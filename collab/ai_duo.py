@@ -142,9 +142,17 @@ def touched_files(diff: str) -> set:
 def run_tests() -> tuple:
     r = sh("npm", "test", check=False)
     out = (r.stdout + "\n" + r.stderr)
-    summary = "\n".join(l for l in out.splitlines() if re.match(r"^(not ok|# (pass|fail))", l))
-    failures = re.findall(r"^not ok.*?(?=^(?:ok|not ok|# tests)|\Z)", out, re.S | re.M)
-    return r.returncode == 0, summary + ("\n\n" + "\n".join(f[:1500] for f in failures[:5]) if failures else "")
+    lines = out.splitlines()
+    summary = [l.strip() for l in lines if re.match(r"^\s*(not ok|# (pass|fail) )", l)]
+    # 실패한 테스트마다 오류 설명 몇 줄을 함께 남긴다
+    details = []
+    for i, l in enumerate(lines):
+        if re.match(r"^\s*not ok", l):
+            details.append("\n".join(x.rstrip() for x in lines[i:i + 14]))
+    report = "\n".join(summary) or out[-1500:]
+    if details:
+        report += "\n\n[실패 상세]\n" + "\n---\n".join(d[:1500] for d in details[:5])
+    return r.returncode == 0, report
 
 
 def parse_review(text: str) -> dict:
