@@ -1,0 +1,15 @@
+{
+  "name": "byeoksa-saju",
+  "private": true,
+  "description": "벽사신견 사주 웹 — 정적 사이트(site/) + 자동 테스트(tests/)",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js tests/static/*.test.js tests/e2e/*.test.js",
+    "test:unit": "node --test tests/unit/*.test.js tests/static/*.test.js",
+    "test:e2e": "node --test tests/e2e/*.test.js",
+    "solar-terms": "python3 tools/solar_terms.py 1900 2100 > tools/solar_terms_1900_2100.json"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  },
+  "engines": { "node": ">=22" }
+}

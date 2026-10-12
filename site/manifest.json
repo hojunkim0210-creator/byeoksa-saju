@@ -1,0 +1,13 @@
+{
+  "name": "벽사신견 사주",
+  "short_name": "벽사신견",
+  "description": "대문 앞 지박령 백구가 읽어주는 시크릿 사주 리포트",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d090b",
+  "theme_color": "#0d090b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,13 @@
+# 비밀 키 — 절대 커밋하지 않는다
+.env
+.env.*
+!.env.example
+
+# 협업 스크립트 로그·임시 산출물
+collab/logs/
+
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

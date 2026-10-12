@@ -1,0 +1,25 @@
+name: CI (테스트)
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 의존성 설치
+        run: npm install
+      - name: 브라우저 설치
+        run: npx playwright install --with-deps chromium
+      - name: 테스트 (만세력·CSS·문구 보존·모바일)
+        run: npm test

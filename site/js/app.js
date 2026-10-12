@@ -1,0 +1,1054 @@
+// Saju App UI & Event Handler
+const {
+  STEMS, BRANCHES, NOBLE_PEOPLE, ELEMENT_REMEDIES, UNSUNG_NAMES,
+  isValidDate, getManAge, getUnsung, getSipsin, getSinsal,
+  calculateMonthPillar, calculateFourPillars, calculateOheng, calculateDaeun, calculateKpi
+} = (typeof SajuCore !== 'undefined' ? SajuCore : (typeof window !== 'undefined' ? window.SajuCore : {}));
+
+  // 🗓️ 현재 연도 기준 동적 연도 (하드코딩 제거)
+  const NOW_Y = new Date().getFullYear();
+  const Y_PAST1 = NOW_Y - 2, Y_PAST2 = NOW_Y - 1;          // "불과 1~2년 전"
+  const Y_R0 = NOW_Y, Y_R1 = NOW_Y + 1, Y_R2 = NOW_Y + 2;  // 3개년 로드맵
+  function yearGanji(y, useHanja) {
+    const s = ((y - 4) % 10 + 10) % 10, b = ((y - 4) % 12 + 12) % 12;
+    return useHanja ? STEMS[s].hanja + BRANCHES[b].hanja : STEMS[s].char + BRANCHES[b].char;
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.yr-roadmap').forEach(el => { el.textContent = `${Y_R0}~${Y_R2}년`; });
+    document.querySelectorAll('.yr-peak').forEach(el => { el.textContent = `${Y_R1}년`; });
+  });
+
+// Saju App UI & Event Handler
+let currentSajuData = null;
+
+  
+  // 🗂️ 다단계 화면(스텝) 전환 핸들러
+  
+  // 📜 한지 두루마리(족자) 모달 핸들러
+  function openHanjiScroll() {
+    const modal = document.getElementById('hanjiScrollModal');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    
+    // 리셋 애니메이션 (다시 열 때도 돌돌 펼쳐지는 효과)
+    const paper = document.getElementById('scrollPaperBody');
+    paper.style.animation = 'none';
+    paper.offsetHeight; // reflow
+    paper.style.animation = 'unfurlScroll 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  }
+
+  function closeHanjiScroll() {
+    const modal = document.getElementById('hanjiScrollModal');
+    modal.style.opacity = '0';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+
+  function proceedFromScroll() {
+    closeHanjiScroll();
+    goToStep(2);
+  }
+
+  function goToStep(step) {
+    document.getElementById('viewLanding').style.display = (step === 1) ? 'flex' : 'none';
+    document.getElementById('viewInput').style.display = (step === 2) ? 'flex' : 'none';
+    document.getElementById('viewResult').style.display = (step === 3) ? 'flex' : 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function submitAndGoToResult() {
+    const yVal = document.getElementById('year').value.trim();
+    const mVal = document.getElementById('month').value.trim();
+    const dVal = document.getElementById('day').value.trim();
+    const calType = document.getElementById('calendarType').value;
+
+    if (!yVal || !mVal || !dVal) {
+      alert('크르르...! 생년월일을 온전히 대지 않으면 등 뒤의 그림자를 벗겨낼 수 없다!');
+      return;
+    }
+
+    const y = parseInt(yVal);
+    const m = parseInt(mVal);
+    const d = parseInt(dVal);
+
+    if (isNaN(y) || isNaN(m) || isNaN(d) || y < 1920 || y > 2030) {
+      alert('생년은 1920년부터 2030년 사이로 바르게 고하거라!');
+      return;
+    }
+
+    if (m < 1 || m > 12 || d < 1 || d > 31) {
+      alert('올바른 생월과 생일을 고하거라!');
+      return;
+    }
+
+    // 날짜 유효성 검증 (2월 30일 등 날짜 롤오버 방지)
+    const testDate = new Date(Date.UTC(y, m - 1, d));
+    if (testDate.getUTCFullYear() !== y || (testDate.getUTCMonth() + 1) !== m || testDate.getUTCDate() !== d) {
+      alert('존재하지 않는 날짜(예: 2월 30일 등)다. 올바른 생년월일을 확인하고 다시 적거라!');
+      return;
+    }
+
+    if (calType === 'lunar') {
+      alert('⚠️ 음력 생일 변환은 아직 준비 중이다. 양력 생년월일로 다시 고하거라!');
+      return;
+    }
+
+    calculateSaju(y, m, d);
+    goToStep(3);
+  }
+
+  function acceptDestiny() {
+    const modal = document.getElementById('introGateModal');
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => { modal.style.display = 'none'; }, 350);
+    showToast('🕯️ 운명의 문턱을 넘었다.');
+    // 넘어가면 접견실(입력창)로 직행
+    goToStep(2);
+  }
+
+  function calculateSaju(y, m, d) {
+    const hourVal = parseInt(document.getElementById('hourSelect').value);
+    const genderVal = document.getElementById('gender').value;
+
+    const userJob = document.getElementById('userJob').value.trim() || '현재의 신분';
+    const userMajor = document.getElementById('userMajor').value.trim() || '갈고닦는 무기';
+    const userHobby = document.getElementById('userHobby').value.trim() || '숨 쉬는 구멍';
+    const userDream = document.getElementById('userDream').value.trim() || '이루고픈 천명';
+
+    // 🌟 만세력 원국: 계산은 전부 SajuCore가 담당 (입춘·절입 '시각' 기준, 서울 역사 표준시 반영)
+    const pillars = calculateFourPillars(y, m, d, hourVal >= 0 ? hourVal : null);
+    const {
+      yStem, yBranch, yStemIdx,
+      mStem, mBranch, mStemIdx, mBranchIdx,
+      dStem, dBranch, dStemIdx, dBranchIdx,
+      hStem, hBranch
+    } = pillars;
+
+    // 렌더링 파이프라인
+    updateAnimalCard(dStem, dBranch);
+    renderPillars({ yStem, yBranch, mStem, mBranch, dStem, dBranch, hStem, hBranch, dStemIdx });
+    const ohengResult = renderOheng({ yStem, yBranch, mStem, mBranch, dStem, dBranch, hStem, hBranch });
+    updateDreamFitCard(dStem, dBranch, ohengResult, userJob, userMajor, userHobby, userDream);
+    renderDaeun(y, m, d, genderVal, yStemIdx, mStemIdx, mBranchIdx, dStemIdx, pillars);
+    renderTermBoundaryNote(pillars.termBoundary, hourVal >= 0);
+
+    // 🔮 살을 대폭 붙인 심리 투시 및 악연 경고
+    updateMindScanCard(dStem, dBranch, ohengResult, userJob, userDream);
+    updateGhostWarningCard(dStem, dBranch, ohengResult, dStemIdx);
+
+    // 🕯️ 연애/재물 한 줄 후각 감별 티저 갱신
+    updateSniffTeaser(dStem, dBranch, dStemIdx, userDream);
+    updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, y, m, d);
+
+    // 🔒 6단계 대외비 포트폴리오 사전 준비
+    updatePaywallContent(dStem, dBranch, ohengResult, dStemIdx, dBranchIdx, userDream, userJob, y, m, d);
+
+    currentSajuData = {
+      y, m, d, hourVal, genderVal,
+      userJob, userMajor, userHobby, userDream,
+      dStem, dBranch, yStem, yBranch, mStem, mBranch, hStem, hBranch,
+      dStemIdx, ohengResult
+    };
+  }
+
+  function updateAnimalCard(dStem, dBranch) {
+    const animalEmojis = {
+      '자': '🐭', '축': '🐮', '인': '🐯', '묘': '🐰',
+      '진': '🐲', '사': '🐍', '오': '🐴', '미': '🐑',
+      '신': '🐵', '유': '🐔', '술': '🐶', '해': '🐷'
+    };
+    const elColors = { 'wood': '푸른', 'fire': '붉은', 'earth': '황금빛', 'metal': '서늘한 백색', 'water': '검은 심해의' };
+    
+    document.getElementById('animalTag').innerText = `${dStem.char}${dBranch.char} (${dStem.hanja}${dBranch.hanja}) 일주 본성`;
+    document.getElementById('animalEmoji').innerText = animalEmojis[dBranch.char] || '✨';
+    document.getElementById('animalTitle').innerText = `크르르... ${elColors[dStem.el]} ${dBranch.animal}의 살기(殺氣)가 보인다.`;
+    document.getElementById('animalDesc').innerText = 
+      `네놈의 뼈대는 ${dStem.trait}과 ${dBranch.trait}으로 빚어졌다. 기운의 날이 시퍼렇지만, 그만큼 사방에서 쏘아대는 시기와 질투의 화살을 정면으로 맞는 고독한 팔자다.`;
+  }
+
+  function updateDreamFitCard(dStem, dBranch, oheng, job, major, hobby, dream) {
+    const baseScore = 88 + ((dStem.char.charCodeAt(0) + dBranch.char.charCodeAt(0)) % 9);
+    document.getElementById('fitScore').innerText = `영적 조화율 ${baseScore}%`;
+
+    let html = `<strong>"크르르... [${dream}]을(를) 품은 네 가슴속 불길이 내 털끝을 태우는구나."</strong><br><br>`;
+    html += `• <strong>현세의 신분과 무기</strong>: 지금 뒹굴고 있는 [${job}]과 [${major}]... 네놈의 무기인 [${dStem.name}]의 기운을 담금질하는 모진 연단이다. 피하지 말고 칼날을 갈아라.<br>`;
+    html += `• <strong>정신의 숨구멍([${hobby}])</strong>: 가볍게 즐기는 [${hobby}]... 단순한 노름이 아니라 네 메마른 명줄에 음기를 채워주는 은밀한 영약이다.<br>`;
+    html += `• <strong>지박령의 일갈</strong>: 주변의 잡것들이 '그게 되겠냐' 짓껄여도 귓등으로도 흘려듣지 마라. 이 문턱을 지키며 수백 년을 보았으나, 제 고집대로 밀어붙인 자만이 살아서 성채를 세웠다.`;
+
+    document.getElementById('fitContent').innerHTML = html;
+  }
+
+  // 🔮 영적 심리 투시: 팩트 폭격
+    // 🔮 사주(일간/일주/오행/세운)에 따라 100% 실시간 맞춤 렌더링되는 소름 돋는 콜드 리딩
+  function getDynamicColdReading(dStem, dBranch, userDream) {
+    const iljuName = `${dStem.char}${dBranch.char}`;
+    const el = dStem.el; // wood, fire, earth, metal, water
+    const stemChar = dStem.char;
+
+    const elementBetrayals = {
+      wood: {
+        badge: `[${iljuName}日柱 목(木)의 흉살: 결실과 아이디어를 도둑맞은 배신]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 겁재(劫財)와 비견의 흉살이 치솟을 때</strong>, '너랑 나랑 손잡고 함께 가자'며 달콤한 말로 부추기던 동업자나 선배·친구 하나 있었지?`,
+        details: `네 우직하고 순수한 ${stemChar === '갑' ? '갑목(甲木, 큰 나무)' : '을목(乙木, 담쟁이)'}의 심성을 이용해, 네가 밤잠 안 자고 뼈를 깎아 만든 핵심 아이디어와 기획, 인맥의 알맹이는 쏙 빼먹고, 결정적인 순간에 성과와 계약에서 네 이름을 지워버린 그 파렴치한 인간!<br><br>` +
+                 `'내가 왜 사람 보는 눈이 이리 없었을까', '내가 너무 순진해서 당했나' 혼자 자책하며 방구석에서 피눈물을 삼켰겠지만, 똑똑히 알아둬라. 네 탓이 아니다. 네 목(木) 기운의 우직한 성장을 시기해 달라붙은 비열한 흡기귀(吸氣鬼)였다.`,
+        innerSoul: `너는 겉으로는 온화하고 남들에게 싫은 소리 한마디 못 하는 착한 사람처럼 보이지만, 속으로는 네 기준과 선이 칼날보다 날카롭다. 한번 마음에 금이 간 인간은 두 번 다시 안 보지만, 정작 속마음을 100% 털어놓을 영혼의 동반자가 없어 밤마다 뼈마디가 시린 고독을 혼자 씹어 삼켜왔을 것이다.`
+      },
+      fire: {
+        badge: `[${iljuName}日柱 화(火)의 흉살: 온기만 빼앗기고 버려진 배신]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 관살(官煞)과 상관의 칼바람이 불어닥칠 때</strong>, '나 지금 너무 힘들어, 너밖에 의지할 데 없어'라며 매달리던 인간에게 온 마음과 지갑을 다 털어준 적 있지?`,
+        details: `네 타고난 ${stemChar === '병' ? '병화(丙火, 뜨거운 태양)' : '정화(丁火, 촛불)'}의 측은지심 때문에 밥 사주고, 일 도와주고, 마음 다 챙겨주며 살려놓았더니 돌아온 게 뭐였느냐?<br><br>` +
+                 `단물만 쏙 빨아먹고 제 살길 찾자마자 싸늘하게 안면을 바꾸고, 뒤에서는 '걔가 지 멋대로 오지랖 부린 거지'라며 네 험담까지 퍼뜨리고 다닌 그 배은망덕한 인간!<br><br>` +
+                 `너는 온몸을 불살라 길을 밝혀주었건만, 너만 잿더미가 되어 멍하니 가슴을 쥐어뜯었지? 자책하지 마라. 네 불꽃 같은 열정을 갉아먹은 가증스러운 흡기귀였다.`,
+        innerSoul: `너는 남들 앞에선 세상에서 제일 밝고 열정적인 사람인 척 연기하지만, 속은 이미 시커멓게 다 타버린 잿더미다. 거절을 단호하게 못 해서 온갖 궂은일 다 떠맡고 속으로 피눈물 흘리다가, 결국 한계에 달해 혼자 잠수 타거나 자폭해버린 적이 한두 번이 아니지.`
+      },
+      earth: {
+        badge: `[${iljuName}日柱 토(土)의 흉살: 호구 취급과 누명의 배신]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 재관(財官)의 무거운 짐이 쏟아져 내릴 때</strong>, 네가 묵묵히 다 받아주고 양보해주니까 널 만만한 호구이자 '감정 쓰레기통'으로 취급한 인간이 분명히 있었을 게다.`,
+        details: `네 ${stemChar === '무' ? '무토(戊土, 거대한 산)' : '기토(己土, 비옥한 대지)'}의 넓은 도량을 믿고 호의를 권리인 양 착취하더니, 정작 공동의 문제나 금전적 손실이 터졌을 땐 제 책임은 쏙 빼고 네게 모든 책임과 누명을 덤터기 씌우려 했던 그 뻔뻔한 인간!<br><br>` +
+                 `"내가 저 인간한테 어떻게 해줬는데 나한테 이럴 수가 있어?"라는 억울함이 가슴에 맺혀 목구멍까지 피가 거꾸로 솟았을 것이다. 똑똑히 알아둬라. 네 탓이 아니다. 네 넓은 품에 기생해 피를 빤 파렴치한 흡기귀였다.`,
+        innerSoul: `너는 넓은 마음으로 다 이해하고 품어주는 척하지만, 실은 속으로 배신감과 서운함을 뼛속 깊이 새겨두는 타입이다. 참고 참다가 한번 둑이 터지면 뒤도 안 돌아보고 손절하지만, 혼자 남겨졌을 때 엄습하는 지독한 회의감에 가슴을 뜯어왔을 것이다.`
+      },
+      metal: {
+        badge: `[${iljuName}日柱 금(金)의 흉살: 가장 아픈 약점을 찔린 비수]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 식상과 재성이 소용돌이칠 때</strong>, 웬만해선 마음을 안 여는 네가 드물게 마음의 벽을 허물고 치부와 나약한 속내까지 털어놓았던 자에게 등에 칼을 맞은 적이 있지?`,
+        details: `네 서늘한 ${stemChar === '경' ? '경금(庚金, 무쇠 검)' : '신금(辛金, 예리한 단도)'}의 칼날을 거두고 믿어준 대가가, 네가 건넨 약점을 결정적 순간에 쥐고 흔들며 가스라이팅하고 네 자존심을 짓밟은 처참한 뒤통수였지!<br><br>` +
+                 `겉으로는 네 완벽함을 부러워하는 척 알랑방귀를 뀌더니, 네가 조금 흔들리자마자 가장 잔인한 곳을 후벼판 그 교활한 인간!<br><br>` +
+                 `'내가 왜 방심해서 그 칼자루를 쥐어줬을까' 자학하며 며칠 밤을 피를 말렸겠지만 자책하지 마라. 네 날카로운 기운을 시기해 꺾으려 든 사악한 흡기귀였다.`,
+        innerSoul: `너는 겉으로는 냉철하고 야무진 완벽주의자처럼 굴지만, 실은 거절당하거나 실패자로 낙인찍힐까 봐 덜덜 떠는 극단적 유리 멘탈이다. 남들이 무심코 던진 비수 같은 말 한마디를 며칠 밤 동안 곱씹으며 스스로를 난도질하는 자학(自虐)의 칼날을 품고 있다.`
+      },
+      water: {
+        badge: `[${iljuName}日柱 수(水)의 흉살: 영혼과 통장을 갉아먹힌 가스라이팅]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 비겁과 관살이 얽혀들 때</strong>, '너를 진정으로 이해하는 건 나뿐이야'라며 영혼의 구원자인 척 다가와 네 멘탈과 통장을 쥐고 흔든 인간이 분명히 있었을 게다.`,
+        details: `네 깊은 ${stemChar === '임' ? '임수(壬水, 검은 심해)' : '계수(癸水, 스며드는 안개)'}의 외로움과 감성을 교묘하게 자극하며, 네 판단력을 흐려놓고 시간과 에너지를 갉아먹으며 끝없는 자책의 늪으로 끌고 들어간 그 음습한 인간!<br><br>` +
+                 `네 피 같은 돈과 감정을 밑 빠진 독처럼 뜯어먹고서야 겨우 빠져나왔지만, '내가 왜 귀신에 홀린 듯 끌려다녔을까' 혼자 멍하니 가슴을 쥐어뜯었지?<br><br>` +
+                 `네 탓이 아니다. 네 사주의 지혜와 촉을 시기해 눈을 멀게 만든 물귀신 같은 악연이었다.`,
+        innerSoul: `너는 머릿속에 잡생각과 망상이 너무 많아 정작 실행해야 할 순간에 얼어붙는다. 머릿속으로는 이미 수백 번 부자가 되고 성공했지만, 침대에서 스마트폰만 멍하니 보며 인생을 갉아먹는 무기력의 악귀가 네 발목을 밧줄로 칭칭 감아놓고 있다.`
+      }
+    };
+
+    const branchWounds = {
+      '자': `네 일지에 깔린 영리한 쥐(子)의 기운 때문에 어둠 속에서도 위기를 본능적으로 감지했으나, 눈치를 보느라 타이밍을 놓쳐 속병을 키웠다.`,
+      '축': `네 일지의 우직한 소(丑)의 기운 때문에 묵묵히 뼈를 깎으며 버텼지만, 돌아온 건 당연하다는 듯한 냉대와 억울함뿐이었다.`,
+      '인': `네 일지의 용맹한 호랑이(寅)의 기운 때문에 남들 앞에서는 결코 무릎 꿇지 않았으나, 등 뒤에서 혼자 피를 흘리며 이를 갈았다.`,
+      '묘': `네 일지의 여린 토끼(卯)의 기운 때문에 상대방의 차가운 눈빛과 비수 같은 말 한마디에도 심장에 피멍이 들었다.`,
+      '진': `네 일지의 비상하는 용(辰)의 스케일 때문에 남다른 야망을 품었으나, 발목을 잡는 주변 인간들의 잔머리에 날개가 꺾였다.`,
+      '사': `네 일지의 직관적인 뱀(巳)의 기운으로 싸한 냄새를 맡았으면서도, 정에 이끌려 단호히 끊어내지 못해 화를 자초했다.`,
+      '오': `네 일지의 불타는 말(午)의 기운으로 거침없이 돌진하다가, 믿었던 자가 파놓은 함정에 빠져 큰 상처를 입었다.`,
+      '미': `네 일지의 인내심 깊은 양(未)의 기운으로 겉은 온화한 척 웃어넘겼으나, 속은 새카맣게 타들어간 숯덩이가 되었다.`,
+      '신': `네 일지의 재주 많은 원숭이(申)의 기운으로 임기응변을 발휘했으나, 가장 가까운 자의 배신 앞에서는 속수무책이었다.`,
+      '유': `네 일지의 예리한 닭(酉)의 결벽증 때문에, 배신당한 기억을 수백 번 되새김질하며 제 가슴을 스스로 찔렀다.`,
+      '술': `네 일지의 충직한 개(戌)의 순정 때문에, 은혜를 모르는 인간에게 간과 쓸개까지 다 빼주고 토사구팽을 당했다.`,
+      '해': `네 일지의 도량 넓은 돼지(亥)의 기운으로 다 품어주려다, 오히려 삿된 인간들의 오물까지 다 뒤집어썼다.`
+    };
+
+    const betrayal = elementBetrayals[el] || elementBetrayals['wood'];
+    const branchDesc = branchWounds[dBranch.char] || `뼈마디가 시린 고독을 씹어 삼켰다.`;
+
+    return {
+      iljuName,
+      badge: betrayal.badge,
+      hook: betrayal.hook,
+      details: betrayal.details,
+      innerSoul: betrayal.innerSoul,
+      branchDesc
+    };
+  }
+
+  function updateMindScanCard(dStem, dBranch, arg3, arg4, arg5) {
+    const dream = (typeof arg5 === 'string' && arg5) ? arg5 : ((typeof arg3 === 'string' && arg3) ? arg3 : '천명');
+    const data = getDynamicColdReading(dStem, dBranch, dream);
+
+    document.getElementById('mindItem1').innerHTML = 
+      `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">` +
+      `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">👀 속마음 투시 (골수까지 도려내는 소름 돋는 팩폭)</strong>` +
+      `  <span style="font-size:12px; color:#991b1b; background:#fef2f2; border:1px solid #b91c1c; padding:2px 8px; border-radius:4px; font-weight:700;">${data.iljuName}日柱 맞춤</span>` +
+      `</div>` +
+      `<p style="margin:8px 0; font-size:15.5px; line-height:2.0; color:#111827; font-weight:500;">` +
+      `"크르르... 네 골수까지 시린 서늘함을 내가 모를 줄 알았더냐? 딴청 피우지 마라.<br><br>` +
+      `<strong class="impact-red" style="font-size:15.5px; font-weight:800;">${data.badge}</strong><br>` +
+      `${data.hook}<br>` +
+      `${data.details}<br><br>` +
+      `💡 <strong style="color:#b45309; font-weight:800;">[지박령의 일주 본성 꿰뚫음]</strong>: ${data.branchDesc}<br>` +
+      `${data.innerSoul}</p>`;
+
+    document.getElementById('mindItem2').innerHTML = 
+      `<div style="margin-bottom:8px;">` +
+      `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">⚠️ 밤마다 네 숨통을 조이는 지독한 함정</strong>` +
+      `</div>` +
+      `<p style="margin:8px 0; font-size:15.5px; line-height:2.0; color:#111827; font-weight:500;">` +
+      `너, <strong>밤에 불 끄고 침대에 누우면 낮에 있었던 사소한 말 한마디, 상대방의 싸늘한 눈빛이 머릿속에서 수십 번 되감기되며 숨이 턱 막힌 밤들</strong>이 분명히 있었을 게다.<br>` +
+      `겉으로는 '난 쿨해, 다 괜찮아' 센 척하지만, 실은 속으로 온갖 최악의 시나리오를 그리며 뼈마디가 타들어갈 만큼 혼자 피를 말렸지.<br><br>` +
+      `그리고 네가 적어낸 천명... <strong class="impact-gold" style="font-size:16px;">[${dream}]</strong>.<br>` +
+      `남들 앞에서는 '나 꼭 해낼 거야' 당당하게 큰소리치면서도, 정작 혼자 있을 땐 <em>"과연 내가 진짜 이걸 해낼 수 있을까? 이미 너무 늦은 건 아닐까? 남들은 앞서가는데 나만 이 자리에서 영원히 도태되는 건 아닐까?"</em> 하는 공포에 심장이 덜컥 내려앉았을 게다.<br>` +
+      `<strong class="impact-red" style="font-size:16px;">'이러다 나 진짜 아무것도 못 해보고 비참하게 끝나는 거 아니야?'</strong> 하는 그 서늘한 침묵...<br>` +
+      `내 말이 틀렸느냐? 이 흉살의 사슬을 지금 끊어내지 못하면 ${Y_R0}~${Y_R1}년에 터질 인생 일대의 천금 대운마저 네 발로 걷어차게 된다.</p>`;
+  }
+
+  
+  function updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, yVal, mVal, dVal) {
+    const yNum = parseInt(yVal) || 2000;
+    const mNum = parseInt(mVal) || 1;
+    const dNum = parseInt(dVal) || 1;
+    const bIdx = (dBranchIdx !== undefined && dBranchIdx !== null) ? dBranchIdx : 0;
+    const seed = (yNum * 365 + mNum * 31 + dNum + dStemIdx * 7 + bIdx * 13) % 1000;
+    const dmEl = ["wood","wood","fire","fire","earth","earth","metal","metal","water","water"][dStemIdx] || "wood";
+    const dmCount = (ohengResult && ohengResult[dmEl]) ? ohengResult[dmEl] : 1;
+
+    // 1. 잠재 역량 (천명 그릇): 75 ~ 98
+    const potScore = 75 + ((seed * 7 + dmCount * 5) % 24);
+    let potGrade = "[중상 · 잠재력 충만]";
+    let potColor = "#d97706";
+    if (potScore >= 90) {
+      potGrade = "[극상 · 제왕지기]";
+      potColor = "#16a34a";
+    } else if (potScore >= 82) {
+      potGrade = "[상 · 건록지기]";
+      potColor = "#16a34a";
+    }
+
+    // 2. 2027 대운 폭발 지수 (골든타임): 70 ~ 99
+    const timScore = 70 + ((seed * 11 + mNum * 3) % 30);
+    let timGrade = "[도약 준비 태세]";
+    let timColor = "#2563eb";
+    if (timScore >= 90) {
+      timGrade = "[임계점 도달 · 폭발적 상승]";
+      timColor = "#d97706";
+    } else if (timScore >= 80) {
+      timGrade = "[상승 기류 탑승]";
+      timColor = "#d97706";
+    }
+
+    // 3. 재물 방어력 (누재살 漏財煞): 28 ~ 85
+    const wScore = 28 + ((seed * 13 + dNum * 7) % 58);
+    let wGrade = "[⚠️ 위험: 돈 샐 틈 많음]";
+    let wColor = "#dc2626";
+    if (wScore >= 65) {
+      wGrade = "[양호: 재물 곳간 든든함]";
+      wColor = "#16a34a";
+    } else if (wScore >= 48) {
+      wGrade = "[⚠️ 주의: 지출 누수 경계]";
+      wColor = "#d97706";
+    }
+
+    // 4. 주변 인연 정화도 (악연 감별): 32 ~ 88
+    const kScore = 32 + ((seed * 17 + dStemIdx * 9) % 57);
+    let kGrade = "[⚠️ 위험: 흡기귀 1~2명 근접]";
+    let kColor = "#ef4444";
+    if (kScore >= 70) {
+      kGrade = "[청정: 귀인 인연 동행]";
+      kColor = "#16a34a";
+    } else if (kScore >= 50) {
+      kGrade = "[⚠️ 주의: 기 빨림 경계]";
+      kColor = "#d97706";
+    }
+
+    let alerts = 0;
+    if (wScore < 48) alerts++;
+    if (kScore < 50) alerts++;
+    const alertHtml = alerts > 0 
+      ? `<span class="impact-red" style="font-size:12px; font-weight:800;">위험 경보 ${alerts}건</span>` 
+      : `<span style="font-size:12px; font-weight:800; color:#d97706;">주의 경보 1건</span>`;
+
+    const alertEl = document.getElementById('kpiAlertBadge');
+    if (alertEl) alertEl.innerHTML = alertHtml;
+
+    const potScoreEl = document.getElementById('kpiPotentialScore');
+    const potBarEl = document.getElementById('kpiPotentialBar');
+    if (potScoreEl) { potScoreEl.innerHTML = `${potScore}점 ${potGrade}`; potScoreEl.style.color = potColor; }
+    if (potBarEl) { potBarEl.style.width = `${potScore}%`; potBarEl.style.background = potColor; }
+
+    const timScoreEl = document.getElementById('kpiTimingScore');
+    const timBarEl = document.getElementById('kpiTimingBar');
+    if (timScoreEl) { timScoreEl.innerHTML = `${timScore}점 ${timGrade}`; timScoreEl.style.color = timColor; }
+    if (timBarEl) { timBarEl.style.width = `${timScore}%`; timBarEl.style.background = timColor; }
+
+    const wScoreEl = document.getElementById('kpiWealthScore');
+    const wBarEl = document.getElementById('kpiWealthBar');
+    if (wScoreEl) { wScoreEl.innerHTML = `${wScore}점 ${wGrade}`; wScoreEl.style.color = wColor; }
+    if (wBarEl) { wBarEl.style.width = `${wScore}%`; wBarEl.style.background = wColor; }
+
+    const kScoreEl = document.getElementById('kpiKarmaScore');
+    const kBarEl = document.getElementById('kpiKarmaBar');
+    if (kScoreEl) { kScoreEl.innerHTML = `${kScore}점 ${kGrade}`; kScoreEl.style.color = kColor; }
+    if (kBarEl) { kBarEl.style.width = `${kScore}%`; kBarEl.style.background = kColor; }
+
+    return { potScore, potGrade, potColor, timScore, timGrade, timColor, wScore, wGrade, wColor, kScore, kGrade, kColor, alertHtml };
+  }
+
+  function updateGhostWarningCard(dStem, dBranch, oheng, dayStemIdx) {
+    const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    document.getElementById('ghostDesc').innerHTML = 
+      `크르르...! 당장 네 등 뒤를 돌아보아라. 끈적한 악취가 진동한다.<br><br>` +
+      `네 주변에 분명히 있다. <strong>평소엔 살갑게 굴다가도, 네가 조금만 좋은 일이 생기면 눈빛이 묘하게 차가워지며 '그게 잘될까?' 하고 초를 치는 인간!</strong><br>` +
+      `네가 피땀 흘려 쌓아 올린 아이디어와 노력을 은근슬쩍 가로채려 드는 <strong class="impact-red">[흡기귀(吸氣鬼) 같은 악연]</strong>이 네 등 뒤에 시커멓게 찰싹 달라붙어 있다!<br><br>` +
+      `🩸 <strong class="impact-red">지박령의 서늘한 경고</strong>: 이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 천을귀인(<strong class="impact-gold">${nobles[0]}</strong>)을 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!`;
+  }
+
+  function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream) {
+    const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    document.getElementById('sniffLoveText').innerHTML = 
+      `"킁킁... 코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 맑은 솔잎 흙내를 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."`;
+
+    document.getElementById('sniffWealthText').innerHTML = 
+      `"킁... 아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."`;
+
+    document.getElementById('sniffCareerText').innerHTML = 
+      `"크르르... [<strong class="impact-gold">${dream}</strong>]을(를) 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."`;
+  }
+
+  function renderTileHtml(item) {
+    if (!item) return `<span style="color:#555;">-</span>`;
+    return `<div class="ganji-tile ${item.el}"><span class="main-char">${item.char}</span><span class="sub-char">${item.name}</span></div>`;
+  }
+
+  function renderJijangHtml(branch, dayStemIdx) {
+    if (!branch) return `-`;
+    return `<div class="jijanggan-box">` + branch.jijang.map(idx => {
+      const s = STEMS[idx];
+      return `<span class="badge ${s.el}">${s.char} ${getSipsin(dayStemIdx, idx)}</span>`;
+    }).join('') + `</div>`;
+  }
+
+  function renderPillars(p) {
+    document.getElementById('yearStem').innerHTML = renderTileHtml(p.yStem);
+    document.getElementById('monthStem').innerHTML = renderTileHtml(p.mStem);
+    document.getElementById('dayStem').innerHTML = renderTileHtml(p.dStem);
+    document.getElementById('hourStem').innerHTML = renderTileHtml(p.hStem);
+
+    document.getElementById('yearBranch').innerHTML = renderTileHtml(p.yBranch);
+    document.getElementById('monthBranch').innerHTML = renderTileHtml(p.mBranch);
+    document.getElementById('dayBranch').innerHTML = renderTileHtml(p.dBranch);
+    document.getElementById('hourBranch').innerHTML = renderTileHtml(p.hBranch);
+
+    document.getElementById('yearJijang').innerHTML = renderJijangHtml(p.yBranch, p.dStemIdx);
+    document.getElementById('monthJijang').innerHTML = renderJijangHtml(p.mBranch, p.dStemIdx);
+    document.getElementById('dayJijang').innerHTML = renderJijangHtml(p.dBranch, p.dStemIdx);
+    document.getElementById('hourJijang').innerHTML = p.hBranch ? renderJijangHtml(p.hBranch, p.dStemIdx) : '-';
+
+    document.getElementById('yearSipsin').innerText = getSipsin(p.dStemIdx, STEMS.indexOf(p.yStem));
+    document.getElementById('monthSipsin').innerText = getSipsin(p.dStemIdx, STEMS.indexOf(p.mStem));
+    document.getElementById('hourSipsin').innerText = p.hStem ? getSipsin(p.dStemIdx, STEMS.indexOf(p.hStem)) : '-';
+
+    document.getElementById('yearUnsung').innerText = getUnsung(p.dStemIdx, BRANCHES.indexOf(p.yBranch));
+    document.getElementById('monthUnsung').innerText = getUnsung(p.dStemIdx, BRANCHES.indexOf(p.mBranch));
+    document.getElementById('dayUnsung').innerText = getUnsung(p.dStemIdx, BRANCHES.indexOf(p.dBranch));
+    document.getElementById('hourUnsung').innerText = p.hBranch ? getUnsung(p.dStemIdx, BRANCHES.indexOf(p.hBranch)) : '-';
+
+    const ybIdx = BRANCHES.indexOf(p.yBranch);
+    const dbIdx = BRANCHES.indexOf(p.dBranch);
+    const fmt = arr => (!arr || arr.length === 0) ? '-' : arr.map(s => `<span class="sinsal-tag">${s}</span>`).join('<br>');
+
+    document.getElementById('yearSinsal').innerHTML = fmt(getSinsal(ybIdx, dbIdx, ybIdx, p.dStemIdx));
+    document.getElementById('monthSinsal').innerHTML = fmt(getSinsal(ybIdx, dbIdx, BRANCHES.indexOf(p.mBranch), p.dStemIdx));
+    document.getElementById('daySinsal').innerHTML = fmt(getSinsal(ybIdx, dbIdx, dbIdx, p.dStemIdx));
+    document.getElementById('hourSinsal').innerHTML = p.hBranch ? fmt(getSinsal(ybIdx, dbIdx, BRANCHES.indexOf(p.hBranch), p.dStemIdx)) : '-';
+  }
+
+  // 🕯️ 출생 시진(또는 시간 모를 때 그날 하루) 안에 절입 시각이 걸치면 안내한다
+  function renderTermBoundaryNote(boundary, hourKnown) {
+    const el = document.getElementById('termBoundaryNote');
+    if (!el) return;
+    if (!boundary) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    const what = boundary.idx === 1 ? '해(年)와 달(月)' : '달(月)';
+    const range = hourKnown ? '네가 고한 시진' : '시진을 모르는 그날 하루';
+    el.innerHTML =
+      `🕯️ <strong>절입(節入) 경계 경고</strong>: ${range} 안에 <strong>[${boundary.name}]</strong> 절입 시각(${boundary.label})이 걸쳐 있다. ` +
+      `태어난 시각이 이보다 앞서느냐 뒤서느냐에 따라 ${what}의 기둥이 바뀐다. 지금 풀이는 ${hourKnown ? '시진의 한가운데' : '그날 정오'}를 기준으로 했으니, 정확한 출생 시각(분)을 확인하거라.`;
+    el.style.display = 'block';
+  }
+
+  function renderDaeun(birthYear, birthMonth, birthDay, gender, yStemIdx, mStemIdx, mBranchIdx, dStemIdx, pillars) {
+    // 대운 계산은 SajuCore.calculateDaeun 하나로 통일 (절기 시각 기반 대운수)
+    const { isForward, daeunNum, currentAge, daeunItems, curActiveIndex } =
+      calculateDaeun(birthYear, birthMonth, birthDay, gender, yStemIdx, mStemIdx, mBranchIdx, dStemIdx, pillars);
+
+    const dirText = isForward ? "순행(順行)" : "역행(逆行)";
+    document.getElementById('daeunBadge').innerText = `${gender === 'M' ? '남성' : '여성'} ${dirText} · ${daeunNum}세 대운 주기`;
+
+    const scrollContainer = document.getElementById('daeunScroll');
+    scrollContainer.innerHTML = daeunItems.map((item) => `
+      <div class="daeun-item ${item.isCurrent ? 'current-daeun' : ''}">
+        ${item.isCurrent ? '<span class="daeun-current-tag">현재</span>' : ''}
+        <span class="daeun-age">${item.ageStart}세</span>
+        <div class="daeun-tiles">
+          <span class="badge ${item.stemObj.el}" style="font-size:12px; font-weight:800;">${item.stemObj.char}</span>
+          <span class="badge ${item.branchObj.el}" style="font-size:12px; font-weight:800;">${item.branchObj.char}</span>
+        </div>
+        <div class="daeun-sub">
+          <div>${item.sipsin}</div>
+          <div style="color:#64748b;">${item.unsung}</div>
+        </div>
+      </div>
+    `).join('');
+
+    const activeItem = (curActiveIndex >= 0) ? daeunItems[curActiveIndex] : daeunItems[2];
+    document.getElementById('daeunComment').innerHTML = 
+      `🕯️ <strong>"지금 네놈의 명줄(만 ${currentAge}세)은 [${activeItem.ageStart}세 ${activeItem.stemObj.char}${activeItem.branchObj.char} 대운]의 격랑 한복판에 서 있다."</strong><br>` +
+      `이 시기는 <strong>${activeItem.stemObj.name}(${activeItem.sipsin})</strong>과 <strong>${activeItem.branchObj.name}(${activeItem.unsung})</strong>의 기운이 엇갈리며 인생의 판을 통째로 엎어버리는 때다. 머뭇거리다간 기회를 통째로 뜯어먹히니, 이를 악물고 네 칼을 쥐어라.`;
+  }
+
+  function renderOheng(p) {
+    const counts = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+    const items = [p.yStem, p.yBranch, p.mStem, p.mBranch, p.dStem, p.dBranch];
+    if (p.hStem && p.hBranch) items.push(p.hStem, p.hBranch);
+
+    items.forEach(it => { if (it) counts[it.el]++; });
+    const total = items.length;
+
+    document.getElementById('stackedBar').innerHTML = `
+      <div class="stacked-segment wood" style="width:${(counts.wood/total)*100}%;">${counts.wood > 0 ? '목' : ''}</div>
+      <div class="stacked-segment fire" style="width:${(counts.fire/total)*100}%;">${counts.fire > 0 ? '화' : ''}</div>
+      <div class="stacked-segment earth" style="width:${(counts.earth/total)*100}%;">${counts.earth > 0 ? '토' : ''}</div>
+      <div class="stacked-segment metal" style="width:${(counts.metal/total)*100}%;">${counts.metal > 0 ? '금' : ''}</div>
+      <div class="stacked-segment water" style="width:${(counts.water/total)*100}%;">${counts.water > 0 ? '수' : ''}</div>
+    `;
+
+    const elNames = [
+      { key: 'wood', label: '목(木)', color: '#14532d' },
+      { key: 'fire', label: '화(火)', color: '#991b1b' },
+      { key: 'earth', label: '토(土)', color: '#78350f' },
+      { key: 'metal', label: '금(金)', color: '#334155' },
+      { key: 'water', label: '수(水)', color: '#0c4a6e' }
+    ];
+
+    document.getElementById('ohengList').innerHTML = elNames.map(e => `
+      <div class="oheng-item">
+        <div class="oheng-item-name" style="color:${e.color}">${e.label}</div>
+        <div class="oheng-item-val">${counts[e.key]}자</div>
+        <div style="font-size:10px; color:#888;">${Math.round((counts[e.key]/total)*100)}%</div>
+      </div>
+    `).join('');
+
+    let strong = [], weak = [];
+    elNames.forEach(e => {
+      if (counts[e.key] >= 2) strong.push(e.label);
+      if (counts[e.key] === 0) weak.push(e.key);
+    });
+
+    let comment = `전체 ${total}기둥의 명조를 훑어보니, `;
+    if (strong.length > 0) comment += `<strong>${strong.join(', ')}</strong>의 기운이 지나치게 치솟아 살(煞)로 변할 조짐이다. `;
+    if (weak.length > 0) {
+      const weakLabels = weak.map(k => {
+        const found = elNames.find(x => x.key === k);
+        return found ? found.label : k;
+      });
+      comment += `반대로 <strong>${weakLabels.join(', ')}</strong>의 맥이 끊겨 밑 빠진 독처럼 생기가 새어나가고 있다!`;
+    } else {
+      comment += `오행이 상생하고 있으나 자만하는 순간 액살이 덮칠 것이다.`;
+    }
+    document.getElementById('ohengComment').innerHTML = comment;
+
+    return { strong, weak, counts, total };
+  }
+
+  // 📜 결제 후 대외비 영적 전략 포트폴리오 생성
+      function updatePaywallContent(dStem, dBranch, oheng, dayStemIdx, dayBranchIdx, dream, job, birthYear, birthMonth, birthDay) {
+    const iljuName = `${dStem.char}${dBranch.char}`;
+    const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    const weakKey = oheng.weak.length > 0 ? oheng.weak[0] : 'water';
+    const remedy = ELEMENT_REMEDIES[weakKey] || ELEMENT_REMEDIES['water'];
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '. ');
+
+    const kpi = updateKpiDashboard(dayStemIdx, dayBranchIdx, oheng, birthYear, birthMonth, birthDay);
+
+    const unlockedHtml = `
+      <!-- 🏛️ 대외비 1급 전문 기밀 보고서 헤더 (사주단자 고서 스타일) -->
+      <div class="classified-dossier-box">
+        <div class="dossier-top-bar">
+          <span class="dossier-badge-secret">極秘 (대외비 1급 기밀)</span>
+          <span class="dossier-doc-id">문서 식별 번호: 辟邪-${Y_R0}-天命-8821號</span>
+        </div>
+        <div class="dossier-title-group">
+          <div class="dossier-org-title">壁 邪 神 犬 · 終 身 天 命 戰 略 報 告 書</div>
+          <div class="dossier-sub-title">1998년 겨울 강원도 영월 산자락 외딴 흙집 지박령의 1:1 맞춤형 인생 돌파 비방록</div>
+        </div>
+        <div class="dossier-info-table">
+          <div class="dossier-info-cell">
+            <span class="dossier-label">수신 (受信)</span>
+            <span class="dossier-val">${iljuName}日柱 (${dStem.hanja}${dBranch.hanja}) 本元</span>
+          </div>
+          <div class="dossier-info-cell">
+            <span class="dossier-label">발신 (發信)</span>
+            <span class="dossier-val">영월 지박령 벽사신견 (辟邪神犬)</span>
+          </div>
+          <div class="dossier-info-cell">
+            <span class="dossier-label">천명 목표</span>
+            <span class="dossier-val impact-gold">${dream}</span>
+          </div>
+          <div class="dossier-info-cell">
+            <span class="dossier-label">인가 등급</span>
+            <span class="dossier-val impact-red">1급 개운 비방 (전체 6개 챕터 열람 허가)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 포트폴리오 핵심 지표 KPI 대시보드 (동적 연산 반영) -->
+      <div class="kpi-dashboard" id="kpiDashboard">
+        <div class="kpi-title">
+          <span style="font-size:15px; font-weight:800; color:#111827;">📊 영적 역량 & 위험 지표 진단 (KPI Analysis)</span>
+          <span id="kpiAlertBadge" style="font-size:12px; font-weight:800;">${kpi.alertHtml}</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-row">
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">타고난 천명 그릇 (잠재 역량)</span><span id="kpiPotentialScore" style="font-size:14px; font-weight:800; color:${kpi.potColor};">${kpi.potScore}점 ${kpi.potGrade}</span></div>
+            <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiPotentialBar" style="width:${kpi.potScore}%; background:${kpi.potColor};"></div></div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">${Y_R1} 대운 폭발 지수 (골든타임)</span><span id="kpiTimingScore" style="font-size:14px; font-weight:800; color:${kpi.timColor};">${kpi.timScore}점 ${kpi.timGrade}</span></div>
+            <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiTimingBar" style="width:${kpi.timScore}%; background:${kpi.timColor};"></div></div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">재물 방어력 (누재살 漏財煞)</span><span id="kpiWealthScore" style="font-size:14px; font-weight:800; color:${kpi.wColor};">${kpi.wScore}점 ${kpi.wGrade}</span></div>
+            <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiWealthBar" style="width:${kpi.wScore}%; background:${kpi.wColor};"></div></div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">주변 인연 정화도 (악연 감별)</span><span id="kpiKarmaScore" style="font-size:14px; font-weight:800; color:${kpi.kColor};">${kpi.kScore}점 ${kpi.kGrade}</span></div>
+            <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiKarmaBar" style="width:${kpi.kScore}%; background:${kpi.kColor};"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 01:<!-- CHAPTER 01: 영적 악연 차단 & 방어 매뉴얼 -->
+      <div class="portfolio-section-card">
+        <span class="portfolio-section-badge">CHAPTER 01 · 대외비 1급</span>
+        <div class="portfolio-section-title">🗡️ 기(氣) 빨아먹는 악연 색출 및 즉각 처단 매뉴얼</div>
+        <div class="portfolio-text">
+          네가 지금까지 [<strong class="impact-gold">${dream}</strong>]을(를) 향해 달리면서 유독 피로하고 지쳤던 이유는 능력이 부족해서가 아니다.<br><br>
+          너를 둘러싼 인간관계 중에 네 에너지와 통장을 갉아먹는 <strong class="impact-red">[기생형 흡기귀]</strong>가 붙어 있었기 때문이다.<br>
+          이 자들은 네가 힘들 땐 곁에 없다가, 네게 뭔가 이득이 생기거나 성과가 보이면 귀신같이 냄새를 맡고 나타난다.
+        </div>
+        <div class="portfolio-highlight">
+          <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:8px;">⚠️ 즉시 손절해야 할 3대 악연 유형:</strong>
+          1. <strong>"다 너 잘되라고 하는 말인데"</strong>라며 네 자신감을 깎아내리고 가스라이팅하는 자.<br>
+          2. 밥 한 끼, 커피 한 잔도 은근슬쩍 네게 계산을 미루며 네 재물운의 기운을 갉아먹는 자.<br>
+          3. 네 약점이나 실수를 기억해 두었다가 남들 앞에서 장난처럼 터뜨려 네 위신을 깎는 자.<br><br>
+          💡 <strong class="impact-red">처단 비방</strong>: 변명할 기회를 주지 마라. 서서히 연락 빈도를 줄이고 카톡 답장을 3시간 이상 늦추며 영적 연결고리를 완전히 끊어내라.
+        </div>
+      </div>
+
+      <!-- CHAPTER 02: 인연과 사랑의 체취 감별 (사랑의 냄새 대폭 확대) -->
+      <div class="portfolio-section-card">
+        <span class="portfolio-section-badge">CHAPTER 02 · 후각 투시록</span>
+        <div class="portfolio-section-title">🕯️ 인연과 사랑의 체취 감별 (벽사신견 후각 투시록)</div>
+        <div class="portfolio-text">
+          벽사신견의 코는 거짓말을 하지 않는다. 사람이 입으로는 온갖 달콤한 사랑을 맹세해도, 그 영혼에서 뿜어져 나오는 냄새는 숨길 수 없는 법이다.<br><br>
+          너를 스쳐 지나간 인연들을 돌아보아라. <strong>처음엔 눈이 멀 것처럼 설레었지만 결국 네 가슴에 지독한 생채기를 남기고 떠난 자들...</strong> 그들의 냄새를 복기해보아라.
+        </div>
+
+        <div class="portfolio-highlight" style="border-left: 4.5px solid #b91c1c; background: #fff8f8;">
+          <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: 피비린내와 눅눅한 곰팡이 냄새</strong>
+          • <strong>영적 체취</strong>: 겉으로는 비싼 향수나 매력적인 언변으로 포장하지만, 조금만 깊이 교류해보면 바닥에 고인 썩은 물과 쇠비린내가 진동하는 자다.<br>
+          • <strong>소름 돋는 특징</strong>: 네 자존감을 은근히 갉아먹으며 '너는 나 없으면 아무것도 아니야'라는 불안을 주입한다. 네가 잘나갈 땐 질투로 눈빛이 싸늘해지고, 네가 주저앉을 때만 우월감을 느끼며 동정하는 척한다.<br>
+          • <strong>경고</strong>: 이 자와 살을 섞거나 깊은 연인으로 들이면, 네 사주 원국의 명예운과 금전운이 3년간 송두리째 잿더미가 된다. 지금 그런 냄새가 나는 자가 주변에 있다면 뒤도 돌아보지 말고 뛰어 도망쳐라!
+        </div>
+
+        <div class="portfolio-highlight" style="border-left: 4.5px solid #15803d; background: #f6fdf7; margin-top:12px;">
+          <strong class="impact-green" style="font-size:15.5px; display:block; margin-bottom:6px;">🌿 2. 너를 살려낼 천생연분: 비 온 뒤 솔숲의 맑은 흙 냄새</strong>
+          • <strong>영적 체취</strong>: 화려한 말재주는 없어도, 그 사람 곁에 가만히 앉아 있기만 해도 목덜미의 서늘한 긴장감이 봄눈 녹듯 스르륵 풀리는 사람이다. 깊은 산속 젖은 흙내와 청량한 솔잎 향을 풍긴다.<br>
+          • <strong>소름 돋는 특징</strong>: 네 결핍된 오행(${weakKey})을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>] 띠의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.<br>
+          • <strong>도래 시기</strong>: <strong class="impact-gold">${Y_R0}년 하반기~${Y_R1}년 상반기</strong>, 일이나 학업으로 얽힌 공적인 자리 또는 조용한 이동 중에 우연처럼 마주치게 된다.
+        </div>
+      </div>
+
+      <!-- CHAPTER 03: 누재살 방어 및 재물 축적 비방 -->
+      <div class="portfolio-section-card">
+        <span class="portfolio-section-badge">CHAPTER 03 · 재물 결속 비기</span>
+        <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 누재살(漏財煞) 봉인법</div>
+        <div class="portfolio-text">
+          네 명식에는 돈을 버는 재능은 있으나, 담아두는 그릇의 밑바닥에 실금이 가 있어 물이 줄줄 새어나가는 <strong class="impact-red">누재살(漏財煞)</strong>의 기운이 감돌고 있다.<br><br>
+          "돈이 좀 모였다 싶으면 꼭 엉뚱한 곳에서 목돈이 깨지는 상황", 기억나지 않느냐? 병원비, 가족이나 친구의 부탁, 충동적인 지출 등으로 공든 탑이 무너지는 패턴이다.
+        </div>
+        <div class="portfolio-highlight">
+          <strong class="impact-gold" style="font-size:15.5px; display:block; margin-bottom:8px;">🔒 누재살 방어 3대 황금 비방:</strong>
+          1. <strong>현금 봉쇄 작전</strong>: 통장에 자유입출금 잔고를 200만 원 이상 두지 마라. 들어오는 즉시 묶이는 청약, 펀드, 채권 등 빼기 힘든 구조로 강제 이체하라.<br>
+          2. <strong>불필요한 동정심 차단</strong>: 주변의 금전 거래 요구나 빌려달라는 부탁은 무조건 "지금 전세금(또는 투자금)으로 다 묶여 있다"고 단칼에 거절하라.<br>
+          3. <strong>재물 방위 풍수</strong>: 잠잘 때 머리를 [<strong class="impact-gold">${remedy.direction}</strong>] 방향으로 두고, 작업 책상 위에 [<strong class="impact-gold">${remedy.item}</strong>]을(를) 두어 재물의 살을 튕겨내라.
+        </div>
+      </div>
+
+      <!-- CHAPTER 04: 2026~2028년 대운 3개년 로드맵 -->
+      <div class="portfolio-section-card">
+        <span class="portfolio-section-badge">CHAPTER 04 · 시기 포획</span>
+        <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 대운 3개년 로드맵</div>
+        <div class="portfolio-text">
+          인생의 모든 성공은 실력 30%와 타이밍 70%로 결정된다. 네 사주에서 ${Y_R0}년부터 ${Y_R2}년까지는 10년에 한 번 올까 말까 한 격변의 파도가 밀려오는 시기다.
+        </div>
+        <div class="timeline-box">
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">${Y_R0}년 (${yearGanji(Y_R0)}년 ${yearGanji(Y_R0,true)}) · 불의 정화와 준비기</div>
+            <div class="timeline-desc">너를 옭아매던 구시대의 썩은 인연과 미련을 태워 없애는 해다. [<strong class="impact-gold">${dream}</strong>]을(를) 향한 핵심 기술과 역량을 칼처럼 벼려내라. 상반기엔 조용히 내실을 다지고 하반기부터 판을 벌려라.</div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">${Y_R1}년 (${yearGanji(Y_R1)}년 ${yearGanji(Y_R1,true)}) · 인생 최고의 폭발적 골든타임 🎯</div>
+            <div class="timeline-desc">네 인생의 대운이 정점에 달하는 시기다. 네가 준비한 결과물이 세상의 인정을 받고, 귀인의 조력으로 통장에 목돈이 꽂히며 신분이 급상승한다. 이때 주저하지 말고 인생의 승부수를 던져라!</div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">${Y_R2}년 (${yearGanji(Y_R2)}년 ${yearGanji(Y_R2,true)}) · 결실 수확 및 시스템 안착</div>
+            <div class="timeline-desc">폭발적인 성공을 바탕으로 단단한 성벽을 쌓는 해다. 흔들리지 않는 자산 파이프라인을 구축하고, 너를 따르는 세력을 형성하여 평생의 부(富)를 안정화하라.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 05: 100일 작전 행동 수칙 -->
+      <div class="portfolio-section-card">
+        <span class="portfolio-section-badge">CHAPTER 05 · 실전 결행</span>
+        <div class="portfolio-section-title">⚡ 내일부터 당장 결행할 [천명 100일 작전]</div>
+        <div class="portfolio-text">
+          운명은 가만히 앉아 있는 자에게 찾아오지 않는다. 지박령의 기운을 받아 내일부터 당장 실천할 3가지 행동 수칙이다:
+        </div>
+        <div class="portfolio-highlight">
+          1. <strong>기상 직후 찬물 한 잔 & 축문</strong>: 눈뜨자마자 스마트폰을 보지 말고, 찬물 한 잔을 마시며 "내 안의 흉살은 물러가고 천명이 일어선다" 세 번 읊조려라.<br>
+          2. <strong>매일 1시간 몰입 결계</strong>: 어떤 방해도 받지 않고 오직 [<strong class="impact-gold">${dream}</strong>]에만 몰두하는 불가침의 1시간을 반드시 사수하라.<br>
+          3. <strong>침실 정화</strong>: 침대 머리맡에 널브러진 불필요한 옷가지와 쓰레기를 즉시 치워라. 죽은 물건이 침실에 있으면 자는 동안 악귀가 기를 빨아먹는다.
+        </div>
+      </div>
+
+      <!-- SECTION 06: 궁서체 정통 괴황지 수호부적 쇼케이스 & 원형 다운로드 -->
+      <div class="talisman-section-card">
+        <span class="portfolio-section-badge">SECTION 06 · 종신 수호 비기</span>
+        <div class="portfolio-section-title">🧧 《벽사신견 액막이 개운부 (辟邪神犬 開運符)》</div>
+        
+        <!-- 부적 해설 및 소장 비방 박스 (다운로드 전 상세 설명) -->
+        <div class="talisman-info-box">
+          <div class="talisman-info-item">
+            <strong>📜 부적의 유래와 원리</strong>
+            <p>
+              동양 오행에서 삿된 음기(陰氣)와 잡귀를 누르는 <strong>괴황지(槐黃紙, 황금 한지)</strong>에 
+              강력한 양기(陽氣)를 뿜어내는 <strong>경면주사(鏡面朱砂)</strong>의 붉은 붓글씨로 새겨진 정통 벽사부(辟邪符)입니다. 
+              1998년 겨울부터 대문을 지킨 충견의 영험한 원념이 깃들어 있습니다.
+            </p>
+          </div>
+
+          <div class="talisman-info-item">
+            <strong>🛡️ 3대 영적 수호 효능</strong>
+            <ul>
+              <li><strong>1. 흡기귀(吸氣鬼) 및 악연 차단</strong>: 내 기를 빨아먹고 성과를 가로채려는 자들의 살기를 튕겨냅니다.</li>
+              <li><strong>2. 누재살(漏財煞) 방어</strong>: 피 같은 돈이 줄줄 새어나가지 않도록 재물의 문을 단단히 걸어 잠급니다.</li>
+              <li><strong>3. 천명([${dream}]) 개운</strong>: ${Y_R0}~${Y_R2}년 대운 골든타임에 폭발적 기회를 온전히 틀어쥐도록 기운을 틔웁니다.</li>
+            </ul>
+          </div>
+
+          <div class="talisman-info-item">
+            <strong>📱 소장 및 사용 비방</strong>
+            <p>
+              • 다운로드한 부적 이미지를 <strong>스마트폰 잠금화면이나 배경화면</strong>으로 설정해 두면 매일 첫 순간 액살을 털어냅니다.<br>
+              • 출력하여 지갑 속이나 작업 공간(모니터 뒤편, 책상 서랍)에 넣어두셔도 좋습니다.<br>
+              • 마음이 흔들리거나 중요한 결정을 내릴 때 꺼내보며 지박령의 축문을 나지막이 읊으십시오.
+            </p>
+          </div>
+        </div>
+
+        <!-- 부적 실물 미리보기 프레임 -->
+        <div class="talisman-preview-frame">
+          <div class="talisman-real-view">
+            <div class="talisman-real-seal-top">敕 令</div>
+            <div class="talisman-real-main">辟 邪</div>
+            <div class="talisman-real-sigil">卍 &nbsp; 開運大吉 &nbsp; 卍</div>
+            <div class="talisman-real-sub">鎭煞萬福 · [${iljuName}日柱 守護]</div>
+            <div class="talisman-real-bottom">急急如律令</div>
+            <div class="talisman-real-stamp">辟邪神犬<br>之 印</div>
+          </div>
+        </div>
+
+        <button class="btn-talisman-download" onclick="downloadTalismanImage()">
+          🧧 궁서체 정통 수호부적 원형 다운로드 (갤러리 저장) 🐾
+        </button>
+      </div>
+    `;
+
+    document.getElementById('unlockedReportContainer').innerHTML = unlockedHtml;
+  }
+
+    function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
+  function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
+
+    function showToast(text) {
+    const t = document.getElementById('toastMsg');
+    if (t) {
+      t.innerText = text;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2500);
+    }
+  }
+
+  function copyShareUrl() {
+    if (!currentSajuData) return;
+    const { y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream } = currentSajuData;
+    const url = new URL(window.location.href);
+    url.searchParams.set('y', y);
+    url.searchParams.set('m', m);
+    url.searchParams.set('d', d);
+    url.searchParams.set('h', hourVal);
+    url.searchParams.set('g', genderVal);
+    if (userJob) url.searchParams.set('job', userJob);
+    if (userMajor) url.searchParams.set('major', userMajor);
+    if (userHobby) url.searchParams.set('hobby', userHobby);
+    if (userDream) url.searchParams.set('dream', userDream);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url.href).then(() => {
+        showToast('🔗 사주 명식 공유 링크가 복사되었습니다!');
+      });
+    } else {
+      showToast('🔗 링크 복사 완료!');
+    }
+  }
+
+  function copySummaryText() {
+    if (!currentSajuData) {
+      showToast('사주를 먼저 분석해야 요약문을 복사할 수 있다.');
+      return;
+    }
+    const { y, m, d, hourVal, genderVal, dStem, dBranch, yStem, yBranch, mStem, mBranch, hStem, hBranch, userDream, userJob } = currentSajuData;
+    const iljuName = `${dStem.char}${dBranch.char}`;
+    const timeText = hBranch ? `${hBranch.char}시(${hBranch.hanja}時)` : '시간 미선택';
+    const summaryText = `[벽사신견(辟邪神犬) 사주 요약 리포트]\n` +
+      `------------------------------------\n` +
+      `🐾 의뢰인 명식:\n` +
+      `• 생년월일: ${y}년 ${m}월 ${d}일 (${genderVal === 'M' ? '남성' : '여성'})\n` +
+      `• 출생시: ${timeText}\n` +
+      `• 사주 본원: ${iljuName}日柱 (${dStem.name}${dBranch.name})\n` +
+      `• 천명 목표: ${userDream}\n` +
+      `• 현재 신분: ${userJob}\n\n` +
+      `🔮 지박령의 3대 핵심 액막이 비방:\n` +
+      `1. 내 기(氣)를 갉아먹는 흡기귀 악연 즉각 차단\n` +
+      `2. 밑 빠진 독 같은 누재살(漏財煞) 재물 방어\n` +
+      `3. ${Y_R0}~${Y_R2}년 대운 골든타임 도약\n` +
+      `------------------------------------\n` +
+      `강원도 영월 산자락 외딴 흙집 지박령 벽사신견`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(summaryText).then(() => {
+        showToast('📋 사주 핵심 요약문이 클립보드에 복사되었습니다! (카톡/메모장 공유 가능) 🐾');
+      }).catch(() => {
+        showToast('📋 요약문 복사 완료! 🐾');
+      });
+    } else {
+      showToast('📋 요약문 복사 완료! 🐾');
+    }
+  }
+
+  function printReport() {
+    window.print();
+  }
+
+  
+
+  function unlockContent() {
+    document.getElementById('paywallOverlay').style.display = 'none';
+    const unlocked = document.getElementById('unlockedReportContainer');
+    unlocked.style.display = 'flex';
+    closePaymentModal();
+    showToast('🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제 🐾');
+    unlocked.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function saveTalismanNotice() {
+    showToast('📸 스마트폰 화면 캡처로 저장하여 배경화면으로 지녀라 🐾');
+  }
+
+  
+  // 🧧 HTML5 Canvas 기반 고해상도 수호 부적 이미지 생성 및 자동 다운로드
+    // 🧧 궁서체 정통 괴황지(槐黃紙) 경면주사(鏡面朱砂) 수호부적 생성 및 다운로드
+  function downloadTalismanImage() {
+    if (!currentSajuData) {
+      showToast('사주를 먼저 분석해야 맞춤 부적을 내릴 수 있다.');
+      return;
+    }
+
+    const { dStem, dBranch, userDream } = currentSajuData;
+    const iljuName = `${dStem.char}${dBranch.char}`;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 1000;
+    const ctx = canvas.getContext('2d');
+
+    // 1. 고풍스러운 괴황지(槐黃紙, 황금 한지) 질감 배경 렌더링
+    const bgGrad = ctx.createLinearGradient(0, 0, 600, 1000);
+    bgGrad.addColorStop(0, '#f5deb3');
+    bgGrad.addColorStop(0.2, '#ebd085');
+    bgGrad.addColorStop(0.6, '#e0be67');
+    bgGrad.addColorStop(1, '#cda74e');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 600, 1000);
+
+    // 전통 한지 닥나무 섬유 노이즈 효과
+    ctx.fillStyle = 'rgba(120, 80, 20, 0.07)';
+    for (let i = 0; i < 700; i++) {
+      const rx = Math.random() * 600;
+      const ry = Math.random() * 1000;
+      ctx.fillRect(rx, ry, Math.random() * 3 + 1, Math.random() * 3 + 1);
+    }
+
+    // 2. 부적 전통 이중 주사 테두리 (경면주사 鏡面朱砂)
+    ctx.strokeStyle = '#b91c1c';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(20, 20, 560, 960);
+
+    ctx.strokeStyle = '#991b1b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(30, 30, 540, 940);
+
+    // 네 모서리 퇴마 문양 (卍 / 符印)
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = 'bold 24px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('卍', 46, 56);
+    ctx.fillText('卍', 554, 56);
+    ctx.fillText('卍', 46, 960);
+    ctx.fillText('卍', 554, 960);
+
+    // 3. 상단 삼청부(三淸符) & 칠성(七星) 비호 점
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = '900 28px serif';
+    ctx.fillText('•••', 300, 72);
+
+    // 敕令 (궁서체 붓글씨)
+    ctx.font = '900 48px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.letterSpacing = '6px';
+    ctx.fillText('敕 令', 300, 128);
+    ctx.letterSpacing = '0px';
+
+    // 벼락 뇌살(雷煞) 지그재그 칼날선
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(170, 145);
+    ctx.lineTo(240, 145);
+    ctx.lineTo(265, 162);
+    ctx.lineTo(335, 162);
+    ctx.lineTo(360, 145);
+    ctx.lineTo(430, 145);
+    ctx.stroke();
+
+    // 4. 중앙 주술 부문: 辟 邪 (궁서체 대필)
+    ctx.font = '900 74px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.letterSpacing = '14px';
+    ctx.fillText('辟 邪', 300, 240);
+    ctx.letterSpacing = '0px';
+
+    // 북두칠성 7개 호위 점선
+    ctx.fillStyle = '#991b1b';
+    const stars = [[240,280],[260,295],[285,290],[310,305],[335,310],[350,335],[340,360]];
+    stars.forEach(([sx, sy]) => {
+      ctx.beginPath();
+      ctx.arc(sx, sy, 4, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // 태극/회오리 주술 선
+    ctx.strokeStyle = '#b91c1c';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(300, 310, 42, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(300, 352);
+    ctx.lineTo(300, 400);
+    ctx.lineTo(245, 428);
+    ctx.lineTo(355, 456);
+    ctx.lineTo(300, 484);
+    ctx.lineTo(300, 520);
+    ctx.stroke();
+
+    // 5. 핵심 4대 개운 붓글씨 (開 運 大 吉 · 鎭 煞 萬 福)
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = '900 62px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.letterSpacing = '4px';
+    ctx.fillText('開 運 大 吉', 300, 600);
+    
+    ctx.font = 'bold 42px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.fillText('鎭 煞 萬 福', 300, 665);
+    ctx.letterSpacing = '0px';
+
+    // 맞춤 일주 수호 낙관 박스
+    ctx.fillStyle = 'rgba(185, 28, 28, 0.92)';
+    ctx.fillRect(160, 700, 280, 50);
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(160, 700, 280, 50);
+
+    ctx.fillStyle = '#ebd085';
+    ctx.font = 'bold 22px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.fillText(`[ ${iljuName}日柱 終身 守護 ]`, 300, 734);
+
+    // 하단 퇴마 주술 번개선
+    ctx.strokeStyle = '#b91c1c';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(210, 775);
+    ctx.lineTo(300, 815);
+    ctx.lineTo(390, 775);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(300, 815);
+    ctx.lineTo(300, 850);
+    ctx.stroke();
+
+    // 6. 하단 주술문: 급급여율령 (急急如律令)
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = '900 34px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.letterSpacing = '8px';
+    ctx.fillText('急 急 如 律 令', 300, 890);
+    ctx.letterSpacing = '0px';
+
+    // 7. 하단 붉은 주사 도장 (辟邪神犬 之印)
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(235, 915, 130, 52);
+    ctx.strokeStyle = '#7f1d1d';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(235, 915, 130, 52);
+
+    ctx.fillStyle = '#ebd085';
+    ctx.font = 'bold 18px "Noto Serif KR", "Gowun Batang", serif';
+    ctx.fillText('辟邪神犬', 300, 938);
+    ctx.fillText('之 印', 300, 958);
+
+    const link = document.createElement('a');
+    link.download = `벽사신견_궁서체_개운부_${iljuName}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    showToast('🎉 궁서체 정통 괴황지 수호부적이 갤러리에 저장되었습니다! 🐾');
+  }
+
+  function _oldAcceptDestiny() {
+    const modal = document.getElementById('introGateModal');
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => { modal.style.display = 'none'; }, 350);
+    showToast('🕯️ 운명의 문턱을 넘었다. 생년월일을 대거라.');
+    
+    // 생년월일 입력란으로 스크롤 및 포커스
+    const yearInput = document.getElementById('year');
+    if (yearInput) {
+      yearInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => { yearInput.focus(); }, 400);
+    }
+  }
+
+  function refuseDestiny() {
+    document.getElementById('introBtnRow').style.display = 'none';
+    document.getElementById('introRefusalBox').style.display = 'flex';
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('y') && params.get('m') && params.get('d')) {
+      document.getElementById('year').value = params.get('y');
+      document.getElementById('month').value = params.get('m');
+      document.getElementById('day').value = params.get('d');
+      if (params.get('h')) document.getElementById('hourSelect').value = params.get('h');
+      if (params.get('g')) document.getElementById('gender').value = params.get('g');
+      if (params.get('job')) document.getElementById('userJob').value = params.get('job');
+      if (params.get('major')) document.getElementById('userMajor').value = params.get('major');
+      if (params.get('hobby')) document.getElementById('userHobby').value = params.get('hobby');
+      if (params.get('dream')) document.getElementById('userDream').value = params.get('dream');
+      submitAndGoToResult();
+    }
+  });
+
