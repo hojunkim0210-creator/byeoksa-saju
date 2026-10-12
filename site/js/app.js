@@ -360,7 +360,7 @@ let currentSajuData = null;
   // 💬 사이트 공유: 개인정보 없이 첫 화면 주소만 보낸다 (휴대폰은 공유 창 → 카카오톡, 안 되면 문구 복사)
   // ─────────────────────────────────────────────────────────────────────────
   const SHARE_TITLE = '벽사신견 사주';
-  const SHARE_TEXT = '크르르... 1998년 겨울, 영월 산자락 흙집 대문을 지키던 백구 지박령이 네 사주를 냄새로 읽어준다 🐾\n오늘의 운세·궁합·벽사 패 뽑기는 무료다.';
+  const SHARE_TEXT = '1998년 겨울, 영월 산자락 흙집 대문을 지키던 백구 지박령이 네 사주를 냄새로 읽어준다 🐾\n오늘의 운세·궁합·벽사 패 뽑기는 무료다.';
   function siteHomeUrl() {
     const u = new URL(window.location.href);
     u.search = ''; u.hash = '';
@@ -400,7 +400,7 @@ let currentSajuData = null;
     const calType = document.getElementById('calendarType').value;
 
     if (!yVal || !mVal || !dVal) {
-      alert('크르르...! 생년월일을 온전히 대지 않으면 등 뒤의 그림자를 벗겨낼 수 없다!');
+      alert('생년월일을 온전히 대지 않으면 등 뒤의 그림자를 벗겨낼 수 없다!');
       return;
     }
 
@@ -500,7 +500,7 @@ let currentSajuData = null;
     
     document.getElementById('animalTag').innerText = `${dStem.char}${dBranch.char} (${dStem.hanja}${dBranch.hanja}) 일주 본성`;
     document.getElementById('animalEmoji').innerText = animalEmojis[dBranch.char] || '✨';
-    document.getElementById('animalTitle').innerText = `크르르... ${elColors[dStem.el]} ${dBranch.animal}의 살기(殺氣)가 보인다.`;
+    document.getElementById('animalTitle').innerText = `${elColors[dStem.el]} ${dBranch.animal}의 살기(殺氣)가 보인다.`;
     document.getElementById('animalDesc').innerText = 
       `네놈의 뼈대는 ${dStem.trait}과 ${dBranch.trait}으로 빚어졌다. 기운의 날이 시퍼렇지만, 그만큼 사방에서 쏘아대는 시기와 질투의 화살을 정면으로 맞는 고독한 팔자다.`;
   }
@@ -511,7 +511,7 @@ let currentSajuData = null;
     const baseScore = fit.score;
     document.getElementById('fitScore').innerText = `영적 조화율 ${baseScore}%`;
 
-    let html = `<strong>"크르르... [${dream}]${josa(dream, '을')} 품은 네 가슴속 불길이 내 털끝을 태우는구나."</strong><br><br>`;
+    let html = `<strong>"[${dream}]${josa(dream, '을')} 품은 네 가슴속 불길이 내 털끝을 태우는구나."</strong><br><br>`;
     html += `• <strong>현세의 신분과 무기</strong>: 지금 뒹굴고 있는 [${job}]과 [${major}]... 네놈의 무기인 [${dStem.name}]의 기운을 담금질하는 모진 연단이다. 피하지 말고 칼날을 갈아라.<br>`;
     html += `• <strong>정신의 숨구멍([${hobby}])</strong>: 가볍게 즐기는 [${hobby}]... 단순한 노름이 아니라 네 메마른 명줄에 음기를 채워주는 은밀한 영약이다.<br>`;
     html += `• <strong>지박령의 일갈</strong>: 주변의 잡것들이 '그게 되겠냐' 짓껄여도 귓등으로도 흘려듣지 마라. 1998년 겨울부터 이 문턱을 지키며 숱한 사람을 보았으나, 제 고집대로 밀어붙인 자만이 살아서 성채를 세웠다.<br>`;
@@ -640,7 +640,7 @@ let currentSajuData = null;
       `  <span style="font-size:12px; color:#991b1b; background:#fef2f2; border:1px solid #b91c1c; padding:2px 8px; border-radius:4px; font-weight:700;">${data.iljuName}日柱 맞춤</span>` +
       `</div>` +
       `<p style="margin:8px 0; font-size:15.5px; line-height:2.0; color:#111827; font-weight:500;">` +
-      `"크르르... 네 골수까지 시린 서늘함을 내가 모를 줄 알았더냐? 딴청 피우지 마라.<br><br>` +
+      `"네 골수까지 시린 서늘함을 내가 모를 줄 알았더냐? 딴청 피우지 마라.<br><br>` +
       `<strong class="impact-red" style="font-size:15.5px; font-weight:800;">${data.badge}</strong><br>` +
       `${data.hook}<br>` +
       `${data.details}<br><br>` +
@@ -757,7 +757,7 @@ let currentSajuData = null;
     const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
     const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
     document.getElementById('ghostDesc').innerHTML = 
-      `크르르...! 당장 네 등 뒤를 돌아보아라. 끈적한 악취가 진동한다.<br><br>` +
+      `당장 네 등 뒤를 돌아보아라. 끈적한 악취가 진동한다.<br><br>` +
       `네 주변에 분명히 있다. <strong>평소엔 살갑게 굴다가도, 네가 조금만 좋은 일이 생기면 눈빛이 묘하게 차가워지며 '그게 잘될까?' 하고 초를 치는 인간!</strong><br>` +
       `네가 피땀 흘려 쌓아 올린 아이디어와 노력을 은근슬쩍 가로채려 드는 <strong class="impact-red">[흡기귀(吸氣鬼) 같은 악연]</strong>이 네 등 뒤에 시커멓게 찰싹 달라붙어 있다!<br><br>` +
       `🩸 <strong class="impact-red">지박령의 서늘한 경고</strong>: 이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 천을귀인(<strong class="impact-gold">${nobles[0]}</strong>)을 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!` +
@@ -770,13 +770,13 @@ let currentSajuData = null;
     const careerSipsin = getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10);
     const loveScent = SOULMATE_SCENTS[ps.weakKey].short;
     document.getElementById('sniffLoveText').innerHTML = 
-      `"킁킁... 코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
+      `"코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
-      `"킁... 아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."` + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps)}</span>`;
+      `"아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."` + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps)}</span>`;
 
     document.getElementById('sniffCareerText').innerHTML = 
-      `"크르르... [<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[careerSipsin]}</span>`;
+      `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[careerSipsin]}</span>`;
   }
 
   function renderTileHtml(item) {
@@ -1259,7 +1259,7 @@ let currentSajuData = null;
     const sd = currentSajuData;
     const txt = id => { const el = document.getElementById(id); return el ? el.innerText.trim() : ''; };
     const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    // 첫 문장만: 앞머리 '킁...', '크르르...' 같은 추임새와 따옴표는 걷어낸다
+    // 첫 문장만: 앞머리 따옴표(와 혹시 남은 짧은 추임새)는 걷어낸다
     const firstSentence = t => {
       const clean = String(t).replace(/\s+/g, ' ').replace(/^["“]/, '').replace(/^([가-힣]{1,4}\.{2,}\s*)+/, '').trim();
       const m = clean.match(/^.*?[^.][.!?](?=\s|$|["”])/);

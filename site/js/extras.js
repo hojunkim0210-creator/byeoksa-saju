@@ -366,7 +366,7 @@
       case 'love': {
         const group = SIPSIN_GROUP[yearSipsin];
         const loveYear = (p.gender === 'M' && group === 'jae') || (p.gender === 'F' && group === 'gwan');
-        return `킁킁... 네게 가장 해로운 건 <strong>[${ruin.title}]</strong>${josa(ruin.title, '을')} 풍기는 자다. ${ruin.trait}<br><br>`
+        return `네게 가장 해로운 건 <strong>[${ruin.title}]</strong>${josa(ruin.title, '을')} 풍기는 자다. ${ruin.trait}<br><br>`
           + `대신 <strong>[${soul.title}]</strong>${josa(soul.title, '을')} 풍기는 사람을 곁에 두거라. 띠로는 <strong>${nobles.join(', ')}</strong> 쪽에서 귀한 인연이 온다.`
           + (loveYear ? `<br><br>올해(${NOW_Y}년)는 네게 <strong>${yearSipsin}</strong>의 해라, 인연의 문이 활짝 열리는 시기다. 소개와 모임을 마다하지 마라.` : '');
       }
@@ -394,7 +394,7 @@
         const reading = getDynamicColdReading(P.dStem, P.dBranch, '천명');
         return `너는 <strong>${sj.ilju}일주</strong>, ${P.dStem.trait} 기운을 타고났다.<br><br>${stripTags(reading.innerSoul)}`;
       }
-      default: return '크르르... 무슨 말인지 냄새가 안 잡힌다. 다른 걸 물어보거라.';
+      default: return '무슨 말인지 냄새가 안 잡힌다. 다른 걸 물어보거라.';
     }
   }
 
@@ -436,7 +436,7 @@
           };
         });
       };
-      say('dog', `크르르... <strong>${sj.ilju}일주</strong>로구나. 네 냄새는 기억해 두었다. 궁금한 걸 골라 물어보거라.`);
+      say('dog', `<strong>${sj.ilju}일주</strong>로구나. 네 냄새는 기억해 두었다. 궁금한 걸 골라 물어보거라.`);
       drawChips();
     });
   }
