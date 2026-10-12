@@ -9,13 +9,13 @@
   <meta property="og:description" content="크르르... 네 등 뒤에 붙은 차가운 그림자가 보인다. 네 사주에 숨은 살(煞)과 기(氣)를 빨아먹는 악연을 모조리 털어낼 테니, 생년월일을 대거라.">
   <meta property="og:image" content="mung.jpg">
   <meta property="og:type" content="website">
-  <meta name="theme-color" content="#0d090b">
+  <meta name="theme-color" content="#1A1C2E">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -141,6 +141,11 @@
 <div class="app-container">
   <!-- 📍 STEP 1. 스토리 랜딩 화면 (토속사주 스타일) -->
   <div class="view-step" id="viewLanding">
+    <nav class="home-topbar" aria-label="상단">
+      <span class="home-seal" aria-hidden="true">辟邪</span>
+      <span class="home-brand">벽사신견</span>
+      <button class="home-topbar-link" onclick="openHanjiScroll()">설화록</button>
+    </nav>
     <header>
       <!-- 백구 영물 정면 초상화 프레임 -->
       <div class="spirit-portrait-box">
@@ -168,16 +173,58 @@
         </div>
       </div>
 
-      <!-- 1. 한지 족자 설화록 풀어서 보기 버튼 -->
-      <button class="btn-landing-scroll" onclick="openHanjiScroll()" title="한지 두루마리 설화록 펼쳐보기">
-        📜 1998년 지박령 설화록 (한지 족자 풀기)
-      </button>
-
-      <!-- 2. 바로 사주 보기 버튼 -->
-      <button class="btn-main" onclick="goToStep(2)" style="margin-top: 10px;">
+      <!-- 바로 사주 보기 버튼 -->
+      <button class="btn-main" onclick="goToStep(2)">
         🐾 벽사 사주 풀이 시작하기 ➔
       </button>
     </header>
+
+    <!-- 대문에 붙은 부적 메뉴 -->
+    <section class="slip-section" aria-labelledby="slipHeading">
+      <h2 class="slip-heading" id="slipHeading">대문에 붙은 부적을 골라 떼어 보거라</h2>
+      <div class="slip-grid">
+        <button class="slip" onclick="openFeature('compat')">
+          <span class="slip-title">인연 궁합</span>
+          <span class="slip-desc">두 사람의 사주를 맞대어 냄새를 맡는다</span>
+          <span class="slip-seal" aria-hidden="true">合</span>
+        </button>
+        <button class="slip" onclick="openFeature('daily')">
+          <span class="slip-title">오늘의 운세</span>
+          <span class="slip-desc">오늘 일진이 네 일간에 닿는 기운</span>
+          <span class="slip-seal" aria-hidden="true">日</span>
+        </button>
+        <button class="slip" onclick="openFeature('tarot')">
+          <span class="slip-title">벽사 패 뽑기</span>
+          <span class="slip-desc">하루 한 장, 백구가 물어다 주는 패</span>
+          <span class="slip-seal" aria-hidden="true">牌</span>
+        </button>
+        <button class="slip" onclick="openFeature('chat')">
+          <span class="slip-title">백구에게 묻기</span>
+          <span class="slip-desc">연애·돈·일, 궁금한 걸 골라 물어라</span>
+          <span class="slip-seal" aria-hidden="true">問</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 1. 한지 족자 설화록 풀어서 보기 버튼 -->
+    <button class="btn-landing-scroll" onclick="openHanjiScroll()" title="한지 두루마리 설화록 펼쳐보기">
+      📜 1998년 지박령 설화록 (한지 족자 풀기)
+    </button>
+
+    <p class="event-strip sale-event-badge">🎉 <span class="sale-event-name">오픈 기념 이벤트</span> 진행 중 · 상세 리포트 <span class="sale-price">3,900</span>원</p>
+
+    <footer class="site-footer">
+      <nav class="footer-links" aria-label="약관">
+        <a href="legal.html#terms">이용약관</a>
+        <a href="legal.html#privacy">개인정보처리방침</a>
+        <a href="legal.html#refund">환불 안내</a>
+        <a href="legal.html#business">사업자 정보</a>
+      </nav>
+      <p class="footer-note">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠입니다.</p>
+      <!-- 판매 전에 채울 것 (전자상거래법 10조, 첫 화면 표시 의무): 상호 · 대표자 · 사업자등록번호 · 통신판매업 신고번호 · 주소 · 전화 · 이메일
+           예) <p class="footer-biz" id="footerBiz">상호 ○○ · 대표 ○○○ · 사업자등록번호 000-00-00000 · 통신판매업 제0000-서울○○-0000호 · 주소 … · 010-0000-0000 · mail@…</p> -->
+      <p class="footer-biz" id="footerBiz"></p>
+    </footer>
   </div>
 
   <!-- 📍 STEP 2. 벽사신견 접견실 & 정갈한 입력 화면 -->
@@ -262,6 +309,7 @@
       <button class="btn-action" onclick="copyShareUrl()">🔗 결과 링크 복사</button>
       <button class="btn-action" onclick="copySummaryText()">📋 요약문 복사</button>
       <button class="btn-action" onclick="printReport()">🖨️ PDF/인쇄 저장</button>
+      <button class="btn-action" onclick="downloadShareCard()">📸 공유 카드 저장</button>
     </div>
 
     <!-- 1. 영안 개안 동물 캐릭터 카드 -->
@@ -375,8 +423,8 @@
     <div class="paywall-container" id="paywallContainer">
       <div class="paywall-overlay" id="paywallOverlay">
         <div class="paywall-trust-banner">
-          <span>🕯️ 오늘 1,842명 액운 정화 완료</span>
-          <span>⚡ 1인 청년·개발자 응원 특가</span>
+          <span class="sale-event-badge">🎉 <span class="sale-event-name">오픈 기념 이벤트</span> 진행 중</span>
+          <span>⚡ 1인 청년·개발자 응원 이벤트</span>
         </div>
 
         <div class="paywall-hook-title">
@@ -398,7 +446,7 @@
           <div class="reason-item">
             <span class="reason-num">01</span>
             <div>
-              <strong>커피 한 잔 값(3,900원)으로 3년 치 액운 차단</strong>
+              <strong>커피 한 잔 값(<span class="sale-price">3,900</span>원)으로 3년 치 액운 차단</strong>
               <p>망설이다 날아갈 3년 치 피 같은 돈과 멘탈을 생각하면, 이 복채는 네 인생 가장 싼 보험이다.</p>
             </div>
           </div>
@@ -413,16 +461,17 @@
             <span class="reason-num">03</span>
             <div>
               <strong>지박령이 보증하는 1:1 맞춤형 인생 기밀 지침서</strong>
-              <p>수백 년간 대문 앞을 지키며 검증된 벽사(辟邪) 비방과 소장용 디지털 황금 액막이 부적을 영구 제공한다.</p>
+              <p>1998년 겨울부터 이 대문 앞을 지키며 가려낸 벽사(辟邪) 비방과 소장용 디지털 황금 액막이 부적을 영구 제공한다.</p>
             </div>
           </div>
         </div>
 
         <div class="price-box">
           <div class="price-tag">
-            <del>정가 ₩19,900</del> <strong>액막이 헌화비 ₩3,900</strong>
+            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비 ₩<span class="sale-price">3,900</span></strong>
           </div>
-          <div class="price-sub">오늘 자정까지만 80% 할인 제공 (단 1회 열람 시 평생 소장)</div>
+          <div class="price-sub" id="saleSub">결제 후 열리는 리포트는 PDF로 저장해 소장할 수 있습니다</div>
+          <div class="price-disclaimer">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않습니다.</div>
         </div>
 
         <button class="btn-pay" onclick="openPaymentModal()">
@@ -435,14 +484,71 @@
         <!-- 동적 렌더링 -->
       </div>
     </div>
+
+    <!-- 다른 풀이로 이어 가기 (방금 입력한 생년월일을 그대로 쓴다) -->
+    <nav class="result-more" aria-label="다른 풀이">
+      <p class="result-more-title">대문에 남은 부적도 떼어 보거라</p>
+      <div class="result-more-grid">
+        <button class="btn-quiet" onclick="openFeature('daily')"><span class="result-more-seal" aria-hidden="true">日</span>오늘의 운세</button>
+        <button class="btn-quiet" onclick="openFeature('compat')"><span class="result-more-seal" aria-hidden="true">合</span>인연 궁합</button>
+        <button class="btn-quiet" onclick="openFeature('tarot')"><span class="result-more-seal" aria-hidden="true">牌</span>벽사 패 뽑기</button>
+        <button class="btn-quiet" onclick="openFeature('chat')"><span class="result-more-seal" aria-hidden="true">問</span>백구에게 묻기</button>
+      </div>
+    </nav>
     </div>
+
+  <!-- 📍 인연 궁합 -->
+  <div class="view-step" id="viewCompat" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">合</span>
+      <h2 class="feature-title">인연 궁합</h2>
+      <p class="feature-lead">"킁킁... 두 사람의 사주를 맞대어 보거라. 서로를 살리는 냄새인지, 갉아먹는 냄새인지 맡아주마."</p>
+    </div>
+    <div class="feature-card" id="compatForm"></div>
+    <div id="compatResult" class="feature-result"></div>
+  </div>
+
+  <!-- 📍 오늘의 운세 -->
+  <div class="view-step" id="viewDaily" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">日</span>
+      <h2 class="feature-title">오늘의 운세</h2>
+      <p class="feature-lead">"오늘 하루 대문 밖에서 어떤 기운이 너를 기다리는지, 일진(日辰)으로 짚어주마."</p>
+    </div>
+    <div id="dailyBody" class="feature-result"></div>
+  </div>
+
+  <!-- 📍 벽사 패 뽑기 -->
+  <div class="view-step" id="viewTarot" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">牌</span>
+      <h2 class="feature-title">벽사 패 뽑기</h2>
+      <p class="feature-lead">"하루에 한 장. 내가 대문 앞에서 물어다 준 패를 뒤집어 보거라. 같은 날엔 같은 패다."</p>
+    </div>
+    <div id="tarotBody" class="feature-result"></div>
+  </div>
+
+  <!-- 📍 백구에게 묻기 -->
+  <div class="view-step" id="viewChat" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">問</span>
+      <h2 class="feature-title">백구에게 묻기</h2>
+      <p class="feature-lead">"궁금한 걸 골라 물어라. 네 사주 냄새를 맡고 답해주마."</p>
+    </div>
+    <div id="chatBody" class="chat-panel"></div>
+  </div>
   </div>
 
 <!-- 결제 모달 -->
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box">
     <h3>🕯️ 벽사신견 지박령 액막이 복채 안내</h3>
-    <p>실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br>액막이 복채(3,900원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <p>실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br>액막이 복채(<span class="sale-price">3,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <p class="payment-notice">결제 후 리포트가 열리면 디지털 콘텐츠의 특성상 청약철회(환불)가 제한됩니다. 리포트가 열리지 않았거나 내용이 정상적으로 보이지 않으면 환불해 드립니다. <a href="legal.html#refund" target="_blank" rel="noopener">환불 안내 보기</a></p>
     <button class="btn-submit" onclick="unlockContent()">테스트로 봉인 해제해보기 🐾</button>
     <button class="btn-close" onclick="closePaymentModal()">닫기</button>
   </div>
@@ -451,8 +557,8 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="https://js.tosspayments.com/v2/standard"></script>
   <script src="js/saju-core.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/extras.js"></script>
 </body>
 </html>

@@ -27,6 +27,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # 브라우저가 옛 CSS·JS를 쓰지 않도록, 배포할 때마다 파일 주소 뒤에 커밋 번호를 붙인다 (예: js/app.js?v=51bfb5f)
+      - name: 캐시 무효화용 버전 표시 붙이기
+        run: |
+          V="${GITHUB_SHA::7}"
+          sed -i -E "s#(href|src)=\"(css/style\.css|js/saju-core\.js|js/app\.js|js/extras\.js|manifest\.json)\"#\1=\"\2?v=${V}\"#g" site/index.html
+          COUNT=$(grep -o "?v=${V}" site/index.html | wc -l)
+          echo "버전 표시 ${COUNT}곳: v=${V}"
+          test "$COUNT" -eq 5
+          sed -i -E "s#href=\"css/style\.css\"#href=\"css/style.css?v=${V}\"#" site/legal.html
+          grep -q "style.css?v=${V}" site/legal.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

@@ -12,8 +12,8 @@ test('사용 중인 모든 클래스에 CSS 정의가 있다', () => {
   const css = read('css/style.css').replace(/\/\*[\s\S]*?\*\//g, '');
   const defined = new Set((css.replace(/\{[^}]*\}/g, '{}').match(/\.[a-zA-Z][\w-]*/g) || []).map(s => s.slice(1)));
   const used = new Set();
-  const html = read('index.html'), app = read('js/app.js');
-  for (const src of [html, app]) {
+  const sources = ['index.html', 'legal.html', 'js/app.js', 'js/extras.js'].map(read);
+  for (const src of sources) {
     for (const m of src.matchAll(/class=\\?"([^"$`{\\]+)\\?"/g)) m[1].split(/\s+/).filter(Boolean).forEach(c => used.add(c));
     for (const m of src.matchAll(/classList\.(?:add|toggle|remove)\('([\w-]+)'/g)) used.add(m[1]);
   }
@@ -30,4 +30,18 @@ test('index.html이 네 파일 구조를 참조한다', () => {
   const html = read('index.html');
   for (const ref of ['css/style.css', 'js/saju-core.js', 'js/app.js']) assert.ok(html.includes(ref), ref);
   assert.ok(!/data:image\/[a-z]+;base64/.test(html), 'base64 이미지 내장 금지');
+});
+
+test('대문 바닥글의 약관 링크가 legal.html의 실제 절을 가리킨다', () => {
+  const html = read('index.html'), legal = read('legal.html');
+  const anchors = [...html.matchAll(/href="legal\.html#([\w-]+)"/g)].map(m => m[1]);
+  assert.ok(anchors.length >= 3, '바닥글 약관 링크가 3개 이상이어야 함');
+  for (const a of anchors) assert.ok(legal.includes(`id="${a}"`), `legal.html에 #${a} 절이 없음`);
+  for (const must of ['오락 콘텐츠', '청약철회', '브라우저 저장소', 'Google Fonts', '사업자등록번호']) assert.ok(legal.includes(must), must);
+});
+
+test('결제창에 청약철회 제한 안내가 있다 (전자상거래법 17조 6항 표시 의무)', () => {
+  const html = read('index.html');
+  const modal = html.slice(html.indexOf('id="paymentModal"'));
+  assert.match(modal.slice(0, 2000), /청약철회/);
 });

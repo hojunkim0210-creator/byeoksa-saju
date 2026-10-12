@@ -14,6 +14,33 @@ const {
     return useHanja ? STEMS[s].hanja + BRANCHES[b].hanja : STEMS[s].char + BRANCHES[b].char;
   }
   // ─────────────────────────────────────────────────────────────────────────
+  // 💰 판매 설정 — 가격과 이벤트 문구는 여기 한 곳에서만 바꾼다.
+  //   화면의 가격·이벤트 표시는 모두 이 값에서 나오므로, 표시가 실제 판매 조건과 어긋나지 않는다.
+  //   (기준 정가에 취소선을 긋는 표시나 '오늘 자정까지' 같은 반복 마감 문구는 쓰지 않는다)
+  // ─────────────────────────────────────────────────────────────────────────
+  const SALE = {
+    price: 3900,                  // 원
+    eventName: '오픈 기념 이벤트',  // 이벤트가 없으면 '' (배지 숨김)
+    eventEndsOn: null             // 종료일이 정해지면 'YYYY-MM-DD'. 지나면 이벤트 표시가 자동으로 꺼진다
+  };
+
+  function renderSale() {
+    const priceText = SALE.price.toLocaleString('ko-KR');
+    document.querySelectorAll('.sale-price').forEach(el => { el.textContent = priceText; });
+    let ends = null;
+    if (SALE.eventEndsOn) { const [y, m, d] = SALE.eventEndsOn.split('-').map(Number); ends = new Date(y, m - 1, d, 23, 59, 59); }
+    const active = !!SALE.eventName && (!ends || new Date() <= ends);
+    document.querySelectorAll('.sale-event-name').forEach(el => { el.textContent = SALE.eventName; el.style.display = active ? '' : 'none'; });
+    document.querySelectorAll('.sale-event-badge').forEach(el => { el.style.display = active ? '' : 'none'; });
+    const sub = document.getElementById('saleSub');
+    if (sub) {
+      const keep = '결제 후 열리는 리포트는 PDF로 저장해 소장할 수 있습니다';
+      sub.textContent = (active && ends) ? `이벤트 기간 ~ ${ends.getMonth() + 1}월 ${ends.getDate()}일 · ${keep}` : keep;
+    }
+  }
+  document.addEventListener('DOMContentLoaded', renderSale);
+
+  // ─────────────────────────────────────────────────────────────────────────
   // 🐾 사주 맞춤 문장 데이터 — 같은 판정이 모든 사람에게 나오지 않도록
   //   키: 일간 오행(dmEl) / 가장 모자란 오행(weakKey) / 재성 개수 / 그해 간지와의 십신·충
   //   원칙: 기존 문장은 지우지 않고 한 유형으로 남기며, 나머지 유형을 같은 말투로 추가한다.
@@ -82,22 +109,27 @@ const {
   // 너를 살려낼 천생연분 — 네게 가장 모자란 오행을 채워주는 체취 (목(木) 보충 = 원래 문장)
   const SOULMATE_SCENTS = {
     wood: {
+      short: '맑은 솔잎 흙내',
       title: '비 온 뒤 솔숲의 맑은 흙 냄새',
       scent: '화려한 말재주는 없어도, 그 사람 곁에 가만히 앉아 있기만 해도 목덜미의 서늘한 긴장감이 봄눈 녹듯 스르륵 풀리는 사람이다. 깊은 산속 젖은 흙내와 청량한 솔잎 향을 풍긴다.'
     },
     fire: {
+      short: '따스한 장작불 내음',
       title: '겨울밤 아궁이의 따스한 장작불 냄새',
       scent: '말수는 적어도 그 사람이 곁에 있으면 꽁꽁 언 손끝부터 서서히 데워지는 사람이다. 마른 장작이 타닥거리며 타는 포근한 불 냄새와 갓 지은 밥 냄새를 풍긴다.'
     },
     earth: {
+      short: '구수한 볏짚 내음',
       title: '햇볕에 잘 말린 볏짚과 구수한 누룩 냄새',
       scent: '요란하게 다가오지 않지만, 흔들리는 너를 넓은 들판처럼 받아주는 사람이다. 가을 햇살에 말린 볏짚과 장독대의 구수한 냄새를 풍긴다.'
     },
     metal: {
+      short: '서늘한 놋그릇 향',
       title: '새벽 서리 머금은 놋그릇의 서늘한 쇠 향',
       scent: '흐트러진 네 하루에 선을 그어주고, 망설일 때 단호하게 길을 짚어주는 사람이다. 새벽 서리와 깨끗이 닦인 놋그릇의 맑고 서늘한 향을 풍긴다.'
     },
     water: {
+      short: '맑은 물안개 향',
       title: '새벽 계곡물에 씻긴 이끼와 물안개 냄새',
       scent: '조용히 네 말을 끝까지 들어주며, 달아오른 머리를 차분히 식혀주는 사람이다. 깊은 계곡의 맑은 물소리와 촉촉한 물안개 향을 풍긴다.'
     }
@@ -112,7 +144,37 @@ const {
     water: '네 원국에는 열기를 식혀주는 수(水)의 기운이 모자라다. 그래서 머릿속이 과열된 엔진처럼 꺼지지 않고, 누워서도 생각이 생각을 낳으며 새벽까지 달려왔지. 그 열기가 네 잠을 태워버린 것이다.'
   };
 
-  // 그해 천간이 일간에게 어떤 십신으로 들어오는지에 따른 해설
+  /** 한국어 조사: 마지막 한글 글자의 받침에 따라 고른다. josa('정재','으로') → '로' */
+  function josa(word, kind) {
+    const m = String(word).replace(/[^가-힣]+$/g, '').match(/[가-힣](?=[^가-힣]*$)/);
+    const ch = m ? m[0].charCodeAt(0) - 0xAC00 : -1;
+    const jong = ch >= 0 ? ch % 28 : 0;          // 0 = 받침 없음, 8 = ㄹ
+    const has = jong !== 0;
+    switch (kind) {
+      case '으로': return (has && jong !== 8) ? '으로' : '로';
+      case '을': return has ? '을' : '를';
+      case '이': return has ? '이' : '가';
+      case '은': return has ? '은' : '는';
+      case '과': return has ? '과' : '와';
+      default: return '';
+    }
+  }
+
+  // 그해 천간이 일간에게 들어오는 십신 10가지별 해설 (같은 계열이 연달아 와도 문장이 겹치지 않게)
+  const YEAR_SIPSIN_TEXT_10 = {
+    '비견': '어깨를 나란히 할 동료와 경쟁자가 한꺼번에 몰려드는 해다. 손잡을 자와 경계할 자를 칼같이 가려라.',
+    '겁재': '네 몫을 노리는 손이 가까이 다가오는 해다. 동업과 보증, 돈거래만은 두 번 세 번 따져보거라.',
+    '식신': '타고난 재주가 자연스럽게 밥이 되는 해다. 즐겨 하던 일을 꾸준히 쌓으면 그것이 곧 네 밥그릇이 된다.',
+    '상관': '말과 재능이 밖으로 터져 나오는 해다. 만들고 드러내되, 윗사람과의 말다툼과 규칙 어김만은 삼가거라.',
+    '편재': '뜻밖의 큰돈이 움직이는 해다. 들어오는 판은 크지만 나가는 길도 넓으니 계약서와 통장을 네 손으로 직접 챙겨라.',
+    '정재': '꼬박꼬박 쌓이는 재물의 해다. 한 방을 노리기보다 월급과 고정 수입의 그릇을 키우는 데 힘을 쏟거라.',
+    '편관': '거센 압박과 시험이 몰아치는 해다. 그 무게를 버텨내면 감투와 권한이 따라오니 피하지 말고 맞서라.',
+    '정관': '자리와 명예가 바로 서는 해다. 승진·합격·계약처럼 공식적인 인정을 받을 일에 정면으로 도전하거라.',
+    '편인': '남다른 감각과 촉이 깨어나는 해다. 낯선 공부와 기술에 파고들되, 생각만 많아져 실행을 미루지는 마라.',
+    '정인': '배움과 귀인의 도움이 깃드는 해다. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 된다.'
+  };
+
+  // 그해 천간이 일간에게 어떤 십신으로 들어오는지에 따른 해설 (계열별 요약 — 직장운 한 줄 등에 사용)
   const YEAR_SIPSIN_TEXT = {
     bi: '경쟁자와 동료가 한꺼번에 몰려드는 해다. 손잡을 자와 경계할 자를 칼같이 가려라.',
     sik: '네 재능과 말이 밖으로 터져 나오는 해다. 만들고 드러내되, 윗사람과의 말다툼만은 삼가거라.',
@@ -128,7 +190,11 @@ const {
     const counts = (oheng && oheng.counts) || { wood: 1, fire: 1, earth: 1, metal: 1, water: 1 };
     // 가장 모자란 오행: 0개인 것이 우선, 없으면 개수가 가장 적은 것
     let weakKey = (oheng && oheng.weak && oheng.weak.length) ? oheng.weak[0] : null;
-    if (!weakKey) weakKey = EL_KEYS.reduce((a, b) => (counts[b] < counts[a] ? b : a), EL_KEYS[0]);
+    if (!weakKey) {
+      const min = Math.min(...EL_KEYS.map(k => counts[k]));
+      const cands = EL_KEYS.filter(k => counts[k] === min);
+      weakKey = cands.find(k => k !== dmEl) || cands[0];   // 동률이면 자기 일간 오행은 '결핍'에서 제외
+    }
     const wealthEl = EL_KEYS[(EL_KEYS.indexOf(dmEl) + 2) % 5];   // 내가 극하는 오행 = 재성
     return { dmEl, weakKey, wealthEl, wealthCount: counts[wealthEl] || 0, dayStemIdx, dayBranchIdx };
   }
@@ -145,7 +211,7 @@ const {
   function yearRelationText(year, ps) {
     const ys = ((year - 4) % 10 + 10) % 10, yb = ((year - 4) % 12 + 12) % 12;
     const sipsin = getSipsin(ps.dayStemIdx, ys);
-    let t = `🔎 <strong>명식 대조</strong>: ${yearGanji(year)}년의 천간이 네게 <strong class="impact-gold">[${sipsin}]</strong>으로 들어온다. ${YEAR_SIPSIN_TEXT[SIPSIN_GROUP[sipsin]]}`;
+    let t = `🔎 <strong>명식 대조</strong>: ${yearGanji(year)}년의 천간이 네게 <strong class="impact-gold">[${sipsin}]</strong>${josa(sipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[sipsin]}`;
     if ((yb - ps.dayBranchIdx + 12) % 12 === 6) {
       t += ` 또한 이 해의 지지(${BRANCHES[yb].char})가 네 일지(${BRANCHES[ps.dayBranchIdx].char})와 정면으로 부딪히는 <strong class="impact-red">충(沖)</strong>이 걸려 있으니, 이사·이직·관계의 큰 변동에 대비하거라.`;
     }
@@ -187,12 +253,28 @@ let currentSajuData = null;
     goToStep(2);
   }
 
-  function goToStep(step) {
-    document.getElementById('viewLanding').style.display = (step === 1) ? 'flex' : 'none';
-    document.getElementById('viewInput').style.display = (step === 2) ? 'flex' : 'none';
-    document.getElementById('viewResult').style.display = (step === 3) ? 'flex' : 'none';
+  /** 화면 하나만 보이게 한다 (홈·입력·결과·궁합·오늘의 운세·벽사 패·묻기) */
+  function showView(id) {
+    document.querySelectorAll('.app-container > .view-step').forEach(v => { v.style.display = (v.id === id) ? 'flex' : 'none'; });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  function goToStep(step) {
+    showView({ 1: 'viewLanding', 2: 'viewInput', 3: 'viewResult' }[step] || 'viewLanding');
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🔐 내 생년월일: 이 기기 브라우저에만 저장 (서버로 보내지 않음). 다른 기능에서 다시 묻지 않으려고 쓴다.
+  // ─────────────────────────────────────────────────────────────────────────
+  const PROFILE_KEY = 'byeoksa.profile.v1';
+  function saveProfile(p) { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) { /* 사생활 보호 모드 등 */ } }
+  function loadProfile() {
+    try {
+      const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+      return (p && p.y && p.m && p.d) ? p : null;
+    } catch (e) { return null; }
+  }
+  function clearProfile() { try { localStorage.removeItem(PROFILE_KEY); } catch (e) { /* 무시 */ } }
 
   function submitAndGoToResult() {
     const yVal = document.getElementById('year').value.trim();
@@ -286,8 +368,9 @@ let currentSajuData = null;
       y, m, d, hourVal, genderVal,
       userJob, userMajor, userHobby, userDream,
       dStem, dBranch, yStem, yBranch, mStem, mBranch, hStem, hBranch,
-      dStemIdx, ohengResult
+      dStemIdx, dBranchIdx, ohengResult, pillars
     };
+    saveProfile({ y, m, d, hour: hourVal, gender: genderVal });
   }
 
   function updateAnimalCard(dStem, dBranch) {
@@ -312,7 +395,7 @@ let currentSajuData = null;
     let html = `<strong>"크르르... [${dream}]을(를) 품은 네 가슴속 불길이 내 털끝을 태우는구나."</strong><br><br>`;
     html += `• <strong>현세의 신분과 무기</strong>: 지금 뒹굴고 있는 [${job}]과 [${major}]... 네놈의 무기인 [${dStem.name}]의 기운을 담금질하는 모진 연단이다. 피하지 말고 칼날을 갈아라.<br>`;
     html += `• <strong>정신의 숨구멍([${hobby}])</strong>: 가볍게 즐기는 [${hobby}]... 단순한 노름이 아니라 네 메마른 명줄에 음기를 채워주는 은밀한 영약이다.<br>`;
-    html += `• <strong>지박령의 일갈</strong>: 주변의 잡것들이 '그게 되겠냐' 짓껄여도 귓등으로도 흘려듣지 마라. 이 문턱을 지키며 수백 년을 보았으나, 제 고집대로 밀어붙인 자만이 살아서 성채를 세웠다.`;
+    html += `• <strong>지박령의 일갈</strong>: 주변의 잡것들이 '그게 되겠냐' 짓껄여도 귓등으로도 흘려듣지 마라. 1998년 겨울부터 이 문턱을 지키며 숱한 사람을 보았으나, 제 고집대로 밀어붙인 자만이 살아서 성채를 세웠다.`;
 
     document.getElementById('fitContent').innerHTML = html;
   }
@@ -433,7 +516,8 @@ let currentSajuData = null;
     const bIdx = (dBranchIdx !== undefined && dBranchIdx !== null) ? dBranchIdx : 0;
     const seed = (yNum * 365 + mNum * 31 + dNum + dStemIdx * 7 + bIdx * 13) % 1000;
     const dmEl = ["wood","wood","fire","fire","earth","earth","metal","metal","water","water"][dStemIdx] || "wood";
-    const dmCount = (ohengResult && ohengResult[dmEl]) ? ohengResult[dmEl] : 1;
+    const ohengCounts = (ohengResult && ohengResult.counts) ? ohengResult.counts : (ohengResult || {});
+    const dmCount = ohengCounts[dmEl] || 1;   // 일간 오행 글자 수 (예전엔 counts를 거치지 않아 늘 1)
 
     // 1. 잠재 역량 (천명 그릇): 75 ~ 98
     const potScore = 75 + ((seed * 7 + dmCount * 5) % 24);
@@ -530,14 +614,16 @@ let currentSajuData = null;
   function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream, oheng) {
     const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
     const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
+    const careerSipsin = getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10);
+    const loveScent = SOULMATE_SCENTS[ps.weakKey].short;
     document.getElementById('sniffLoveText').innerHTML = 
-      `"킁킁... 코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 맑은 솔잎 흙내를 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
+      `"킁킁... 코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
       `"킁... 아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."` + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps)}</span>`;
 
     document.getElementById('sniffCareerText').innerHTML = 
-      `"크르르... [<strong class="impact-gold">${dream}</strong>]을(를) 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)}]</strong>으로 들어온다. ${YEAR_SIPSIN_TEXT[SIPSIN_GROUP[getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)]]}</span>`;
+      `"크르르... [<strong class="impact-gold">${dream}</strong>]을(를) 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[careerSipsin]}</span>`;
   }
 
   function renderTileHtml(item) {
@@ -669,7 +755,7 @@ let currentSajuData = null;
       if (counts[e.key] === 0) weak.push(e.key);
     });
 
-    let comment = `전체 ${total}기둥의 명조를 훑어보니, `;
+    let comment = `전체 ${total}글자의 명조를 훑어보니, `;
     if (strong.length > 0) comment += `<strong>${strong.join(', ')}</strong>의 기운이 지나치게 치솟아 살(煞)로 변할 조짐이다. `;
     if (weak.length > 0) {
       const weakLabels = weak.map(k => {
@@ -695,7 +781,8 @@ let currentSajuData = null;
     const enemies = ENEMY_TYPES[ps.dmEl];
     const ruin = RUIN_LOVERS[ps.dmEl];
     const soulmate = SOULMATE_SCENTS[weakKey];
-    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '. ');
+    const _t = new Date();   // 기기 현지 날짜 (toISOString은 UTC라 한국 오전 9시 전엔 어제 날짜가 찍혔다)
+    const todayStr = `${_t.getFullYear()}. ${String(_t.getMonth() + 1).padStart(2, '0')}. ${String(_t.getDate()).padStart(2, '0')}`;
 
     const kpi = updateKpiDashboard(dayStemIdx, dayBranchIdx, oheng, birthYear, birthMonth, birthDay);
 
@@ -794,7 +881,7 @@ let currentSajuData = null;
         <div class="portfolio-highlight" style="border-left: 4.5px solid #15803d; background: #f6fdf7; margin-top:12px;">
           <strong class="impact-green" style="font-size:15.5px; display:block; margin-bottom:6px;">🌿 2. 너를 살려낼 천생연분: ${soulmate.title}</strong>
           • <strong>영적 체취</strong>: ${soulmate.scent}<br>
-          • <strong>소름 돋는 특징</strong>: 네 결핍된 오행(${EL_KO[weakKey]})을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>] 띠의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.<br>
+          • <strong>소름 돋는 특징</strong>: 네 결핍된 오행(${EL_KO[weakKey]})을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>]의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.<br>
           • <strong>도래 시기</strong>: <strong class="impact-gold">${Y_R0}년 하반기~${Y_R1}년 상반기</strong>, 일이나 학업으로 얽힌 공적인 자리 또는 조용한 이동 중에 우연처럼 마주치게 된다.
         </div>
       </div>
@@ -856,7 +943,7 @@ let currentSajuData = null;
           1. <strong>기상 직후 찬물 한 잔 & 축문</strong>: 눈뜨자마자 스마트폰을 보지 말고, 찬물 한 잔을 마시며 "내 안의 흉살은 물러가고 천명이 일어선다" 세 번 읊조려라.<br>
           2. <strong>매일 1시간 몰입 결계</strong>: 어떤 방해도 받지 않고 오직 [<strong class="impact-gold">${dream}</strong>]에만 몰두하는 불가침의 1시간을 반드시 사수하라.<br>
           3. <strong>침실 정화</strong>: 침대 머리맡에 널브러진 불필요한 옷가지와 쓰레기를 즉시 치워라. 죽은 물건이 침실에 있으면 자는 동안 악귀가 기를 빨아먹는다.<br><br>
-          ➕ <strong class="impact-gold">네 명식에만 내리는 맞춤 수칙 · ${EL_KO[weakKey]} 기운 보충</strong>: 네 원국에 가장 모자란 기운이다. <strong>${remedy.color}</strong> 계열의 소지품을 몸에 지니고, <strong>${remedy.food}</strong>을(를) 가까이하며, 중요한 결정은 <strong>${remedy.dir}</strong>을 바라보고 내리거라. 행운의 숫자는 <strong>${remedy.num}</strong>이다.
+          ➕ <strong class="impact-gold">네 명식에만 내리는 맞춤 수칙 · ${EL_KO[weakKey]} 기운 보충</strong>: 네 원국에 가장 모자란 기운이다. <strong>${remedy.color}</strong> 계열의 소지품을 몸에 지니고, <strong>${remedy.food}</strong>${josa(remedy.food, '을')} 가까이하며, 중요한 결정은 <strong>${remedy.dir}</strong>을 바라보고 내리거라. 행운의 숫자는 <strong>${remedy.num}</strong>이다.
         </div>
       </div>
 
@@ -898,14 +985,7 @@ let currentSajuData = null;
 
         <!-- 부적 실물 미리보기 프레임 -->
         <div class="talisman-preview-frame">
-          <div class="talisman-real-view">
-            <div class="talisman-real-seal-top">敕 令</div>
-            <div class="talisman-real-main">辟 邪</div>
-            <div class="talisman-real-sigil">卍 &nbsp; 開運大吉 &nbsp; 卍</div>
-            <div class="talisman-real-sub">鎭煞萬福 · [${iljuName}日柱 守護]</div>
-            <div class="talisman-real-bottom">急急如律令</div>
-            <div class="talisman-real-stamp">辟邪神犬<br>之 印</div>
-          </div>
+          <canvas class="talisman-canvas" id="talismanCanvas" width="900" height="1500" role="img" aria-label="${iljuName}일주 수호 부적"></canvas>
         </div>
 
         <button class="btn-talisman-download" onclick="downloadTalismanImage()">
@@ -915,6 +995,7 @@ let currentSajuData = null;
     `;
 
     document.getElementById('unlockedReportContainer').innerHTML = unlockedHtml;
+    renderTalismanPreview(`${dStem.hanja}${dBranch.hanja}`);
   }
 
     function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
@@ -938,16 +1019,18 @@ let currentSajuData = null;
     url.searchParams.set('d', d);
     url.searchParams.set('h', hourVal);
     url.searchParams.set('g', genderVal);
-    if (userJob) url.searchParams.set('job', userJob);
-    if (userMajor) url.searchParams.set('major', userMajor);
-    if (userHobby) url.searchParams.set('hobby', userHobby);
-    if (userDream) url.searchParams.set('dream', userDream);
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url.href).then(() => {
-        showToast('🔗 사주 명식 공유 링크가 복사되었습니다!');
-      });
+    // 직업·전공·취미·꿈은 개인적인 내용이라 링크에 싣지 않는다 (받는 사람은 생년월일 풀이만 본다)
+    ['job', 'major', 'hobby', 'dream'].forEach(k => url.searchParams.delete(k));
+    copyText(url.href, '🔗 사주 명식 공유 링크가 복사되었습니다!');
+  }
+
+  /** 클립보드 복사. 안 되는 환경이면 직접 복사할 수 있게 보여준다 */
+  function copyText(text, okMessage) {
+    const fallback = () => { window.prompt('아래 내용을 길게 눌러 복사하거라', text); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => showToast(okMessage), fallback);
     } else {
-      showToast('🔗 링크 복사 완료!');
+      fallback();
     }
   }
 
@@ -974,15 +1057,7 @@ let currentSajuData = null;
       `------------------------------------\n` +
       `강원도 영월 산자락 외딴 흙집 지박령 벽사신견`;
 
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(summaryText).then(() => {
-        showToast('📋 사주 핵심 요약문이 클립보드에 복사되었습니다! (카톡/메모장 공유 가능) 🐾');
-      }).catch(() => {
-        showToast('📋 요약문 복사 완료! 🐾');
-      });
-    } else {
-      showToast('📋 요약문 복사 완료! 🐾');
-    }
+    copyText(summaryText, '📋 사주 핵심 요약문이 클립보드에 복사되었습니다! (카톡/메모장 공유 가능) 🐾');
   }
 
   function printReport() {
@@ -1007,169 +1082,117 @@ let currentSajuData = null;
   
   // 🧧 HTML5 Canvas 기반 고해상도 수호 부적 이미지 생성 및 자동 다운로드
     // 🧧 궁서체 정통 괴황지(槐黃紙) 경면주사(鏡面朱砂) 수호부적 생성 및 다운로드
-  function downloadTalismanImage() {
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🧧 액막이 개운부: 바탕 그림(tools/make_talisman.py로 생성) 위에 사용자 일주를 붉은 먹으로 덧쓴다
+  // ─────────────────────────────────────────────────────────────────────────
+  const TALISMAN = { src: 'img/talisman.webp', w: 900, h: 1500, slot: { x: 788, y: 1020, size: 50, step: 58 } };
+  const TALISMAN_FONT = '"Song Myung", "Noto Serif KR", "Noto Serif CJK TC", serif';
+  let _talismanImg = null;
+
+  function loadTalismanBase() {
+    if (_talismanImg) return _talismanImg;
+    _talismanImg = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = TALISMAN.src;
+    });
+    return _talismanImg;
+  }
+
+  /** 900×1500 캔버스에 부적을 그린다. iljuHanja 예: '乙巳' */
+  async function drawTalisman(ctx, iljuHanja) {
+    const img = await loadTalismanBase();
+    try { await document.fonts.load(`${TALISMAN.slot.size}px ${TALISMAN_FONT}`); } catch (e) { /* 글꼴을 못 받아도 대체 글꼴로 그린다 */ }
+    ctx.clearRect(0, 0, TALISMAN.w, TALISMAN.h);
+    ctx.drawImage(img, 0, 0, TALISMAN.w, TALISMAN.h);
+    const chars = (iljuHanja + '日柱守護').split('');
+    const { x, y, size, step } = TALISMAN.slot;
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(176, 34, 22, 0.92)';
+    ctx.font = `${size}px ${TALISMAN_FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    chars.forEach((ch, i) => {
+      const seed = (ch.charCodeAt(0) * 9301 + i * 49297) % 233280 / 233280; // 글자마다 일정한 작은 흔들림
+      ctx.save();
+      ctx.translate(x + (seed - 0.5) * 6, y + i * step);
+      ctx.rotate((seed - 0.5) * 0.07);
+      // 붓 획 굵기와 먹 번짐을 바탕 글씨에 맞춘다
+      ctx.shadowColor = 'rgba(150, 24, 14, 0.55)';
+      ctx.shadowBlur = 3;
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 3.2;
+      ctx.strokeStyle = 'rgba(176, 34, 22, 0.92)';
+      ctx.strokeText(ch, 0, 0);
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+
+  function renderTalismanPreview(iljuHanja) {
+    const canvas = document.getElementById('talismanCanvas');
+    if (!canvas) return;
+    drawTalisman(canvas.getContext('2d'), iljuHanja).catch(() => { canvas.style.display = 'none'; });
+  }
+
+  async function downloadTalismanImage() {
     if (!currentSajuData) {
       showToast('사주를 먼저 분석해야 맞춤 부적을 내릴 수 있다.');
       return;
     }
-
-    const { dStem, dBranch, userDream } = currentSajuData;
+    const { dStem, dBranch } = currentSajuData;
     const iljuName = `${dStem.char}${dBranch.char}`;
+    const iljuHanja = `${dStem.hanja}${dBranch.hanja}`;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 600;
-    canvas.height = 1000;
-    const ctx = canvas.getContext('2d');
-
-    // 1. 고풍스러운 괴황지(槐黃紙, 황금 한지) 질감 배경 렌더링
-    const bgGrad = ctx.createLinearGradient(0, 0, 600, 1000);
-    bgGrad.addColorStop(0, '#f5deb3');
-    bgGrad.addColorStop(0.2, '#ebd085');
-    bgGrad.addColorStop(0.6, '#e0be67');
-    bgGrad.addColorStop(1, '#cda74e');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 600, 1000);
-
-    // 전통 한지 닥나무 섬유 노이즈 효과
-    ctx.fillStyle = 'rgba(120, 80, 20, 0.07)';
-    for (let i = 0; i < 700; i++) {
-      const rx = Math.random() * 600;
-      const ry = Math.random() * 1000;
-      ctx.fillRect(rx, ry, Math.random() * 3 + 1, Math.random() * 3 + 1);
+    // 휴대폰 배경화면 크기(1080×1920): 밤 바탕 위에 부적
+    const talisman = document.createElement('canvas');
+    talisman.width = TALISMAN.w; talisman.height = TALISMAN.h;
+    const wall = document.createElement('canvas');
+    wall.width = 1080; wall.height = 1920;
+    const ctx = wall.getContext('2d');
+    try {
+      await drawTalisman(talisman.getContext('2d'), iljuHanja);
+      const bg = ctx.createRadialGradient(540, 760, 80, 540, 900, 1200);
+      bg.addColorStop(0, '#2B2E49');
+      bg.addColorStop(1, '#14151F');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, 1080, 1920);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowBlur = 50;
+      ctx.shadowOffsetY = 24;
+      ctx.drawImage(talisman, 135, 230, 810, 1350);
+      ctx.shadowColor = 'transparent';
+      ctx.fillStyle = 'rgba(244, 238, 226, 0.85)';
+      ctx.textAlign = 'center';
+      ctx.font = `34px ${TALISMAN_FONT}`;
+      ctx.fillText(`辟邪神犬 開運符 · ${iljuHanja}日柱 守護`, 540, 1690);
+    } catch (e) {
+      showToast('부적 그림을 불러오지 못했다. 잠시 뒤 다시 눌러 보거라.');
+      return;
     }
 
-    // 2. 부적 전통 이중 주사 테두리 (경면주사 鏡面朱砂)
-    ctx.strokeStyle = '#b91c1c';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(20, 20, 560, 960);
+    const fileName = `벽사신견_궁서체_개운부_${iljuName}.png`;
+    let blob = null;
+    try {
+      blob = await new Promise(res => wall.toBlob(res, 'image/png'));
+    } catch (e) { blob = null; }
+    if (!blob) { showToast('이 브라우저에서는 저장이 막혔다. 부적 그림을 길게 눌러 저장하거라.'); return; }
 
-    ctx.strokeStyle = '#991b1b';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(30, 30, 540, 940);
-
-    // 네 모서리 퇴마 문양 (卍 / 符印)
-    ctx.fillStyle = '#b91c1c';
-    ctx.font = 'bold 24px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('卍', 46, 56);
-    ctx.fillText('卍', 554, 56);
-    ctx.fillText('卍', 46, 960);
-    ctx.fillText('卍', 554, 960);
-
-    // 3. 상단 삼청부(三淸符) & 칠성(七星) 비호 점
-    ctx.fillStyle = '#b91c1c';
-    ctx.font = '900 28px serif';
-    ctx.fillText('•••', 300, 72);
-
-    // 敕令 (궁서체 붓글씨)
-    ctx.font = '900 48px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.letterSpacing = '6px';
-    ctx.fillText('敕 令', 300, 128);
-    ctx.letterSpacing = '0px';
-
-    // 벼락 뇌살(雷煞) 지그재그 칼날선
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(170, 145);
-    ctx.lineTo(240, 145);
-    ctx.lineTo(265, 162);
-    ctx.lineTo(335, 162);
-    ctx.lineTo(360, 145);
-    ctx.lineTo(430, 145);
-    ctx.stroke();
-
-    // 4. 중앙 주술 부문: 辟 邪 (궁서체 대필)
-    ctx.font = '900 74px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.letterSpacing = '14px';
-    ctx.fillText('辟 邪', 300, 240);
-    ctx.letterSpacing = '0px';
-
-    // 북두칠성 7개 호위 점선
-    ctx.fillStyle = '#991b1b';
-    const stars = [[240,280],[260,295],[285,290],[310,305],[335,310],[350,335],[340,360]];
-    stars.forEach(([sx, sy]) => {
-      ctx.beginPath();
-      ctx.arc(sx, sy, 4, 0, Math.PI*2);
-      ctx.fill();
-    });
-
-    // 태극/회오리 주술 선
-    ctx.strokeStyle = '#b91c1c';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(300, 310, 42, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(300, 352);
-    ctx.lineTo(300, 400);
-    ctx.lineTo(245, 428);
-    ctx.lineTo(355, 456);
-    ctx.lineTo(300, 484);
-    ctx.lineTo(300, 520);
-    ctx.stroke();
-
-    // 5. 핵심 4대 개운 붓글씨 (開 運 大 吉 · 鎭 煞 萬 福)
-    ctx.fillStyle = '#b91c1c';
-    ctx.font = '900 62px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.letterSpacing = '4px';
-    ctx.fillText('開 運 大 吉', 300, 600);
-    
-    ctx.font = 'bold 42px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.fillText('鎭 煞 萬 福', 300, 665);
-    ctx.letterSpacing = '0px';
-
-    // 맞춤 일주 수호 낙관 박스
-    ctx.fillStyle = 'rgba(185, 28, 28, 0.92)';
-    ctx.fillRect(160, 700, 280, 50);
-    ctx.strokeStyle = '#fde047';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(160, 700, 280, 50);
-
-    ctx.fillStyle = '#ebd085';
-    ctx.font = 'bold 22px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.fillText(`[ ${iljuName}日柱 終身 守護 ]`, 300, 734);
-
-    // 하단 퇴마 주술 번개선
-    ctx.strokeStyle = '#b91c1c';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(210, 775);
-    ctx.lineTo(300, 815);
-    ctx.lineTo(390, 775);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(300, 815);
-    ctx.lineTo(300, 850);
-    ctx.stroke();
-
-    // 6. 하단 주술문: 급급여율령 (急急如律令)
-    ctx.fillStyle = '#b91c1c';
-    ctx.font = '900 34px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.letterSpacing = '8px';
-    ctx.fillText('急 急 如 律 令', 300, 890);
-    ctx.letterSpacing = '0px';
-
-    // 7. 하단 붉은 주사 도장 (辟邪神犬 之印)
-    ctx.fillStyle = '#b91c1c';
-    ctx.fillRect(235, 915, 130, 52);
-    ctx.strokeStyle = '#7f1d1d';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(235, 915, 130, 52);
-
-    ctx.fillStyle = '#ebd085';
-    ctx.font = 'bold 18px "Noto Serif KR", "Gowun Batang", serif';
-    ctx.fillText('辟邪神犬', 300, 938);
-    ctx.fillText('之 印', 300, 958);
-
+    const file = new File([blob], fileName, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: '벽사신견 개운부' }); return; } catch (e) { /* 공유 취소 시 내려받기로 */ }
+    }
     const link = document.createElement('a');
-    link.download = `벽사신견_궁서체_개운부_${iljuName}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = fileName;
+    link.href = URL.createObjectURL(blob);
     link.click();
-
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
     showToast('🎉 궁서체 정통 괴황지 수호부적이 갤러리에 저장되었습니다! 🐾');
   }
+
 
   function _oldAcceptDestiny() {
     const modal = document.getElementById('introGateModal');

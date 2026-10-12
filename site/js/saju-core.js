@@ -533,6 +533,105 @@
     };
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // 확장 기능용 순수 계산: 궁합 · 오늘의 운세 · 하루 한 장 타로 (DOM 없음)
+  // ─────────────────────────────────────────────────────────────────────────
+  const EL_ORDER = ['wood', 'fire', 'earth', 'metal', 'water'];
+
+  /** 문자열 → 32비트 정수 (FNV-1a). 같은 입력이면 항상 같은 값 */
+  function hashSeed(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+
+  /** 양력 날짜의 일진(日辰) 인덱스 */
+  function getDayPillarIdx(y, m, d) {
+    const diffDays = Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(2000, 0, 1)) / 86400000);
+    return { stemIdx: ((4 + diffDays) % 10 + 10) % 10, branchIdx: ((6 + diffDays) % 12 + 12) % 12 };
+  }
+
+  /** 오행 관계: A가 B를 생(generates)·극(controls)하는지, 반대인지, 같은지 */
+  function elementRelation(elA, elB) {
+    const a = EL_ORDER.indexOf(elA), b = EL_ORDER.indexOf(elB);
+    const d = (b - a + 5) % 5;
+    return ['same', 'generates', 'controls', 'controlledBy', 'generatedBy'][d];
+  }
+
+  const STEM_HAP = { 0: 5, 5: 0, 1: 6, 6: 1, 2: 7, 7: 2, 3: 8, 8: 3, 4: 9, 9: 4 }; // 甲己·乙庚·丙辛·丁壬·戊癸
+  const BRANCH_YUKHAP = { 0: 1, 1: 0, 2: 11, 11: 2, 3: 10, 10: 3, 4: 9, 9: 4, 5: 8, 8: 5, 6: 7, 7: 6 };
+  const BRANCH_SAMHAP = [[8, 0, 4], [11, 3, 7], [2, 6, 10], [5, 9, 1]]; // 申子辰·亥卯未·寅午戌·巳酉丑
+
+  /** 두 지지의 관계: 육합 · 삼합 · 충 */
+  function branchRelation(a, b) {
+    return {
+      yukhap: BRANCH_YUKHAP[a] === b,
+      samhap: a !== b && BRANCH_SAMHAP.some(g => g.includes(a) && g.includes(b)),
+      chung: (b - a + 12) % 12 === 6
+    };
+  }
+
+  /**
+   * 궁합 점수와 근거. pA·pB는 calculateFourPillars 결과, oA·oB는 calculateOheng 결과.
+   * 같은 두 사람이면 순서를 바꿔도 점수가 같다.
+   */
+  function calculateCompatibility(pA, pB, oA, oB) {
+    const parts = [];
+    const add = (key, points, detail) => parts.push({ key, points, detail });
+    const elA = STEMS[pA.dStemIdx].el, elB = STEMS[pB.dStemIdx].el;
+
+    if (STEM_HAP[pA.dStemIdx] === pB.dStemIdx) add('stemHap', 16, { a: pA.dStemIdx, b: pB.dStemIdx });
+    const rel = elementRelation(elA, elB);
+    if (rel === 'same') add('stemSame', 8, { el: elA });
+    else if (rel === 'generates' || rel === 'generatedBy') add('stemGenerate', 14, { giver: rel === 'generates' ? 'A' : 'B', elA, elB });
+    else add('stemControl', -4, { controller: rel === 'controls' ? 'A' : 'B', elA, elB });
+
+    const day = branchRelation(pA.dBranchIdx, pB.dBranchIdx);
+    if (day.yukhap) add('dayYukhap', 12, {});
+    if (day.samhap) add('daySamhap', 8, {});
+    if (day.chung) add('dayChung', -10, {});
+
+    const yr = branchRelation(pA.yBranchIdx, pB.yBranchIdx);
+    if (yr.yukhap) add('yearYukhap', 6, {});
+    if (yr.samhap) add('yearSamhap', 6, {});
+    if (yr.chung) add('yearChung', -6, {});
+
+    // 서로의 빈 오행을 채워주는가 (상대에게 그 오행이 2글자 이상)
+    const fills = (weak, other) => weak.filter(k => (other.counts[k] || 0) >= 2);
+    const aGets = fills(oA.weak, oB), bGets = fills(oB.weak, oA);
+    if (aGets.length) add('fillA', 6, { els: aGets });
+    if (bGets.length) add('fillB', 6, { els: bGets });
+
+    const raw = 52 + parts.reduce((n, p) => n + p.points, 0);
+    return { score: Math.max(35, Math.min(98, raw)), parts, elA, elB, dayRelation: day, yearRelation: yr };
+  }
+
+  const DAILY_SIPSIN_POINTS = { '정재': 14, '정관': 13, '정인': 12, '식신': 12, '편재': 8, '편인': 6, '비견': 4, '상관': 0, '겁재': -6, '편관': -8 };
+
+  /** 오늘의 운세: 그날 일진이 내 일간·일지와 맺는 관계 */
+  function calculateDailyFortune(pillars, y, m, d) {
+    const today = getDayPillarIdx(y, m, d);
+    const sipsin = getSipsin(pillars.dStemIdx, today.stemIdx);
+    const rel = branchRelation(pillars.dBranchIdx, today.branchIdx);
+    let score = 62 + DAILY_SIPSIN_POINTS[sipsin];
+    if (rel.yukhap) score += 10;
+    if (rel.samhap) score += 6;
+    if (rel.chung) score -= 12;
+    // 같은 사람·같은 날의 소소한 차이(±3)는 날짜 해시로 고정
+    score += (hashSeed(`${y}-${m}-${d}|${pillars.dStemIdx}${pillars.dBranchIdx}`) % 7) - 3;
+    return {
+      dayStem: STEMS[today.stemIdx], dayBranch: BRANCHES[today.branchIdx],
+      stemIdx: today.stemIdx, branchIdx: today.branchIdx,
+      sipsin, relation: rel, score: Math.max(30, Math.min(97, score))
+    };
+  }
+
+  /** 하루 한 장 타로: 같은 사람·같은 날이면 같은 패. 역방향은 약 30% */
+  function drawDailyTarot(personKey, y, m, d, deckSize) {
+    const h = hashSeed(`tarot|${personKey}|${y}-${m}-${d}`);
+    return { index: h % deckSize, reversed: (Math.floor(h / deckSize) % 10) < 3 };
+  }
+
   return {
     STEMS,
     BRANCHES,
@@ -559,6 +658,13 @@
     calculateFourPillars,
     calculateOheng,
     calculateDaeun,
-    calculateKpi
+    calculateKpi,
+    hashSeed,
+    getDayPillarIdx,
+    elementRelation,
+    branchRelation,
+    calculateCompatibility,
+    calculateDailyFortune,
+    drawDailyTarot
   };
 });
