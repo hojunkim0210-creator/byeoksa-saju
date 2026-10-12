@@ -101,7 +101,7 @@ def call_mock(role: str):
             if scenario == "break_text":  # '크르르' 대사가 든 줄을 지움 → 문구 보존 테스트가 실패해야 함
                 i = next(k for k, l in enumerate(lines) if "크르르" in l)
                 return ("## 변경 요약\n- (mock) 대사 한 줄 삭제\n\n```diff\n"
-                        f"--- a/{path}\n+++ b/{path}\n@@ -{i + 1},1 +{i + 1},0 @@\n-{lines[i]}\n```")
+                        f"--- a/{path}\n+++ b/{path}\n@@ -{i},3 +{i},2 @@\n {lines[i - 1]}\n-{lines[i]}\n {lines[i + 1]}\n```")
             return ("## 변경 요약\n- (mock) 첫 줄 위에 주석 추가\n\n```diff\n"
                     f"--- a/{path}\n+++ b/{path}\n@@ -1,1 +1,2 @@\n+// ai_duo mock 점검용 주석\n {lines[0]}\n```")
         return json.dumps({"verdict": "approve", "issues": []}, ensure_ascii=False)
@@ -199,7 +199,7 @@ def main():
 
     ensure_clean_git()
     base_branch = sh("git", "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")[:-3]
     work_branch = f"duo/{stamp}"
     sh("git", "switch", "-c", work_branch)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
