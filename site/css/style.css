@@ -71,7 +71,7 @@ body {
   background-attachment: fixed;
   display: flex;
   justify-content: center;
-  padding: 0 18px 72px;
+  padding: 0 18px calc(96px + env(safe-area-inset-bottom));   /* 하단 메뉴 높이만큼 */
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -927,7 +927,7 @@ option:disabled { color: #9C8E7C; }
 .toast-msg {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: calc(84px + env(safe-area-inset-bottom));   /* 하단 메뉴 위 */
   z-index: 200;
   display: none;
   width: max-content;
@@ -1161,12 +1161,84 @@ option:disabled { color: #9C8E7C; }
 .compat-card { gap: 16px; }
 .tarot-reading { animation: fadeIn 0.45s ease; }
 
-/* 결과 끝: 다른 풀이로 이어 가기 */
-.result-more { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; }
-.result-more-title { font-family: var(--font-display); font-size: 18px; line-height: 1.5; color: var(--moon); text-align: center; }
-.result-more-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.result-more-grid .btn-quiet { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 10px; font-size: 14.5px; }
-.result-more-seal { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 3px; background: var(--cinnabar); color: #F7E3B0; font-family: var(--font-display); font-weight: 400; font-size: 14px; line-height: 1; }
+/* ── 하단 메뉴 (모든 화면) ─────────────────────────────────────────── */
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;   /* 모달(100~)과 알림(200) 아래 */
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  background: rgba(26, 28, 46, 0.94);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--night-line);
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 52px;
+  padding: 5px 0 3px;
+  border-radius: 10px;
+  color: var(--moon-soft);
+  font-family: var(--font-body);
+}
+.tab-seal {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--moon);
+  border: 1px solid rgba(244, 238, 226, 0.28);
+}
+.tab-label { font-size: 11.5px; line-height: 1.2; white-space: nowrap; }
+.tab-item.active { color: var(--yellow); }
+.tab-item.active .tab-seal { background: var(--cinnabar); border-color: var(--cinnabar); color: #F7E3B0; }
+.tab-item:focus-visible { outline: 2px solid var(--yellow); outline-offset: -2px; }
+
+/* 결과 화면: 사이트 공유 버튼은 한 줄 전체 */
+.btn-action-wide { grid-column: 1 / -1; }
+
+/* 결과 화면: 결제 뒤 '리포트 다시 보기' */
+.report-reopen { display: flex; flex-direction: column; gap: 10px; padding: 22px 18px; border-radius: var(--r-paper); background: var(--night-2); border: 1px solid var(--night-line); color: var(--moon); text-align: center; }
+.report-reopen-title { font-family: var(--font-display); font-size: 20px; line-height: 1.4; color: var(--yellow); }
+.report-reopen-desc { font-size: 14.5px; line-height: 1.7; color: var(--moon-soft); }
+
+/* 리포트 첫머리: 무료 풀이 요약 */
+.report-summary:empty { display: none; }
+.rs-card { gap: 16px; }
+.rs-meta { font-size: 14px; line-height: 1.6; color: var(--ink-soft); }
+.rs-pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rs-pillar { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 6px; background: rgba(255, 252, 244, 0.7); border: 1px solid var(--paper-line); }
+.rs-pillar-label { font-size: 12px; color: var(--ink-soft); }
+.rs-char { font-family: var(--font-display); font-size: 26px; line-height: 1.15; color: var(--ink); }
+.rs-char.wood { color: var(--wood-text); }
+.rs-char.fire { color: var(--fire-text); }
+.rs-char.earth { color: var(--earth-text); }
+.rs-char.metal { color: var(--metal-text); }
+.rs-char.water { color: var(--water-text); }
+.rs-pillar-ko { font-size: 12.5px; color: var(--ink-soft); }
+.rs-oheng { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rs-el { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 6px; border: 1px solid var(--paper-line); font-size: 12.5px; color: var(--ink-soft); }
+.rs-el strong { font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 1.1; color: var(--ink); }
+.rs-el.is-weak { border-color: var(--cinnabar); background: rgba(168, 42, 32, 0.07); }
+.rs-el.is-weak span::after { content: ' · 결핍'; color: var(--cinnabar); }
+.rs-list { display: grid; grid-template-columns: 5.6em 1fr; gap: 8px 12px; font-size: 14.5px; line-height: 1.7; }
+.rs-list dt { font-weight: 700; color: var(--cinnabar); }
+.rs-list dd { color: var(--ink); }
+
+/* 리포트: 누재살 비방이 어떤 사주 값으로 골랐는지 */
+.guard-basis { display: block; margin-bottom: 6px; font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
 
 /* ── 결제 안내 · 약관 페이지 ─────────────────────────────────────────── */
 .payment-notice { text-align: left; font-size: 13.5px !important; line-height: 1.7 !important; color: var(--ink-soft) !important; padding: 10px 12px; border-radius: 6px; background: rgba(168, 42, 32, 0.06); border: 1px solid rgba(168, 42, 32, 0.18); }
@@ -1201,6 +1273,11 @@ option:disabled { color: #9C8E7C; }
   .legal-table td::before { content: attr(data-label); font-weight: 700; color: var(--ink-soft); }
 }
 
+/* 키 작은 휴대폰(아이폰 SE 등): 첫 안내창 사진을 줄여 두 버튼이 한 화면에 들어오게 */
+@media (max-height: 700px) {
+  .intro-modal-img-box { height: 150px; }
+}
+
 /* ── 움직임 줄이기 ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1211,7 +1288,7 @@ option:disabled { color: #9C8E7C; }
   body { background: #fff !important; color: #000 !important; padding: 0 !important; }
   .app-container { max-width: 100% !important; }
   header, .home-topbar, .slip-section, .event-strip, .site-footer, .action-bar, .btn-submit, .btn-nav-back, .btn-pay,
-  .paywall-overlay, .modal-overlay, .intro-modal-overlay, .hanji-scroll-overlay, .toast-msg, .btn-talisman-download, .feature-nav, .result-more {
+  .paywall-overlay, .modal-overlay, .intro-modal-overlay, .hanji-scroll-overlay, .toast-msg, .btn-talisman-download, .feature-nav, .tab-bar, .report-reopen {
     display: none !important;
   }
   .character-card, .paywall-overlay { background: #fff !important; color: #000 !important; }

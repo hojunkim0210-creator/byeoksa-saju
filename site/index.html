@@ -7,8 +7,15 @@
   <meta name="description" content="1998년 강원도 영월 산자락 외딴 흙집 대문 앞을 지키다 지박령이 된 충견 백구... 네 등 뒤에 붙은 악운과 살(煞)의 숨소리를 모조리 털어내주마.">
   <meta property="og:title" content="벽사신견 사주 - 대문 앞 지박령의 소름 돋는 영적 리포트">
   <meta property="og:description" content="크르르... 네 등 뒤에 붙은 차가운 그림자가 보인다. 네 사주에 숨은 살(煞)과 기(氣)를 빨아먹는 악연을 모조리 털어낼 테니, 생년월일을 대거라.">
-  <meta property="og:image" content="mung.jpg">
+  <!-- 카카오톡·SNS 링크 미리보기: 이미지·주소는 반드시 전체 주소(https://…)여야 한다. 도메인을 바꾸면 여기 3곳도 바꿀 것 -->
+  <meta property="og:image" content="https://hojunkim0210-creator.github.io/byeoksa-saju/img/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://hojunkim0210-creator.github.io/byeoksa-saju/">
+  <meta property="og:site_name" content="벽사신견 사주">
   <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://hojunkim0210-creator.github.io/byeoksa-saju/">
   <meta name="theme-color" content="#1A1C2E">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" type="image/png">
@@ -75,11 +82,9 @@
 
         <!-- 액션 버튼 -->
         <div class="scroll-btn-row">
-          <button class="btn-scroll-action" onclick="proceedFromScroll()">
+          <!-- 버튼은 하나: 대문에서 열면 "사주 풀이 보기", 다른 화면에서 열면 "두루마리 말기" (app.js openHanjiScroll) -->
+          <button class="btn-scroll-action" id="scrollActionBtn" onclick="scrollPrimaryAction()">
             사주 풀이 보기 ➔
-          </button>
-          <button class="btn-scroll-close" onclick="closeHanjiScroll()">
-            두루마리 말기
           </button>
         </div>
       </div>
@@ -144,7 +149,7 @@
     <nav class="home-topbar" aria-label="상단">
       <span class="home-seal" aria-hidden="true">辟邪</span>
       <span class="home-brand">벽사신견</span>
-      <button class="home-topbar-link" onclick="openHanjiScroll()">설화록</button>
+      <button class="home-topbar-link" onclick="shareSite()" aria-label="벽사신견 사주 사이트 공유하기">💬 공유하기</button>
     </nav>
     <header>
       <!-- 백구 영물 정면 초상화 프레임 -->
@@ -211,7 +216,7 @@
       📜 1998년 지박령 설화록 (한지 족자 풀기)
     </button>
 
-    <p class="event-strip sale-event-badge">🎉 <span class="sale-event-name">오픈 기념 이벤트</span> 진행 중 · 상세 리포트 <span class="sale-price">3,900</span>원</p>
+    <p class="event-strip sale-event-badge">🎉 <span class="sale-event-name">오픈 기념 이벤트</span> 진행 중 · 상세 리포트 <span class="sale-price">4,900</span>원</p>
 
     <footer class="site-footer">
       <nav class="footer-links" aria-label="약관">
@@ -310,6 +315,7 @@
       <button class="btn-action" onclick="copySummaryText()">📋 요약문 복사</button>
       <button class="btn-action" onclick="printReport()">🖨️ PDF/인쇄 저장</button>
       <button class="btn-action" onclick="downloadShareCard()">📸 공유 카드 저장</button>
+      <button class="btn-action btn-action-wide" onclick="shareSite()">💬 카톡으로 사이트 공유하기</button>
     </div>
 
     <!-- 1. 영안 개안 동물 캐릭터 카드 -->
@@ -374,7 +380,7 @@
     <div class="mind-scan-card" id="mindScanCard">
       <div class="mind-scan-header">
         <div class="section-title" style="margin-bottom:0;">🔮 지박령의 영적 투시: 등 뒤의 그림자와 고질병</div>
-        <div class="mind-badge">심리 투시 100%</div>
+        <div class="mind-badge" id="mindBadge">심리 투시 -%</div>
       </div>
       <div class="mind-item" id="mindItem1">속마음 분석 중...</div>
       <div class="mind-item" id="mindItem2">치명적 함정 분석 중...</div>
@@ -446,7 +452,7 @@
           <div class="reason-item">
             <span class="reason-num">01</span>
             <div>
-              <strong>커피 한 잔 값(<span class="sale-price">3,900</span>원)으로 3년 치 액운 차단</strong>
+              <strong>커피 한 잔 값(<span class="sale-price">4,900</span>원)으로 3년 치 액운 차단</strong>
               <p>망설이다 날아갈 3년 치 피 같은 돈과 멘탈을 생각하면, 이 복채는 네 인생 가장 싼 보험이다.</p>
             </div>
           </div>
@@ -468,7 +474,7 @@
 
         <div class="price-box">
           <div class="price-tag">
-            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비 ₩<span class="sale-price">3,900</span></strong>
+            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비 ₩<span class="sale-price">4,900</span></strong>
           </div>
           <div class="price-sub" id="saleSub">결제 후 열리는 리포트는 PDF로 저장해 소장할 수 있습니다</div>
           <div class="price-disclaimer">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않습니다.</div>
@@ -479,23 +485,33 @@
         </button>
       </div>
 
-      <!-- 9. 📜 결제 후 대외비 영적 전략 포트폴리오 -->
-      <div class="unlocked-report-container" id="unlockedReportContainer">
-        <!-- 동적 렌더링 -->
+      <!-- 결제 후에는 리포트가 별도 화면(viewReport)에서 열린다 -->
+      <div class="report-reopen" id="reportReopen" hidden>
+        <p class="report-reopen-title">📜 봉인이 풀린 리포트</p>
+        <p class="report-reopen-desc">무료 풀이 요약과 6단계 리포트, 개운부가 한 화면에 정리되어 있다.</p>
+        <button class="btn-pay" onclick="openReport()">리포트 다시 보기 🐾</button>
       </div>
     </div>
 
-    <!-- 다른 풀이로 이어 가기 (방금 입력한 생년월일을 그대로 쓴다) -->
-    <nav class="result-more" aria-label="다른 풀이">
-      <p class="result-more-title">대문에 남은 부적도 떼어 보거라</p>
-      <div class="result-more-grid">
-        <button class="btn-quiet" onclick="openFeature('daily')"><span class="result-more-seal" aria-hidden="true">日</span>오늘의 운세</button>
-        <button class="btn-quiet" onclick="openFeature('compat')"><span class="result-more-seal" aria-hidden="true">合</span>인연 궁합</button>
-        <button class="btn-quiet" onclick="openFeature('tarot')"><span class="result-more-seal" aria-hidden="true">牌</span>벽사 패 뽑기</button>
-        <button class="btn-quiet" onclick="openFeature('chat')"><span class="result-more-seal" aria-hidden="true">問</span>백구에게 묻기</button>
-      </div>
-    </nav>
     </div>
+
+  <!-- 📍 결제 후 리포트 (무료 풀이 요약 + 6단계 리포트 + 개운부) -->
+  <div class="view-step" id="viewReport" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(3)">← 무료 풀이로 돌아가기</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">秘</span>
+      <h2 class="feature-title">벽사신견 천명 리포트</h2>
+      <p class="feature-lead">"봉인을 풀었구나. 앞서 맡은 냄새부터 한눈에 정리해 두었으니, 차례로 읽어 내려가거라."</p>
+    </div>
+    <div class="action-bar">
+      <button class="btn-action" onclick="printReport()">🖨️ PDF/인쇄 저장</button>
+      <button class="btn-action" onclick="shareSite()">💬 사이트 공유하기</button>
+    </div>
+    <section class="report-summary" id="reportSummary" aria-label="무료 풀이 요약"></section>
+    <div class="unlocked-report-container" id="unlockedReportContainer">
+      <!-- 동적 렌더링 -->
+    </div>
+  </div>
 
   <!-- 📍 인연 궁합 -->
   <div class="view-step" id="viewCompat" style="display: none;">
@@ -543,11 +559,21 @@
   </div>
   </div>
 
+<!-- 하단 메뉴: 어느 화면에서든 다른 풀이로 바로 간다 -->
+<nav class="tab-bar" id="tabBar" aria-label="메뉴">
+  <button class="tab-item" data-views="viewLanding" onclick="goToStep(1)"><span class="tab-seal" aria-hidden="true">門</span><span class="tab-label">대문</span></button>
+  <button class="tab-item" data-views="viewInput viewResult viewReport" onclick="openMySaju()"><span class="tab-seal" aria-hidden="true">命</span><span class="tab-label">내 사주</span></button>
+  <button class="tab-item" data-views="viewCompat" onclick="openFeature('compat')"><span class="tab-seal" aria-hidden="true">合</span><span class="tab-label">궁합</span></button>
+  <button class="tab-item" data-views="viewDaily" onclick="openFeature('daily')"><span class="tab-seal" aria-hidden="true">日</span><span class="tab-label">오늘 운세</span></button>
+  <button class="tab-item" data-views="viewTarot" onclick="openFeature('tarot')"><span class="tab-seal" aria-hidden="true">牌</span><span class="tab-label">벽사 패</span></button>
+  <button class="tab-item" data-views="viewChat" onclick="openFeature('chat')"><span class="tab-seal" aria-hidden="true">問</span><span class="tab-label">묻기</span></button>
+</nav>
+
 <!-- 결제 모달 -->
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box">
     <h3>🕯️ 벽사신견 지박령 액막이 복채 안내</h3>
-    <p>실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br>액막이 복채(<span class="sale-price">3,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <p>실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br>액막이 복채(<span class="sale-price">4,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
     <p class="payment-notice">결제 후 리포트가 열리면 디지털 콘텐츠의 특성상 청약철회(환불)가 제한됩니다. 리포트가 열리지 않았거나 내용이 정상적으로 보이지 않으면 환불해 드립니다. <a href="legal.html#refund" target="_blank" rel="noopener">환불 안내 보기</a></p>
     <button class="btn-submit" onclick="unlockContent()">테스트로 봉인 해제해보기 🐾</button>
     <button class="btn-close" onclick="closePaymentModal()">닫기</button>

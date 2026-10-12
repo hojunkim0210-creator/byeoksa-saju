@@ -13,6 +13,7 @@
 | 벽사 패 뽑기 | 오리지널 22장 덱, 하루 한 장(같은 날엔 같은 패) | 무료 |
 | 백구에게 묻기 | 8개 질문 버튼, 내 사주로 답함 | 무료 |
 | 공유 카드 | 1080×1920 세로 이미지(일주·동물 이름·태그) | 무료 |
+| 사이트 공유하기 | 카톡 등으로 첫 화면 주소만 보냄(개인정보 없음), 링크 미리보기 이미지 `img/og-image.jpg` | 무료 |
 
 ## 폴더 구성
 
@@ -32,6 +33,7 @@ tests/                 ← 자동 테스트 (이게 통과해야 배포됨)
   e2e/                 ← 320·360·390px 모바일 브라우저 검사, 사람마다 다른 풀이, 새 기능
 tools/solar_terms.py   ← 절기 시각표 생성기 (VSOP87 천문 계산)
 tools/make_talisman.py ← 부적 그림 생성기 (Noto Serif CJK 글꼴, OFL)
+tools/make_og_image.py ← 카톡·SNS 링크 미리보기 이미지 생성기 (1200×630)
 collab/ai_duo.py       ← Gemini × Claude 협업 스크립트 (패치 제출 → 테스트 판정)
 docs/DESIGN.md         ← 색·글꼴·배치 기준
 AI_RULES.md            ← 사람·AI 공통 작업 규칙 (문구 보존 등)
@@ -50,7 +52,7 @@ AI_RULES.md            ← 사람·AI 공통 작업 규칙 (문구 보존 등)
 `site/js/app.js` 맨 위의 `SALE`만 고치면 화면의 모든 가격 표시가 바뀝니다.
 
 ```js
-const SALE = { price: 3900, eventName: '오픈 기념 이벤트', eventEndsOn: null };  // eventEndsOn: '2026-12-31' 처럼 넣으면 종료일 표시
+const SALE = { price: 4900, eventName: '오픈 기념 이벤트', eventEndsOn: null };  // eventEndsOn: '2026-12-31' 처럼 넣으면 종료일 표시
 ```
 
 "오늘 ○○명", "자정까지 80% 할인"처럼 사실이 아닌 숫자·기한은 표시·광고법 위반 소지가 있어 넣지 않습니다.

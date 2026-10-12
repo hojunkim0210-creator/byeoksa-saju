@@ -29,6 +29,9 @@ test.before(async () => {
         roadmap: [...document.querySelectorAll('.timeline-relation')].map(e => e.innerText).join('\n'),
         ghost: t('#ghostDesc'), sniff: t('#sniffLoveText') + t('#sniffWealthText') + t('#sniffCareerText'),
         mind: t('#mindItem2'),
+        guard: ([...document.querySelectorAll('#unlockedReportContainer .portfolio-highlight')].find(e => e.innerText.includes('누재살 방어 3대 황금 비방')) || { innerText: '' }).innerText,
+        plan: ([...document.querySelectorAll('#unlockedReportContainer .portfolio-highlight')].find(e => e.innerText.includes('몰입 결계')) || { innerText: '' }).innerText.split('➕')[0],
+        mindPct: t('#mindBadge'), fitPct: t('#fitScore'),
       };
     }));
     await ctx.close();
@@ -46,9 +49,21 @@ test('깨진 값(undefined·NaN·[object Object]·영문 오행 코드)이 없�
 const distinct = key => new Set(results.map(r => r[key])).size;
 for (const [key, label, min] of [
   ['enemies', '3대 악연 유형', 3], ['lovers', '파멸의 연인·천생연분', 4], ['wealth', '누재살 재물 진단', 2],
-  ['roadmap', '3개년 로드맵 명식 대조', 4], ['ghost', '악연 징조 카드', 3], ['sniff', '후각 감별 티저', 4], ['mind', '밤의 함정', 3],
+  ['roadmap', '3개년 로드맵 명식 대조', 4], ['guard', '누재살 방어 3대 비방', 5], ['plan', '천명 100일 작전 세 수칙', 5],
+  ['mindPct', '심리 투시 %', 4], ['fitPct', '영적 조화율 %', 4], ['ghost', '악연 징조 카드', 3], ['sniff', '후각 감별 티저', 4], ['mind', '밤의 함정', 3],
 ]) {
   test(`${label}: ${PEOPLE.length}명 중 최소 ${min}가지 이상으로 갈린다`, () => {
     assert.ok(distinct(key) >= min, `${label} 서로 다른 결과 ${distinct(key)}가지`);
   });
 }
+
+test('심리 투시·영적 조화율이 숫자로 나오고 범위 안이다', () => {
+  for (const r of results) {
+    const m = Number((r.mindPct.match(/(\d+)%/) || [])[1]), f = Number((r.fitPct.match(/(\d+)%/) || [])[1]);
+    assert.ok(m >= 60 && m <= 99, r.mindPct); assert.ok(f >= 60 && f <= 98, r.fitPct);
+  }
+});
+
+test('꿈 뒤 조사가 받침에 맞는다 ("을(를)" 같은 겸용 표기가 없다)', () => {
+  for (const r of results) assert.ok(!/\]을\(를\)/.test(r.allText), '을(를) 남아 있음');
+});

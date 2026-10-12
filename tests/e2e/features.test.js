@@ -128,3 +128,82 @@ test('약관 페이지: 320px에서 가로 넘침 없고, 대문 바닥글 링�
   assert.deepEqual(page._errors, []);
   await ctx.close();
 });
+
+test('공유하기: 주소에 개인정보(쿼리·해시) 없이 첫 화면만, 공유 창이 없으면 문구를 복사', async () => {
+  const { ctx, page } = await openPage(browser);
+  await fillAndSubmit(page, { y: '2002', m: '10', d: '4', hour: '-1', gender: 'M', job: '대학생', dream: '창업' });
+  const shared = await page.evaluate(async () => {
+    let got = null;
+    navigator.share = async d => { got = d; };
+    history.replaceState(null, '', location.pathname + '?y=2002&m=10&d=4#result');
+    await shareSite();
+    return got;
+  });
+  assert.ok(shared && shared.url, 'navigator.share 호출');
+  assert.ok(!/[?#]/.test(shared.url), shared.url);
+  assert.ok(!/2002|창업|대학생/.test(shared.text + shared.url), '개인정보가 공유 문구에 없어야 함');
+  assert.ok(shared.url.endsWith('/'), '첫 화면 주소: ' + shared.url);
+  await ctx.close();
+});
+
+test('하단 메뉴가 모든 화면에 보이고, 지금 화면 칸이 표시된다', async () => {
+  const { ctx, page } = await openPage(browser);
+  await home(page);
+  for (const [fn, view] of [["goToStep(1)", 'viewLanding'], ["goToStep(2)", 'viewInput'], ["openFeature('compat')", 'viewCompat'], ["openFeature('daily')", 'viewDaily'], ["openFeature('tarot')", 'viewTarot'], ["openFeature('chat')", 'viewChat']]) {
+    await page.evaluate(f => eval(f), fn);
+    assert.ok(await page.isVisible('#tabBar'), view);
+    const active = await page.evaluate(() => [...document.querySelectorAll('#tabBar .tab-item.active')].map(t => t.dataset.views));
+    assert.equal(active.length, 1, view); assert.ok(active[0].split(' ').includes(view), view + ' → ' + active[0]);
+  }
+  await ctx.close();
+});
+
+test('결제하면 리포트 전용 화면이 열리고, 무료 풀이 요약이 먼저 나온다', async () => {
+  const { ctx, page } = await openPage(browser);
+  await fillAndSubmit(page, { y: '2002', m: '10', d: '4', hour: '-1', gender: 'M', job: '대학생', dream: '창업' });
+  await page.evaluate(() => unlockContent()); await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('viewReport')).display), 'flex');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('viewResult')).display), 'none');
+  const sum = await page.textContent('#reportSummary');
+  assert.match(sum, /을사일주/); assert.match(sum, /심리 투시 \d+%/); assert.ok(!/undefined|NaN/.test(sum), sum);
+  assert.ok(await page.isVisible('#unlockedReportContainer .classified-dossier-box'));
+  await page.evaluate(() => goToStep(3));
+  assert.ok(await page.isVisible('#reportReopen'), '결과 화면에 리포트 다시 보기');
+  await page.click('#tabBar [data-views~="viewResult"]');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('viewReport')).display), 'flex', '내 사주 → 리포트');
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('궁합: 내 이름을 적으면 결과에 이름으로 나온다', async () => {
+  const { ctx, page } = await openPage(browser);
+  await home(page); await page.click('.slip:has-text("인연 궁합")');
+  await page.fill('#caName', '호준');
+  await page.fill('#caY', '2002'); await page.fill('#caM', '10'); await page.fill('#caD', '4');
+  await page.fill('#cbName', '민지');
+  await page.fill('#cbY', '2001'); await page.fill('#cbM', '5'); await page.fill('#cbD', '17');
+  await page.click('#compatGo'); await page.waitForTimeout(300);
+  const t = await page.textContent('#compatResult');
+  assert.match(t, /호준/); assert.match(t, /민지/); assert.ok(!/undefined|NaN/.test(t));
+  await ctx.close();
+});
+
+test('설화 두루마리는 버튼 하나: 대문에선 풀이로, 다른 화면에선 닫기', async () => {
+  const { ctx, page } = await openPage(browser);
+  await home(page);
+  await page.evaluate(() => openHanjiScroll()); await page.waitForTimeout(200);
+  assert.equal(await page.locator('#hanjiScrollModal button:visible').count(), 1);
+  assert.match(await page.textContent('#scrollActionBtn'), /사주 풀이 보기/);
+  await page.click('#scrollActionBtn'); await page.waitForTimeout(700);
+  assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('viewInput')).display), 'flex');
+  await page.evaluate(() => openHanjiScroll()); await page.waitForTimeout(200);
+  assert.match(await page.textContent('#scrollActionBtn'), /두루마리 말기/);
+  await ctx.close();
+});
+
+test('가격은 4,900원으로 모든 곳에 표시된다', async () => {
+  const { ctx, page } = await openPage(browser);
+  const prices = await page.evaluate(() => [...document.querySelectorAll('.sale-price')].map(e => e.textContent));
+  assert.ok(prices.length >= 4); assert.ok(prices.every(p => p === '4,900'), prices.join(','));
+  await ctx.close();
+});

@@ -136,7 +136,10 @@
       case 'yearSamhap': return `띠끼리 <strong>삼합</strong>이다. 함께 어울리는 무리가 자연스럽게 겹친다.`;
       case 'yearChung': return `띠가 <strong>충</strong>으로 맞선다. 서로의 가족·친구와는 거리를 적당히 두는 게 좋다.`;
       case 'fillA': return `<strong>${esc(A)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 상대가 넉넉히 품고 있다. 곁에 있기만 해도 기운이 채워진다.`;
-      case 'fillB': return `<strong>${esc(B)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 네가 넉넉히 품고 있다. 네가 상대의 빈자리를 메워 주는 사람이다.`;
+      case 'fillB': {
+        const who = A === '나' ? '네가' : `<strong>${esc(subj(A))}</strong>`;   // 이름을 적었으면 이름으로
+        return `<strong>${esc(B)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 ${who} 넉넉히 품고 있다. ${who} 상대의 빈자리를 메워 주는 사람이다.`;
+      }
       default: return '';
     }
   }
@@ -146,6 +149,7 @@
     const form = $('compatForm');
     form.innerHTML = `
       <h3 class="feature-card-title">나</h3>
+      <input type="text" id="caName" maxlength="10" placeholder="내 이름 (선택, 저장하지 않음)" aria-label="내 이름">
       ${birthFieldsHtml('ca', me || {})}
       <h3 class="feature-card-title">상대</h3>
       <input type="text" id="cbName" maxlength="10" placeholder="부를 이름 (선택, 저장하지 않음)" aria-label="상대를 부를 이름">
@@ -160,8 +164,9 @@
       if (b.error) { $('compatErr').textContent = '상대: ' + b.error; return; }
       $('compatErr').textContent = '';
       saveProfile(a);
+      const nameA = ($('caName').value || '').trim() || '나';
       const nameB = ($('cbName').value || '').trim() || '상대';
-      showCompatResult(a, b, '나', nameB);
+      showCompatResult(a, b, nameA, nameB === nameA ? nameB + '(상대)' : nameB);
     };
   }
 
