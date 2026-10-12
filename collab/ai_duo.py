@@ -89,13 +89,21 @@ def call_claude(system_prompt: str, user_message: str) -> str:
 
 def call_mock(role: str):
     """API 없이 파이프라인만 점검하는 가짜 모델. 개발자는 주석 한 줄 추가, 리뷰어는 승인."""
+    scenario = os.environ.get("AI_DUO_MOCK", "ok")  # ok | break_text | outside (안전장치 점검용)
+
     def _call(system_prompt: str, user_message: str) -> str:
         if role == "developer":
             m = re.search(r"### 파일: (\S+)\n```[a-z]*\n(.*?)\n```", user_message, re.S)
             path, body = m.group(1), m.group(2)
-            first = body.split("\n", 1)[0]
+            lines = body.split("\n")
+            if scenario == "outside":
+                path = "site/index.html"  # 허용되지 않은 파일 → 스크립트가 거부해야 함
+            if scenario == "break_text":  # '크르르' 대사가 든 줄을 지움 → 문구 보존 테스트가 실패해야 함
+                i = next(k for k, l in enumerate(lines) if "크르르" in l)
+                return ("## 변경 요약\n- (mock) 대사 한 줄 삭제\n\n```diff\n"
+                        f"--- a/{path}\n+++ b/{path}\n@@ -{i + 1},1 +{i + 1},0 @@\n-{lines[i]}\n```")
             return ("## 변경 요약\n- (mock) 첫 줄 위에 주석 추가\n\n```diff\n"
-                    f"--- a/{path}\n+++ b/{path}\n@@ -1,1 +1,2 @@\n+// ai_duo mock 점검용 주석\n {first}\n```")
+                    f"--- a/{path}\n+++ b/{path}\n@@ -1,1 +1,2 @@\n+// ai_duo mock 점검용 주석\n {lines[0]}\n```")
         return json.dumps({"verdict": "approve", "issues": []}, ensure_ascii=False)
     return _call
 
