@@ -34,7 +34,14 @@ test('기준 문구가 모두 남아 있다 (연도·간지 차이, 허용 목�
   const curNorm = new Set(cur.map(norm));
   const curJoined = cur.map(norm).join('\n');
   const isDevComment = s => /^(\/\/|\*|\/\*)/.test(s.trim()); // 화면에 나오지 않는 코드 주석은 보존 대상 아님
-  const lost = base.filter(s => { if (isDevComment(s)) return false; const n = norm(s); return !curNorm.has(n) && !curJoined.includes(n) && !ALLOWED_REMOVED.includes(n); });
+  // "2. 문장", "제목: 내용"처럼 번호·제목과 문장이 데이터로 분리 저장된 경우를 위해, 번호를 떼고 ': ' 기준으로 나눈 각 문장이 모두 있는지 본다
+  const parts = s => s.split(/:\s+/).map(x => norm(x.replace(/^[\s:•·\-]*(\d+\.\s*)?/, ''))).filter(x => /[가-힣].*[가-힣]/.test(x));
+  const lost = base.filter(s => {
+    if (isDevComment(s)) return false;
+    const n = norm(s);
+    if (curNorm.has(n) || curJoined.includes(n) || ALLOWED_REMOVED.includes(n)) return false;
+    return !parts(s).every(x => curJoined.includes(x));
+  });
   assert.deepEqual(lost, [], `사라진 문구 ${lost.length}개:\n` + lost.join('\n'));
 });
 

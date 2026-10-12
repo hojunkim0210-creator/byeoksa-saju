@@ -13,6 +13,145 @@ const {
     const s = ((y - 4) % 10 + 10) % 10, b = ((y - 4) % 12 + 12) % 12;
     return useHanja ? STEMS[s].hanja + BRANCHES[b].hanja : STEMS[s].char + BRANCHES[b].char;
   }
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🐾 사주 맞춤 문장 데이터 — 같은 판정이 모든 사람에게 나오지 않도록
+  //   키: 일간 오행(dmEl) / 가장 모자란 오행(weakKey) / 재성 개수 / 그해 간지와의 십신·충
+  //   원칙: 기존 문장은 지우지 않고 한 유형으로 남기며, 나머지 유형을 같은 말투로 추가한다.
+  // ─────────────────────────────────────────────────────────────────────────
+  const EL_KEYS = ['wood', 'fire', 'earth', 'metal', 'water'];
+  const EL_KO = { wood: '목(木)', fire: '화(火)', earth: '토(土)', metal: '금(金)', water: '수(水)' };
+
+  // 즉시 손절해야 할 3대 악연 — 일간 오행별 (수(水) 유형 = 원래 문장)
+  const ENEMY_TYPES = {
+    wood: [
+      `<strong>"같이 하자"</strong>며 판을 벌여 놓고, 정작 결실이 나면 네 이름을 슬쩍 지우고 제 공으로 가로채는 자.`,
+      `네 아이디어를 듣자마자 "그거 나도 생각했던 건데"라며 먼저 떠벌리고 다니는 자.`,
+      `네가 뻗어나가려 할 때마다 "아직 때가 아니다"라며 발목을 잡아 제자리에 묶어두려는 자.`
+    ],
+    fire: [
+      `힘들 때만 <strong>"너밖에 없다"</strong>며 매달리다가, 제 살길을 찾으면 연락을 뚝 끊어버리는 자.`,
+      `네 열정과 호의를 당연한 듯 받아먹고, 고맙다는 말 한마디 없이 더 큰 것을 요구하는 자.`,
+      `네가 지쳐 쓰러지면 "원래 네가 오지랖 부린 거잖아"라며 뒤에서 험담을 퍼뜨리는 자.`
+    ],
+    earth: [
+      `네가 묵묵히 받아주는 걸 알고 온갖 하소연과 짜증을 쏟아붓는, 너를 <strong>'감정 쓰레기통'</strong> 취급하는 자.`,
+      `일이 잘되면 제 덕, 일이 틀어지면 슬그머니 네게 책임과 누명을 떠넘기는 자.`,
+      `빌려 간 돈과 시간은 기억하지 못하면서, 네가 거절한 단 한 번은 끝까지 물고 늘어지는 자.`
+    ],
+    metal: [
+      `네가 마음을 열고 털어놓은 치부를 쥐고 있다가 <strong>결정적인 순간에 칼날처럼 휘두르는</strong> 자.`,
+      `겉으로는 네 완벽함을 치켜세우면서, 뒤에서는 작은 실수 하나를 부풀려 퍼뜨리는 자.`,
+      `"너 그거 감당할 수 있겠어?"라며 네 결단의 순간마다 의심의 독을 한 방울씩 떨어뜨리는 자.`
+    ],
+    water: [
+      `<strong>"다 너 잘되라고 하는 말인데"</strong>라며 네 자신감을 깎아내리고 가스라이팅하는 자.`,
+      `밥 한 끼, 커피 한 잔도 은근슬쩍 네게 계산을 미루며 네 재물운의 기운을 갉아먹는 자.`,
+      `네 약점이나 실수를 기억해 두었다가 남들 앞에서 장난처럼 터뜨려 네 위신을 깎는 자.`
+    ]
+  };
+
+  // 피해야 할 파멸의 연인 — 일간을 극(剋)하는 기운의 체취 (목(木) 일간 = 원래 문장: 금(金)의 쇠비린내)
+  const RUIN_LOVERS = {
+    wood: {
+      title: '피비린내와 눅눅한 곰팡이 냄새',
+      scent: '겉으로는 비싼 향수나 매력적인 언변으로 포장하지만, 조금만 깊이 교류해보면 바닥에 고인 썩은 물과 쇠비린내가 진동하는 자다.',
+      trait: `네 자존감을 은근히 갉아먹으며 '너는 나 없으면 아무것도 아니야'라는 불안을 주입한다. 네가 잘나갈 땐 질투로 눈빛이 싸늘해지고, 네가 주저앉을 때만 우월감을 느끼며 동정하는 척한다.`
+    },
+    fire: {
+      title: '차갑게 고인 물비린내와 꺼진 촛농 냄새',
+      scent: '처음엔 서늘하고 신비로운 분위기로 끌어당기지만, 가까이 갈수록 축축한 냉기가 스며들어 네 안의 불씨를 하나씩 꺼뜨리는 자다.',
+      trait: `네 들뜬 열정에 '현실을 봐'라며 찬물을 끼얹고, 네가 웃을수록 무심한 침묵으로 벌을 준다. 결국 너는 그 사람의 기분을 살피느라 네 빛을 스스로 끄게 된다.`
+    },
+    earth: {
+      title: '풋내 뒤에 숨은 썩은 나무뿌리 냄새',
+      scent: '싱그럽고 활기찬 첫인상으로 다가오지만, 뿌리를 내리는 순간 네 땅의 양분을 빨아올리며 제 키만 키우는 자다.',
+      trait: `네 시간과 돈, 인맥을 제 성장의 거름으로 쓰면서 '우리 둘을 위한 것'이라 포장한다. 네가 지쳐 메말라 갈 때쯤 더 기름진 땅을 찾아 떠난다.`
+    },
+    metal: {
+      title: '달콤한 향 뒤에 숨은 매캐한 탄내',
+      scent: '뜨겁고 강렬한 매력으로 단숨에 마음을 녹이지만, 곁에 오래 있을수록 옷깃에 그을음이 배듯 네 원칙과 자존심이 녹아내리는 자다.',
+      trait: `불같이 사랑하다가도 제 뜻대로 안 되면 화염처럼 분노를 쏟아내 너를 길들인다. 네가 지켜온 기준과 선을 '사랑이면 이 정도는'이라며 하나씩 태워 없앤다.`
+    },
+    water: {
+      title: '흙탕물처럼 텁텁한 진흙 비린내',
+      scent: '듬직하고 안정적인 척 다가오지만, 함께할수록 맑던 네 생각이 흙탕물처럼 탁해지고 발이 진창에 빠진 듯 무거워지는 자다.',
+      trait: `'다 너를 지켜주려고'라며 네 선택과 동선을 하나하나 막아세운다. 네 흐름을 둑처럼 가로막아, 결국 너는 어디로도 흘러가지 못한 채 고여 썩어간다.`
+    }
+  };
+
+  // 너를 살려낼 천생연분 — 네게 가장 모자란 오행을 채워주는 체취 (목(木) 보충 = 원래 문장)
+  const SOULMATE_SCENTS = {
+    wood: {
+      title: '비 온 뒤 솔숲의 맑은 흙 냄새',
+      scent: '화려한 말재주는 없어도, 그 사람 곁에 가만히 앉아 있기만 해도 목덜미의 서늘한 긴장감이 봄눈 녹듯 스르륵 풀리는 사람이다. 깊은 산속 젖은 흙내와 청량한 솔잎 향을 풍긴다.'
+    },
+    fire: {
+      title: '겨울밤 아궁이의 따스한 장작불 냄새',
+      scent: '말수는 적어도 그 사람이 곁에 있으면 꽁꽁 언 손끝부터 서서히 데워지는 사람이다. 마른 장작이 타닥거리며 타는 포근한 불 냄새와 갓 지은 밥 냄새를 풍긴다.'
+    },
+    earth: {
+      title: '햇볕에 잘 말린 볏짚과 구수한 누룩 냄새',
+      scent: '요란하게 다가오지 않지만, 흔들리는 너를 넓은 들판처럼 받아주는 사람이다. 가을 햇살에 말린 볏짚과 장독대의 구수한 냄새를 풍긴다.'
+    },
+    metal: {
+      title: '새벽 서리 머금은 놋그릇의 서늘한 쇠 향',
+      scent: '흐트러진 네 하루에 선을 그어주고, 망설일 때 단호하게 길을 짚어주는 사람이다. 새벽 서리와 깨끗이 닦인 놋그릇의 맑고 서늘한 향을 풍긴다.'
+    },
+    water: {
+      title: '새벽 계곡물에 씻긴 이끼와 물안개 냄새',
+      scent: '조용히 네 말을 끝까지 들어주며, 달아오른 머리를 차분히 식혀주는 사람이다. 깊은 계곡의 맑은 물소리와 촉촉한 물안개 향을 풍긴다.'
+    }
+  };
+
+  // 밤마다 숨통을 조이는 함정 — 가장 모자란 오행이 만드는 마음의 구멍
+  const NIGHT_TRAP_BY_WEAK = {
+    wood: '네 원국에는 위로 뻗어 오르는 목(木)의 기운이 모자라다. 그래서 결심은 수십 번 해도 첫 삽을 뜨는 순간마다 망설이며 내일로, 또 내일로 미뤄왔지. 그 미룬 날들이 밤마다 빚쟁이처럼 찾아와 네 숨통을 조인 것이다.',
+    fire: '네 원국에는 활활 타오르는 화(火)의 기운이 모자라다. 그래서 남들 앞에선 웃어도 혼자가 되면 불씨가 꺼진 아궁이처럼 의욕이 싸늘하게 식어버리지. 그 냉기가 밤마다 이불 속까지 스며든 것이다.',
+    earth: '네 원국에는 중심을 잡아주는 토(土)의 기운이 모자라다. 그래서 작은 말 한마디에도 발밑이 꺼지는 것처럼 흔들리고, 기댈 곳을 찾아 밤새 마음이 떠돌았지. 그 허공이 네 잠을 갉아먹은 것이다.',
+    metal: '네 원국에는 맺고 끊는 금(金)의 기운이 모자라다. 그래서 끊어내야 할 사람과 미련을 단칼에 베지 못하고, 밤마다 그 얼굴들을 다시 불러내 곱씹어왔지. 그 무딘 칼날이 네 마음을 베어온 것이다.',
+    water: '네 원국에는 열기를 식혀주는 수(水)의 기운이 모자라다. 그래서 머릿속이 과열된 엔진처럼 꺼지지 않고, 누워서도 생각이 생각을 낳으며 새벽까지 달려왔지. 그 열기가 네 잠을 태워버린 것이다.'
+  };
+
+  // 그해 천간이 일간에게 어떤 십신으로 들어오는지에 따른 해설
+  const YEAR_SIPSIN_TEXT = {
+    bi: '경쟁자와 동료가 한꺼번에 몰려드는 해다. 손잡을 자와 경계할 자를 칼같이 가려라.',
+    sik: '네 재능과 말이 밖으로 터져 나오는 해다. 만들고 드러내되, 윗사람과의 말다툼만은 삼가거라.',
+    jae: '재물의 기운이 크게 움직이는 해다. 들어오는 돈은 크지만 나가는 길도 넓으니 계약서와 통장을 네 손으로 직접 챙겨라.',
+    gwan: '책임과 압박이 어깨를 짓누르는 해다. 그 무게를 버텨내면 직함과 명예가 따라오니 피하지 말고 맞서라.',
+    in: '배움과 귀인의 도움이 깃드는 해다. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 된다.'
+  };
+  const SIPSIN_GROUP = { '비견': 'bi', '겁재': 'bi', '식신': 'sik', '상관': 'sik', '편재': 'jae', '정재': 'jae', '편관': 'gwan', '정관': 'gwan', '편인': 'in', '정인': 'in' };
+
+  /** 사주에서 맞춤 문장에 쓸 핵심 값을 뽑는다 */
+  function getPersona(dayStemIdx, dayBranchIdx, oheng) {
+    const dmEl = EL_KEYS[Math.floor(dayStemIdx / 2)];
+    const counts = (oheng && oheng.counts) || { wood: 1, fire: 1, earth: 1, metal: 1, water: 1 };
+    // 가장 모자란 오행: 0개인 것이 우선, 없으면 개수가 가장 적은 것
+    let weakKey = (oheng && oheng.weak && oheng.weak.length) ? oheng.weak[0] : null;
+    if (!weakKey) weakKey = EL_KEYS.reduce((a, b) => (counts[b] < counts[a] ? b : a), EL_KEYS[0]);
+    const wealthEl = EL_KEYS[(EL_KEYS.indexOf(dmEl) + 2) % 5];   // 내가 극하는 오행 = 재성
+    return { dmEl, weakKey, wealthEl, wealthCount: counts[wealthEl] || 0, dayStemIdx, dayBranchIdx };
+  }
+
+  /** 재성 개수에 따른 재물 진단 한 단락 */
+  function wealthDiagnosis(ps) {
+    const label = `<strong class="impact-gold">[${EL_KO[ps.wealthEl]}] 재성(財星)</strong>`;
+    if (ps.wealthCount === 0) return `특히 네 원국에는 재물을 뜻하는 ${label}이 한 글자도 드러나 있지 않다. 돈이 제 발로 찾아오는 팔자가 아니니, 네 손으로 그릇을 빚고 길목을 지켜야만 고인다.`;
+    if (ps.wealthCount === 1) return `네 원국에서 재물을 뜻하는 ${label}은 단 한 글자뿐이다. 들어오는 물줄기가 가늘어 한 번 새기 시작하면 바닥이 금세 드러나니, 작은 지출 구멍부터 틀어막아라.`;
+    return `네 원국에는 재물을 뜻하는 ${label}이 ${ps.wealthCount}글자나 깔려 있다. 돈이 들어오는 길은 넓지만 감당할 그릇보다 물이 많아 넘쳐흐르는 형국이니, 들어오는 족족 묶어두지 않으면 남의 주머니로 흘러간다.`;
+  }
+
+  /** 로드맵 연도별: 그해 간지가 일간·일지와 맺는 관계 */
+  function yearRelationText(year, ps) {
+    const ys = ((year - 4) % 10 + 10) % 10, yb = ((year - 4) % 12 + 12) % 12;
+    const sipsin = getSipsin(ps.dayStemIdx, ys);
+    let t = `🔎 <strong>명식 대조</strong>: ${yearGanji(year)}년의 천간이 네게 <strong class="impact-gold">[${sipsin}]</strong>으로 들어온다. ${YEAR_SIPSIN_TEXT[SIPSIN_GROUP[sipsin]]}`;
+    if ((yb - ps.dayBranchIdx + 12) % 12 === 6) {
+      t += ` 또한 이 해의 지지(${BRANCHES[yb].char})가 네 일지(${BRANCHES[ps.dayBranchIdx].char})와 정면으로 부딪히는 <strong class="impact-red">충(沖)</strong>이 걸려 있으니, 이사·이직·관계의 큰 변동에 대비하거라.`;
+    }
+    return t;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.yr-roadmap').forEach(el => { el.textContent = `${Y_R0}~${Y_R2}년`; });
     document.querySelectorAll('.yr-peak').forEach(el => { el.textContent = `${Y_R1}년`; });
@@ -137,7 +276,7 @@ let currentSajuData = null;
     updateGhostWarningCard(dStem, dBranch, ohengResult, dStemIdx);
 
     // 🕯️ 연애/재물 한 줄 후각 감별 티저 갱신
-    updateSniffTeaser(dStem, dBranch, dStemIdx, userDream);
+    updateSniffTeaser(dStem, dBranch, dStemIdx, userDream, ohengResult);
     updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, y, m, d);
 
     // 🔒 6단계 대외비 포트폴리오 사전 준비
@@ -256,6 +395,7 @@ let currentSajuData = null;
 
   function updateMindScanCard(dStem, dBranch, arg3, arg4, arg5) {
     const dream = (typeof arg5 === 'string' && arg5) ? arg5 : ((typeof arg3 === 'string' && arg3) ? arg3 : '천명');
+    const ps = getPersona(STEMS.indexOf(dStem), BRANCHES.indexOf(dBranch), (arg3 && typeof arg3 === 'object') ? arg3 : null);
     const data = getDynamicColdReading(dStem, dBranch, dream);
 
     document.getElementById('mindItem1').innerHTML = 
@@ -281,6 +421,7 @@ let currentSajuData = null;
       `그리고 네가 적어낸 천명... <strong class="impact-gold" style="font-size:16px;">[${dream}]</strong>.<br>` +
       `남들 앞에서는 '나 꼭 해낼 거야' 당당하게 큰소리치면서도, 정작 혼자 있을 땐 <em>"과연 내가 진짜 이걸 해낼 수 있을까? 이미 너무 늦은 건 아닐까? 남들은 앞서가는데 나만 이 자리에서 영원히 도태되는 건 아닐까?"</em> 하는 공포에 심장이 덜컥 내려앉았을 게다.<br>` +
       `<strong class="impact-red" style="font-size:16px;">'이러다 나 진짜 아무것도 못 해보고 비참하게 끝나는 거 아니야?'</strong> 하는 그 서늘한 침묵...<br>` +
+      `<br>🐾 <strong style="color:#b45309;">[그 함정의 뿌리]</strong>: ${NIGHT_TRAP_BY_WEAK[ps.weakKey]}<br><br>` +
       `내 말이 틀렸느냐? 이 흉살의 사슬을 지금 끊어내지 못하면 ${Y_R0}~${Y_R1}년에 터질 인생 일대의 천금 대운마저 네 발로 걷어차게 된다.</p>`;
   }
 
@@ -377,23 +518,26 @@ let currentSajuData = null;
 
   function updateGhostWarningCard(dStem, dBranch, oheng, dayStemIdx) {
     const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
     document.getElementById('ghostDesc').innerHTML = 
       `크르르...! 당장 네 등 뒤를 돌아보아라. 끈적한 악취가 진동한다.<br><br>` +
       `네 주변에 분명히 있다. <strong>평소엔 살갑게 굴다가도, 네가 조금만 좋은 일이 생기면 눈빛이 묘하게 차가워지며 '그게 잘될까?' 하고 초를 치는 인간!</strong><br>` +
       `네가 피땀 흘려 쌓아 올린 아이디어와 노력을 은근슬쩍 가로채려 드는 <strong class="impact-red">[흡기귀(吸氣鬼) 같은 악연]</strong>이 네 등 뒤에 시커멓게 찰싹 달라붙어 있다!<br><br>` +
-      `🩸 <strong class="impact-red">지박령의 서늘한 경고</strong>: 이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 천을귀인(<strong class="impact-gold">${nobles[0]}</strong>)을 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!`;
+      `🩸 <strong class="impact-red">지박령의 서늘한 경고</strong>: 이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 천을귀인(<strong class="impact-gold">${nobles[0]}</strong>)을 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!` +
+      `<br><br>🐾 <strong>네 ${EL_KO[ps.dmEl]} 일간에 붙는 흡기귀의 얼굴</strong>: ${ENEMY_TYPES[ps.dmEl][0]}`;
   }
 
-  function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream) {
+  function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream, oheng) {
     const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
     document.getElementById('sniffLoveText').innerHTML = 
-      `"킁킁... 코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 맑은 솔잎 흙내를 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."`;
+      `"킁킁... 코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 맑은 솔잎 흙내를 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
-      `"킁... 아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."`;
+      `"킁... 아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."` + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps)}</span>`;
 
     document.getElementById('sniffCareerText').innerHTML = 
-      `"크르르... [<strong class="impact-gold">${dream}</strong>]을(를) 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."`;
+      `"크르르... [<strong class="impact-gold">${dream}</strong>]을(를) 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)}]</strong>으로 들어온다. ${YEAR_SIPSIN_TEXT[SIPSIN_GROUP[getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)]]}</span>`;
   }
 
   function renderTileHtml(item) {
@@ -545,8 +689,12 @@ let currentSajuData = null;
       function updatePaywallContent(dStem, dBranch, oheng, dayStemIdx, dayBranchIdx, dream, job, birthYear, birthMonth, birthDay) {
     const iljuName = `${dStem.char}${dBranch.char}`;
     const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
-    const weakKey = oheng.weak.length > 0 ? oheng.weak[0] : 'water';
+    const ps = getPersona(dayStemIdx, dayBranchIdx, oheng);
+    const weakKey = ps.weakKey;   // 오행이 모두 있으면 가장 적은 오행 (예전엔 무조건 water)
     const remedy = ELEMENT_REMEDIES[weakKey] || ELEMENT_REMEDIES['water'];
+    const enemies = ENEMY_TYPES[ps.dmEl];
+    const ruin = RUIN_LOVERS[ps.dmEl];
+    const soulmate = SOULMATE_SCENTS[weakKey];
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '. ');
 
     const kpi = updateKpiDashboard(dayStemIdx, dayBranchIdx, oheng, birthYear, birthMonth, birthDay);
@@ -619,9 +767,10 @@ let currentSajuData = null;
         </div>
         <div class="portfolio-highlight">
           <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:8px;">⚠️ 즉시 손절해야 할 3대 악연 유형:</strong>
-          1. <strong>"다 너 잘되라고 하는 말인데"</strong>라며 네 자신감을 깎아내리고 가스라이팅하는 자.<br>
-          2. 밥 한 끼, 커피 한 잔도 은근슬쩍 네게 계산을 미루며 네 재물운의 기운을 갉아먹는 자.<br>
-          3. 네 약점이나 실수를 기억해 두었다가 남들 앞에서 장난처럼 터뜨려 네 위신을 깎는 자.<br><br>
+          <span style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px;">— ${dStem.char}${EL_KO[ps.dmEl]} 일간인 네게 유독 들러붙는 유형</span>
+          1. ${enemies[0]}<br>
+          2. ${enemies[1]}<br>
+          3. ${enemies[2]}<br><br>
           💡 <strong class="impact-red">처단 비방</strong>: 변명할 기회를 주지 마라. 서서히 연락 빈도를 줄이고 카톡 답장을 3시간 이상 늦추며 영적 연결고리를 완전히 끊어내라.
         </div>
       </div>
@@ -636,16 +785,16 @@ let currentSajuData = null;
         </div>
 
         <div class="portfolio-highlight" style="border-left: 4.5px solid #b91c1c; background: #fff8f8;">
-          <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: 피비린내와 눅눅한 곰팡이 냄새</strong>
-          • <strong>영적 체취</strong>: 겉으로는 비싼 향수나 매력적인 언변으로 포장하지만, 조금만 깊이 교류해보면 바닥에 고인 썩은 물과 쇠비린내가 진동하는 자다.<br>
-          • <strong>소름 돋는 특징</strong>: 네 자존감을 은근히 갉아먹으며 '너는 나 없으면 아무것도 아니야'라는 불안을 주입한다. 네가 잘나갈 땐 질투로 눈빛이 싸늘해지고, 네가 주저앉을 때만 우월감을 느끼며 동정하는 척한다.<br>
+          <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: ${ruin.title}</strong>
+          • <strong>영적 체취</strong>: ${ruin.scent}<br>
+          • <strong>소름 돋는 특징</strong>: ${ruin.trait}<br>
           • <strong>경고</strong>: 이 자와 살을 섞거나 깊은 연인으로 들이면, 네 사주 원국의 명예운과 금전운이 3년간 송두리째 잿더미가 된다. 지금 그런 냄새가 나는 자가 주변에 있다면 뒤도 돌아보지 말고 뛰어 도망쳐라!
         </div>
 
         <div class="portfolio-highlight" style="border-left: 4.5px solid #15803d; background: #f6fdf7; margin-top:12px;">
-          <strong class="impact-green" style="font-size:15.5px; display:block; margin-bottom:6px;">🌿 2. 너를 살려낼 천생연분: 비 온 뒤 솔숲의 맑은 흙 냄새</strong>
-          • <strong>영적 체취</strong>: 화려한 말재주는 없어도, 그 사람 곁에 가만히 앉아 있기만 해도 목덜미의 서늘한 긴장감이 봄눈 녹듯 스르륵 풀리는 사람이다. 깊은 산속 젖은 흙내와 청량한 솔잎 향을 풍긴다.<br>
-          • <strong>소름 돋는 특징</strong>: 네 결핍된 오행(${weakKey})을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>] 띠의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.<br>
+          <strong class="impact-green" style="font-size:15.5px; display:block; margin-bottom:6px;">🌿 2. 너를 살려낼 천생연분: ${soulmate.title}</strong>
+          • <strong>영적 체취</strong>: ${soulmate.scent}<br>
+          • <strong>소름 돋는 특징</strong>: 네 결핍된 오행(${EL_KO[weakKey]})을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>] 띠의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.<br>
           • <strong>도래 시기</strong>: <strong class="impact-gold">${Y_R0}년 하반기~${Y_R1}년 상반기</strong>, 일이나 학업으로 얽힌 공적인 자리 또는 조용한 이동 중에 우연처럼 마주치게 된다.
         </div>
       </div>
@@ -656,13 +805,14 @@ let currentSajuData = null;
         <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 누재살(漏財煞) 봉인법</div>
         <div class="portfolio-text">
           네 명식에는 돈을 버는 재능은 있으나, 담아두는 그릇의 밑바닥에 실금이 가 있어 물이 줄줄 새어나가는 <strong class="impact-red">누재살(漏財煞)</strong>의 기운이 감돌고 있다.<br><br>
-          "돈이 좀 모였다 싶으면 꼭 엉뚱한 곳에서 목돈이 깨지는 상황", 기억나지 않느냐? 병원비, 가족이나 친구의 부탁, 충동적인 지출 등으로 공든 탑이 무너지는 패턴이다.
+          "돈이 좀 모였다 싶으면 꼭 엉뚱한 곳에서 목돈이 깨지는 상황", 기억나지 않느냐? 병원비, 가족이나 친구의 부탁, 충동적인 지출 등으로 공든 탑이 무너지는 패턴이다.<br><br>
+          ${wealthDiagnosis(ps)}
         </div>
         <div class="portfolio-highlight">
           <strong class="impact-gold" style="font-size:15.5px; display:block; margin-bottom:8px;">🔒 누재살 방어 3대 황금 비방:</strong>
           1. <strong>현금 봉쇄 작전</strong>: 통장에 자유입출금 잔고를 200만 원 이상 두지 마라. 들어오는 즉시 묶이는 청약, 펀드, 채권 등 빼기 힘든 구조로 강제 이체하라.<br>
           2. <strong>불필요한 동정심 차단</strong>: 주변의 금전 거래 요구나 빌려달라는 부탁은 무조건 "지금 전세금(또는 투자금)으로 다 묶여 있다"고 단칼에 거절하라.<br>
-          3. <strong>재물 방위 풍수</strong>: 잠잘 때 머리를 [<strong class="impact-gold">${remedy.direction}</strong>] 방향으로 두고, 작업 책상 위에 [<strong class="impact-gold">${remedy.item}</strong>]을(를) 두어 재물의 살을 튕겨내라.
+          3. <strong>재물 방위 풍수</strong>: 잠잘 때 머리를 [<strong class="impact-gold">${remedy.dir}</strong>] 방향으로 두고, 작업 책상 위에 [<strong class="impact-gold">${remedy.item}</strong>]을(를) 두어 재물의 살을 튕겨내라.
         </div>
       </div>
 
@@ -678,16 +828,19 @@ let currentSajuData = null;
             <div class="timeline-dot"></div>
             <div class="timeline-title">${Y_R0}년 (${yearGanji(Y_R0)}년 ${yearGanji(Y_R0,true)}) · 불의 정화와 준비기</div>
             <div class="timeline-desc">너를 옭아매던 구시대의 썩은 인연과 미련을 태워 없애는 해다. [<strong class="impact-gold">${dream}</strong>]을(를) 향한 핵심 기술과 역량을 칼처럼 벼려내라. 상반기엔 조용히 내실을 다지고 하반기부터 판을 벌려라.</div>
+            <div class="timeline-desc timeline-relation">${yearRelationText(Y_R0, ps)}</div>
           </div>
           <div class="timeline-step">
             <div class="timeline-dot"></div>
             <div class="timeline-title">${Y_R1}년 (${yearGanji(Y_R1)}년 ${yearGanji(Y_R1,true)}) · 인생 최고의 폭발적 골든타임 🎯</div>
             <div class="timeline-desc">네 인생의 대운이 정점에 달하는 시기다. 네가 준비한 결과물이 세상의 인정을 받고, 귀인의 조력으로 통장에 목돈이 꽂히며 신분이 급상승한다. 이때 주저하지 말고 인생의 승부수를 던져라!</div>
+            <div class="timeline-desc timeline-relation">${yearRelationText(Y_R1, ps)}</div>
           </div>
           <div class="timeline-step">
             <div class="timeline-dot"></div>
             <div class="timeline-title">${Y_R2}년 (${yearGanji(Y_R2)}년 ${yearGanji(Y_R2,true)}) · 결실 수확 및 시스템 안착</div>
             <div class="timeline-desc">폭발적인 성공을 바탕으로 단단한 성벽을 쌓는 해다. 흔들리지 않는 자산 파이프라인을 구축하고, 너를 따르는 세력을 형성하여 평생의 부(富)를 안정화하라.</div>
+            <div class="timeline-desc timeline-relation">${yearRelationText(Y_R2, ps)}</div>
           </div>
         </div>
       </div>
@@ -702,7 +855,8 @@ let currentSajuData = null;
         <div class="portfolio-highlight">
           1. <strong>기상 직후 찬물 한 잔 & 축문</strong>: 눈뜨자마자 스마트폰을 보지 말고, 찬물 한 잔을 마시며 "내 안의 흉살은 물러가고 천명이 일어선다" 세 번 읊조려라.<br>
           2. <strong>매일 1시간 몰입 결계</strong>: 어떤 방해도 받지 않고 오직 [<strong class="impact-gold">${dream}</strong>]에만 몰두하는 불가침의 1시간을 반드시 사수하라.<br>
-          3. <strong>침실 정화</strong>: 침대 머리맡에 널브러진 불필요한 옷가지와 쓰레기를 즉시 치워라. 죽은 물건이 침실에 있으면 자는 동안 악귀가 기를 빨아먹는다.
+          3. <strong>침실 정화</strong>: 침대 머리맡에 널브러진 불필요한 옷가지와 쓰레기를 즉시 치워라. 죽은 물건이 침실에 있으면 자는 동안 악귀가 기를 빨아먹는다.<br><br>
+          ➕ <strong class="impact-gold">네 명식에만 내리는 맞춤 수칙 · ${EL_KO[weakKey]} 기운 보충</strong>: 네 원국에 가장 모자란 기운이다. <strong>${remedy.color}</strong> 계열의 소지품을 몸에 지니고, <strong>${remedy.food}</strong>을(를) 가까이하며, 중요한 결정은 <strong>${remedy.dir}</strong>을 바라보고 내리거라. 행운의 숫자는 <strong>${remedy.num}</strong>이다.
         </div>
       </div>
 
@@ -736,7 +890,8 @@ let currentSajuData = null;
             <p>
               • 다운로드한 부적 이미지를 <strong>스마트폰 잠금화면이나 배경화면</strong>으로 설정해 두면 매일 첫 순간 액살을 털어냅니다.<br>
               • 출력하여 지갑 속이나 작업 공간(모니터 뒤편, 책상 서랍)에 넣어두셔도 좋습니다.<br>
-              • 마음이 흔들리거나 중요한 결정을 내릴 때 꺼내보며 지박령의 축문을 나지막이 읊으십시오.
+              • 마음이 흔들리거나 중요한 결정을 내릴 때 꺼내보며 지박령의 축문을 나지막이 읊으십시오.<br>
+              • <strong>네 명식 맞춤</strong>: 네 원국에 모자란 <strong>${EL_KO[weakKey]}</strong> 기운을 채우려면, 출력한 부적을 <strong>${remedy.dir}</strong> 벽에 붙이거나 <strong>${remedy.color}</strong> 계열 지갑에 넣어 지니십시오. 효험이 배가됩니다.
             </p>
           </div>
         </div>
