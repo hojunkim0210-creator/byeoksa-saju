@@ -1329,8 +1329,18 @@ let currentSajuData = null;
     report:  { name: '벽사신견 천명 리포트',     price: SALE.price, label: '천명 리포트' },
     newyear: { name: '벽사신견 신년운세',         price: 4900,       label: '신년운세' },
     compat:  { name: '벽사신견 궁합 상세 리포트', price: 3900,       label: '궁합 상세 리포트' },
-    wish:    { name: '벽사신견 소원 부적',         price: 1900,       label: '소원 부적' }
+    wish:    { name: '벽사신견 소원 부적',         price: 1900,       label: '소원 부적' },
+    bundle:  { name: '벽사신견 전부 묶음 보따리',  price: 10900,      label: '전부 묶음 보따리' }
   };
+  // 전부 묶음: 한 사람(생년월일) 기준으로 아래가 모두 열린다. 따로 사면 합계(BUNDLE_LIST_TOTAL)를 그대로 보여 준다 (실제 가격 합)
+  const WISH_KINDS = 5;
+  const BUNDLE_ITEMS = [
+    { id: 'report',  text: '천명 리포트 (6개 장 + 맞춤 개운부)', price: SALE.price },
+    { id: 'newyear', text: '신년운세 (열두 달 풀이)',            price: 4900 },
+    { id: 'wish',    text: `소원 부적 ${WISH_KINDS}종 전부 (재물·연애·합격·건강·액막이)`, price: 1900 * WISH_KINDS },
+    { id: 'compat',  text: '궁합 상세 리포트 (내가 들어간 궁합이면 상대 제한 없음)', price: 3900 }
+  ];
+  const BUNDLE_LIST_TOTAL = BUNDLE_ITEMS.reduce((n, it) => n + it.price, 0);
   // 공유 할인: 사이트를 공유한 사람·공유 링크로 들어온 사람에게 유료 풀이 1건 1,000원 할인 (이 기기, 7일)
   const SHARE_DISCOUNT = { amount: 1000, days: 7 };
   const COUPON_KEY = 'byeoksa.coupon.v1';
@@ -1399,7 +1409,17 @@ let currentSajuData = null;
   function sajuKey(sd) { return SajuCore.hashSeed(`${sd.y}-${sd.m}-${sd.d}-${sd.hourVal}-${sd.genderVal}`).toString(36); }
   function paidKeyOf(productId, subjectKey) { return `${PAID_PREFIX}${productId}.${subjectKey}`; }
   function markPaidFor(productId, subjectKey, paymentId) { try { localStorage.setItem(paidKeyOf(productId, subjectKey), JSON.stringify({ paymentId, at: Date.now() })); } catch (e) { /* 저장 불가 환경 */ } }
-  function isPaidFor(productId, subjectKey) { try { return !!localStorage.getItem(paidKeyOf(productId, subjectKey)); } catch (e) { return false; } }
+  function rawPaid(productId, subjectKey) { try { return !!localStorage.getItem(paidKeyOf(productId, subjectKey)); } catch (e) { return false; } }
+  /** 결제했는지: 그 상품을 직접 샀거나, 같은 사람(생년월일)의 전부 묶음을 샀으면 열린다
+   *  대상 키 모양 — 리포트: 사람키 / 신년운세: 사람키.해 / 소원 부적: 사람키.소원 / 묶음: 사람키 */
+  function isPaidFor(productId, subjectKey) {
+    if (rawPaid(productId, subjectKey)) return true;
+    if (productId === 'report' || productId === 'newyear' || productId === 'wish') return rawPaid('bundle', String(subjectKey).split('.')[0]);
+    return false;
+  }
+  /** 이 사람(생년월일 프로필 {y,m,d,hour,gender})이 전부 묶음을 샀는지 */
+  function personKey(p) { return SajuCore.hashSeed(`${p.y}-${p.m}-${p.d}-${p.hour}-${p.gender}`).toString(36); }
+  function hasBundle(p) { return !!p && rawPaid('bundle', personKey(p)); }
   function markPaid(sd, paymentId) { markPaidFor('report', sajuKey(sd), paymentId); }
   function isPaid(sd) { return isPaidFor('report', sajuKey(sd)); }
   function savePending(obj) { try { localStorage.setItem(PENDING_KEY, JSON.stringify({ ...obj, at: Date.now() })); } catch (e) { /* 무시 */ } }
@@ -1545,6 +1565,131 @@ let currentSajuData = null;
   function openReport() {
     renderReportSummary();
     showView('viewReport');
+    setupReportBook();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 📖 리포트 책 넘김: 요약 → 기밀 표지 → 1~5장 → 개운부, 한 번에 한 장씩.
+  //   넘길 때마다 그 장의 첫머리가 화면 맨 위에 딱 맞춰진다. 인쇄(PDF)는 모든 장이 다 나온다.
+  // ─────────────────────────────────────────────────────────────────────────
+  const BOOK = { pages: [], idx: 0, busy: false };
+  const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function bookPagesNow() {
+    const box = document.getElementById('unlockedReportContainer');
+    const kids = [...box.children];
+    const isChapter = el => el.matches('.portfolio-section-card, .talisman-section-card');
+    const pages = [{ name: '먼저 맡은 냄새', els: [document.getElementById('reportSummary')] }];
+    const cover = kids.filter(el => !isChapter(el));
+    if (cover.length) pages.push({ name: '기밀 문서 표지', els: cover });
+    kids.filter(isChapter).forEach(el => {
+      const t = el.querySelector('.portfolio-section-title');
+      const name = t ? t.textContent.replace(/^[^가-힣0-9《\[(]+/, '').replace(/\s+/g, ' ').trim() : '';
+      pages.push({ name: name.length > 22 ? name.slice(0, 21) + '…' : name, els: [el] });
+    });
+    return pages;
+  }
+
+  function setupReportBook() {
+    BOOK.pages = bookPagesNow();
+    BOOK.idx = 0;
+    const dots = document.getElementById('bookDots');
+    dots.innerHTML = BOOK.pages.map((pg, i) => `<button class="book-dot" role="tab" aria-label="${i + 1}장 ${pg.name}" onclick="bookGo(${i})"></button>`).join('');
+    document.getElementById('bookBar').hidden = false;
+    document.getElementById('bookNav').hidden = false;
+    document.getElementById('viewReport').classList.add('is-book');
+    showBookPage(0);
+    fitBookNav();
+    bindBookSwipe();
+    snapBookTop();
+  }
+
+  function showBookPage(i) {
+    BOOK.idx = i;
+    BOOK.pages.forEach((pg, n) => pg.els.forEach(el => el.classList.toggle('book-off', n !== i)));
+    const last = BOOK.pages.length - 1;
+    document.getElementById('bookCount').textContent = `${i + 1} / ${BOOK.pages.length}`;
+    document.getElementById('bookName').textContent = BOOK.pages[i].name;
+    document.querySelectorAll('#bookDots .book-dot').forEach((d, n) => { d.classList.toggle('is-on', n === i); d.classList.toggle('is-read', n < i); d.setAttribute('aria-selected', n === i); });
+    const prev = document.getElementById('bookPrev'), next = document.getElementById('bookNext');
+    prev.disabled = i === 0;
+    next.textContent = i === last ? '↺ 첫 장으로' : '다음 장 ›';
+    document.getElementById('bookHint').textContent = i === last ? '마지막 장이다' : '옆으로 밀어도 넘어간다';
+    // 개운부 캔버스는 숨어 있을 때 그려졌을 수 있으니 보일 때 한 번 더 그린다
+    if (BOOK.pages[i].els.some(el => el.classList.contains('talisman-section-card')) && currentSajuData) {
+      try { renderTalismanPreview(`${currentSajuData.dStem.hanja}${currentSajuData.dBranch.hanja}`); } catch (e) { /* 미리보기 실패는 무시 */ }
+    }
+  }
+
+  /** 책 맨 위(쪽 표시줄)가 화면 맨 위에 오도록 */
+  /** 아래 메뉴(탭바)가 떠 있으면 넘김 버튼을 그 바로 위에 붙인다 */
+  function fitBookNav() {
+    const tb = document.getElementById('tabBar');
+    const h = tb && getComputedStyle(tb).display !== 'none' ? tb.getBoundingClientRect().height : 0;
+    document.getElementById('viewReport').style.setProperty('--book-nav-bottom', `${Math.round(h)}px`);
+  }
+  window.addEventListener('resize', () => { if (BOOK.pages.length) fitBookNav(); });
+
+  function snapBookTop() {
+    // 쪽 표시줄은 화면 위에 붙어 있으므로(sticky) 책 본문 위치에서 표시줄 높이만큼 뺀다
+    const bar = document.getElementById('bookBar'), book = document.getElementById('reportBook');
+    const y = book.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 14;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
+  }
+
+  function bookGo(i) {
+    if (BOOK.busy || !BOOK.pages.length) return;
+    const n = Math.max(0, Math.min(BOOK.pages.length - 1, i));
+    if (n === BOOK.idx) { snapBookTop(); return; }
+    const dir = n > BOOK.idx ? 1 : -1;
+    const book = document.getElementById('reportBook');
+    if (reduceMotion() || window.__BYEOKSA_TEST__) { showBookPage(n); snapBookTop(); return; }
+    BOOK.busy = true;
+    book.classList.add(dir > 0 ? 'turn-out-next' : 'turn-out-prev');
+    setTimeout(() => {
+      book.classList.remove('turn-out-next', 'turn-out-prev');
+      showBookPage(n);
+      snapBookTop();
+      book.classList.add(dir > 0 ? 'turn-in-next' : 'turn-in-prev');
+      setTimeout(() => { book.classList.remove('turn-in-next', 'turn-in-prev'); BOOK.busy = false; }, 380);
+    }, 260);
+  }
+
+  function bookTurn(d) {
+    const last = BOOK.pages.length - 1;
+    if (d > 0 && BOOK.idx === last) { bookGo(0); return; }
+    bookGo(BOOK.idx + d);
+  }
+
+  let _bookSwipeBound = false;
+  function bindBookSwipe() {
+    if (_bookSwipeBound) return; _bookSwipeBound = true;
+    const book = document.getElementById('reportBook');
+    let sx = 0, sy = 0, st = 0;
+    book.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); }, { passive: true });
+    book.addEventListener('touchend', e => {
+      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - st < 700) bookTurn(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    document.addEventListener('keydown', e => {
+      const v = document.getElementById('viewReport');
+      if (!v || v.style.display === 'none' || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName)) return;
+      if (e.key === 'ArrowRight') bookTurn(1);
+      else if (e.key === 'ArrowLeft') bookTurn(-1);
+    });
+  }
+
+  // PDF·인쇄에는 모든 장이 나오게: 인쇄 직전에 펼쳤다가 끝나면 보던 장으로
+  window.addEventListener('beforeprint', () => { document.querySelectorAll('.book-off').forEach(el => el.classList.remove('book-off')); });
+  window.addEventListener('afterprint', () => { if (BOOK.pages.length) showBookPage(BOOK.idx); });
+
+  /** 리포트 결제창의 '전부 묶음' 버튼 */
+  function openBundleForReport() {
+    if (!currentSajuData || !window.BYEOKSA_SHOP) return;
+    const sd = currentSajuData;
+    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream });
+    closePaymentModal();
+    window.BYEOKSA_SHOP.openBundle({ y: sd.y, m: sd.m, d: sd.d, hour: sd.hourVal, gender: sd.genderVal }, 'report', pick(sd));
   }
 
   /** 리포트 첫머리: 무료 풀이에서 본 내용을 한눈에 정리 */

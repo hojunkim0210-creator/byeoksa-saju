@@ -14,12 +14,12 @@ async function withMe(page, p = ME) {
 }
 const text = (page, sel) => page.evaluate(s => document.querySelector(s).innerText, sel);
 
-test('대문 진열: 유료 풀이 4가지와 가격', async () => {
+test('대문 진열: 유료 풀이 4가지 + 전부 묶음과 가격', async () => {
   const { ctx, page } = await openPage(browser);
   await withMe(page);
   const items = await page.$$eval('.shop-item', els => els.map(e => e.innerText.replace(/\s+/g, ' ')));
-  assert.equal(items.length, 4);
-  for (const [name, price] of [['천명 리포트', '4,900원'], ['신년운세', '4,900원'], ['궁합 상세', '3,900원'], ['소원 부적', '1,900원']]) {
+  assert.equal(items.length, 5);
+  for (const [name, price] of [['천명 리포트', '4,900원'], ['신년운세', '4,900원'], ['궁합 상세', '3,900원'], ['소원 부적', '1,900원'], ['전부 묶음', '10,900원']]) {
     assert.ok(items.some(t => t.includes(name) && t.includes(price)), name + ' ' + price);
   }
   assert.deepEqual(page._errors, []);

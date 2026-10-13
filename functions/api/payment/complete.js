@@ -14,7 +14,8 @@ export const CATALOG = {
   '벽사신견 천명 리포트': 4900,
   '벽사신견 신년운세': 4900,
   '벽사신견 궁합 상세 리포트': 3900,
-  '벽사신견 소원 부적': 1900
+  '벽사신견 소원 부적': 1900,
+  '벽사신견 전부 묶음 보따리': 10900
 };
 export const SHARE_DISCOUNT = 1000;   // 공유 할인 (app.js SHARE_DISCOUNT.amount 와 같게)
 export const ORDER_NAME = '벽사신견 천명 리포트';

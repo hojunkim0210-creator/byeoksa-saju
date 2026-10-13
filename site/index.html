@@ -270,6 +270,11 @@
           <span class="shop-text"><span class="shop-name">소원 부적</span><span class="shop-hook">금테 두른 부적 한 장, 백구가 물어다 던져 준다</span></span>
           <span class="shop-price" data-shop-price="wish">1,900원</span>
         </button>
+        <button class="shop-item shop-item-bundle" onclick="openBundleFromShelf()">
+          <span class="shop-seal" aria-hidden="true">全</span>
+          <span class="shop-text"><span class="shop-name">전부 묶음 보따리</span><span class="shop-hook">위 넷에 소원 부적 다섯 장까지, 한 번에 다 풀어 주마</span></span>
+          <span class="shop-price"><s class="shop-list-price" id="shopBundleList">23,200원</s> <span data-shop-price="bundle">10,900원</span></span>
+        </button>
       </div>
       <p class="coupon-line shop-coupon" data-coupon-line="report" hidden></p>
     </section>
@@ -571,10 +576,22 @@
       <button class="btn-action" onclick="printReport()">🖨️ PDF/인쇄 저장</button>
       <button class="btn-action" onclick="shareSite()">💬 사이트 공유하기</button>
     </div>
-    <section class="report-summary" id="reportSummary" aria-label="무료 풀이 요약"></section>
-    <div class="unlocked-report-container" id="unlockedReportContainer">
-      <!-- 동적 렌더링 -->
+    <!-- 📖 리포트 책: 한 번에 한 장씩 넘겨 본다 (app.js setupReportBook) -->
+    <div class="book-bar" id="bookBar" hidden>
+      <div class="book-bar-top"><span class="book-count" id="bookCount">1 / 8</span><span class="book-name" id="bookName"></span></div>
+      <div class="book-dots" id="bookDots" role="tablist" aria-label="리포트 장 고르기"></div>
     </div>
+    <div class="report-book" id="reportBook">
+      <section class="report-summary" id="reportSummary" aria-label="무료 풀이 요약"></section>
+      <div class="unlocked-report-container" id="unlockedReportContainer">
+        <!-- 동적 렌더링 -->
+      </div>
+    </div>
+    <nav class="book-nav" id="bookNav" hidden aria-label="리포트 넘기기">
+      <button class="book-btn book-prev" id="bookPrev" onclick="bookTurn(-1)">‹ 앞 장</button>
+      <span class="book-hint" id="bookHint">옆으로 밀어도 넘어간다</span>
+      <button class="book-btn book-next" id="bookNext" onclick="bookTurn(1)">다음 장 ›</button>
+    </nav>
   </div>
 
   <!-- 📍 인연 궁합 -->
@@ -671,6 +688,8 @@
     <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
     <div id="reportPromo"></div>
     <button class="btn-submit" id="payButton" onclick="startPayment()">테스트로 봉인 해제해보기 🐾</button>
+    <!-- 전부 묶음 권유: 리포트 대신 묶음으로 한꺼번에 (shop.js openBundle) -->
+    <button class="btn-bundle" id="reportBundleBtn" onclick="openBundleForReport()">📦 <span>신년운세·소원 부적 5종·궁합 상세까지 <strong>전부 10,900원</strong></span></button>
     <button class="btn-close" onclick="closePaymentModal()">닫기</button>
   </div>
 </div>

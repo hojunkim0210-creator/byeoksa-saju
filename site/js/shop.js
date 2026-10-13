@@ -50,8 +50,9 @@
   // ─────────────────────────────────────────────────────────────────────
   // 공용: 봉인 카드(맛보기 + 결제 버튼), 상품 결제창
   // ─────────────────────────────────────────────────────────────────────
-  function sealCard({ productId, title, hook, items, buttonLabel, btnId }) {
+  function sealCard({ productId, title, hook, items, buttonLabel, btnId, bundleFrom }) {
     const pr = priceFor(productId);
+    const bundleLine = bundleFrom ? `<button class="btn-bundle" data-bundle-from="${bundleFrom}">📦 <span>이것까지 리포트·신년운세·소원 부적 5종·궁합 상세 <strong>전부 ${won(PRODUCTS.bundle.price)}원</strong></span></button>` : '';
     return `
       <div class="feature-card seal-card">
         <div class="seal-card-head">
@@ -67,6 +68,7 @@
         </div>
         <p class="coupon-line" data-coupon-line="${productId}" hidden></p>
         <button class="btn-pay" id="${btnId}">${buttonLabel}</button>
+        ${bundleLine}
         <p class="feature-note">전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않는다.</p>
       </div>`;
   }
@@ -178,8 +180,9 @@
         title: `${D.TY}년 열두 달, 봉인된 이야기`,
         hook: `가장 몸을 사려야 할 달은 <strong>${mLabel(w)}</strong>이다. 그 달에 무엇이 네 발목을 잡는지, 그리고 <strong>${mLabel(b)}</strong>에 들어오는 볕을 붙잡으려면 언제부터 무엇을 준비해야 하는지는 이 봉인 안에 적어 두었다.`,
         items: ['달마다 <strong>할 일</strong>과 <strong>피할 일</strong>, 백구 한마디 (12달)', '돈 · 일 · 공부 · 인연 · 건강, <strong>분야별로 기운이 몰리는 달</strong>', '네 사주에 모자란 기운을 채우는 <strong>한 해 비방</strong> (색 · 방위 · 숫자)', 'PDF로 저장해 한 해 동안 꺼내 보기'],
-        buttonLabel: `📜 ${D.TY}년 봉인 풀기`
+        buttonLabel: `📜 ${D.TY}년 봉인 풀기`, bundleFrom: 'newyear'
       });
+      bindBundle(body, p, 'newyear');
       $('nyBuy').onclick = () => openProductModal('newyear', {
         title: `📜 ${D.TY}년 신년운세 봉인 풀기`,
         desc: `${esc(D.sj.ilju)}일주의 ${D.TY}년 열두 달 풀이와 분야별 흐름, 한 해 비방이 열린다.`,
@@ -293,15 +296,16 @@
     $('compatResult').appendChild(host);
     const key = compatKey(a, b);
     const D = compatDetailData(A, B, r, nameA, nameB);
-    if (!isPaidFor('compat', key)) {
+    if (!isPaidFor('compat', key) && !hasBundle(a) && !hasBundle(b)) {
       const firstSentence = D.fight.split('. ')[0] + '.';
       host.innerHTML = sealCard({
         productId: 'compat', btnId: 'compatBuy',
         title: '두 사람의 상세 궁합',
         hook: `점수는 숫자일 뿐이다. ${firstSentence} 이 다툼이 어떻게 풀리는지, 언제 함께 움직여야 하는지는 따로 적어 두었다.`,
         items: ['두 사람이 <strong>싸우는 패턴</strong>과 푸는 법', `${esc(nameA)}에게, ${esc(nameB)}에게 <strong>꼭 필요한 한마디</strong>`, `앞으로 6년 중 <strong>함께하면 좋은 해</strong>와 조심할 해`, '오래 가는 비결 · 두 사람에게 맞는 <strong>데이트 비방</strong>'],
-        buttonLabel: '💞 상세 궁합 봉인 풀기'
+        buttonLabel: '💞 상세 궁합 봉인 풀기', bundleFrom: 'compat'
       });
+      bindBundle(host, a, 'compat', { a, b, nameA, nameB });
       $('compatBuy').onclick = () => openProductModal('compat', {
         title: '💞 두 사람의 상세 궁합',
         desc: `${esc(nameA)} · ${esc(nameB)} 두 사람의 다툼 패턴, 필요한 한마디, 함께하면 좋은 해와 비방이 열린다.`,
@@ -576,8 +580,9 @@
         title: `${W.ko} 소원 부적 받기`,
         hook: `네 사주에서 ${W.ko}의 자리는 <strong>${R.label}</strong>로 드러난다. 이 숫자가 네 ${W.ko}에 무슨 뜻인지, 앞으로 열두 달 중 이 부적이 가장 힘을 쓰는 달이 언제인지는 봉인 안에 적어 두었다.`,
         items: ['금테 두른 <strong>소원 부적 원본</strong> + 휴대폰 <strong>배경화면</strong>(1080×1920) 저장', `네 사주로 본 <strong>${W.ko}의 자리</strong> 풀이`, `앞으로 12달 중 <strong>부적이 힘을 쓰는 달</strong> 3개`, '부적 쓰는 법 (방위 · 색 · 숫자)과 백구 한마디'],
-        buttonLabel: `🧧 ${W.ko} 부적 받기`
+        buttonLabel: `🧧 ${W.ko} 부적 받기`, bundleFrom: 'wish'
       });
+      bindBundle($('wishText'), p, 'wish', { wishId });
       $('wishBuy').onclick = () => openProductModal('wish', {
         title: `🧧 ${W.ko} 소원 부적`,
         desc: `${esc(sj.ilju)}일주에 맞춘 금테 ${W.ko} 부적과 풀이가 열린다.`,
@@ -610,6 +615,69 @@
   }
 
   // ═════════════════════════════════════════════════════════════════════
+  // ④ 전부 묶음 보따리 (10,900원): 한 사람 기준 리포트·신년운세·소원 부적 5종·궁합 상세
+  // ═════════════════════════════════════════════════════════════════════
+  function bindBundle(root, p, from, extra) {
+    if (!root) return;
+    root.querySelectorAll('[data-bundle-from]').forEach(b => {
+      if (hasBundle(p)) { b.remove(); return; }
+      b.onclick = () => { closePaymentModal(); openBundle(p, from, extra); };
+    });
+  }
+
+  function openBundle(p, from = 'shelf', extra = null) {
+    if (!p) return;
+    if (hasBundle(p)) { showToast('이 생년월일은 이미 보따리를 다 풀었다.'); return; }
+    const sj = X.readSaju(p);
+    const rows = BUNDLE_ITEMS.map(it => `<li><span>${it.text}</span><span class="bundle-each">${won(it.price)}원</span></li>`).join('');
+    openProductModal('bundle', {
+      title: '📦 백구의 전부 묶음 보따리',
+      desc: `<strong>${esc(sj.ilju)}일주</strong>(${p.y}년 ${p.m}월 ${p.d}일) 한 사람 몫의 유료 풀이가 한 번에 모두 열린다.
+        <ul class="bundle-list">${rows}</ul>
+        <p class="bundle-sum">따로 사면 <s>${won(BUNDLE_LIST_TOTAL)}원</s> → 묶음 <strong>${won(PRODUCTS.bundle.price)}원</strong></p>
+        <p class="feature-note">이미 따로 산 풀이가 있어도 묶음 가격은 같다. 다른 생년월일에는 열리지 않는다.</p>`,
+      provide: '결제 즉시 리포트·신년운세·소원 부적 5종·궁합 상세가 이 화면에서 열림 · PDF·이미지 저장 가능',
+      again: '같은 기기·같은 생년월일로 들어오면 모두 다시 열림',
+      subjectKey: personKeyOf(p), data: { p, from, extra }
+    });
+  }
+
+  /** 대문 진열의 '전부 묶음' */
+  function openBundleFromShelf() {
+    const p = loadProfile();
+    if (!p) { showToast('보따리를 묶으려면 먼저 네 생년월일부터 알려 주거라.'); openMySaju(); return; }
+    openBundle(p, 'shelf');
+  }
+
+  /** 묶음 결제 뒤: 보던 화면을 그대로 다시 그려 열린 모습을 보여 준다 */
+  function afterBundle(d) {
+    saveProfile(d.p);
+    const vis = id => { const v = $(id); return !!v && v.style.display !== 'none'; };
+    const msg = '📦 보따리가 풀렸다! 리포트·신년운세·소원 부적 5종·궁합 상세가 모두 열렸다.';
+    if (d.from === 'report' && typeof currentSajuData !== 'undefined' && currentSajuData) { unlockContent(); showToast(msg); return; }
+    if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }
+    else if (d.from === 'wish') { if (d.extra) wishPicked = d.extra.wishId; openFeature('wish'); }
+    else if (d.from === 'newyear' || vis('viewNewYear')) openFeature('newyear');
+    else renderShopShelf();
+    showToast(msg);
+  }
+
+  /** 휴대폰 결제 페이지에서 돌아왔을 때 보던 화면부터 다시 그린다 */
+  function resumeBundle(d) {
+    saveProfile(d.p);
+    if (d.from === 'report' && d.extra) {
+      const sj = d.extra;
+      const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
+      set('year', sj.y); set('month', sj.m); set('day', sj.d); set('hourSelect', String(sj.hourVal)); set('gender', sj.genderVal);
+      set('userJob', sj.userJob); set('userMajor', sj.userMajor); set('userHobby', sj.userHobby); set('userDream', sj.userDream);
+      submitAndGoToResult();
+    } else if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }
+    else if (d.from === 'wish') { if (d.extra) wishPicked = d.extra.wishId; openFeature('wish'); }
+    else if (d.from === 'newyear') openFeature('newyear');
+  }
+  registerProduct('bundle', { onPaid: afterBundle, resume: resumeBundle });
+
+  // ═════════════════════════════════════════════════════════════════════
   // 결제 연결 · 진입점
   // ═════════════════════════════════════════════════════════════════════
   registerProduct('newyear', {
@@ -635,8 +703,12 @@
       el.innerHTML = pr.coupon ? `<s>${won(pr.list)}원</s> ${won(pr.final)}원` : `${won(pr.list)}원`;
     });
     const ty = $('shopNewYearYear'); if (ty) ty.textContent = targetYear();
+    const bl = $('shopBundleList'); if (bl) bl.textContent = `${won(BUNDLE_LIST_TOTAL)}원`;
+    const bp = document.querySelector('[data-shop-price="bundle"]');
+    if (bp && hasBundle(loadProfile())) { bp.textContent = '다 풀었다'; if (bl) bl.hidden = true; }
   }
   document.addEventListener('DOMContentLoaded', renderShopShelf);
 
-  window.BYEOKSA_SHOP = { afterCompat, renderShopShelf, newYearData, compatDetailData, wishReading, WISHES, NY, drawWishTalisman, targetYear };
+  window.openBundleFromShelf = openBundleFromShelf;
+  window.BYEOKSA_SHOP = { openBundle, openBundleFromShelf, afterCompat, renderShopShelf, newYearData, compatDetailData, wishReading, WISHES, NY, drawWishTalisman, targetYear };
 })();
