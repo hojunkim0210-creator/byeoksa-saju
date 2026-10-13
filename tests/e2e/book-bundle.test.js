@@ -162,3 +162,26 @@ test('묶음 실결제(포트원 흉내): 10,900원·묶음 상품명으로 요�
   assert.match(await page.textContent('#toastMsg'), /보따리가 풀렸다/);
   await ctx.close();
 });
+
+test('결과 화면 헌화비 칸: 처음부터 묶음(10,900원·23,200원)을 앞에, 따로 사는 풀이 넷도 모두 보여 준다', async () => {
+  const { ctx, page } = await openPage(browser);
+  await fillAndSubmit(page, ME);
+  const t = (await page.textContent('#paywallOverlay .price-box')).replace(/\s+/g, ' ');
+  for (const w of ['전부 묶음 보따리', '10,900', '23,200원', '소원 부적 5종', '하나씩 따로', '천명 리포트', '4,900원', '신년운세', '궁합 상세 리포트', '3,900원', '소원 부적', '1,900원']) assert.ok(t.includes(w), w);
+  assert.ok(!/undefined|NaN/.test(t), t);
+  assert.equal(await page.locator('.plan-row').count(), 4);
+  // 리포트 줄 → 리포트 결제창, 소원 부적 줄 → 부적 화면
+  await page.click('#planRowReport'); await page.waitForTimeout(150);
+  assert.ok(await page.isVisible('#paymentModal'));
+  await page.evaluate(() => closePaymentModal());
+  await page.click('.plan-row:has-text("소원 부적")'); await page.waitForTimeout(250);
+  assert.equal(await viewOf(page), 'viewWish');
+  // 묶음 버튼으로 바로 산다
+  await page.evaluate(() => goToStep(3)); await page.waitForTimeout(150);
+  await page.click('.btn-pay-bundle'); await page.waitForTimeout(200);
+  assert.match(await page.textContent('#productModal'), /전부 묶음 보따리/);
+  await page.click('#productPayBtn'); await page.waitForTimeout(400);
+  assert.equal(await viewOf(page), 'viewReport');
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});

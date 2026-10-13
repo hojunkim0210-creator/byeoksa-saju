@@ -1400,6 +1400,7 @@ let currentSajuData = null;
   function renderCouponLines() {
     document.querySelectorAll('[data-coupon-line]').forEach(el => { el.innerHTML = couponLineHtml(el.dataset.couponLine); el.hidden = !el.innerHTML; });
     if (window.BYEOKSA_SHOP) window.BYEOKSA_SHOP.renderShopShelf();
+    renderPlanBox();
   }
   document.addEventListener('DOMContentLoaded', renderCouponLines);
 
@@ -1431,7 +1432,18 @@ let currentSajuData = null;
   function registerProduct(productId, hooks) { PRODUCT_HOOKS[productId] = hooks; }
 
   /** 지금 풀이가 결제된 사주인지에 따라 결제 안내·리포트를 맞춘다 (다른 생년월일로 바꾸면 다시 잠긴다) */
+  function renderPlanBox() {
+    const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+    set('planBundleList', `${won(BUNDLE_LIST_TOTAL)}원`);
+    set('planBundlePrice', won(priceFor('bundle').final));
+    const d = new Date(), ty = d.getMonth() + 1 >= 9 ? d.getFullYear() + 1 : d.getFullYear();
+    document.querySelectorAll('.plan-ny-year').forEach(el => { el.textContent = ty; });
+    document.querySelectorAll('[data-plan-price]').forEach(el => { el.textContent = `${won(priceFor(el.dataset.planPrice).final)}원 ›`; });
+  }
+  document.addEventListener('DOMContentLoaded', renderPlanBox);
+
   function applyPaidState() {
+    renderPlanBox();
     reportUnlocked = !!currentSajuData && isPaid(currentSajuData);
     document.getElementById('paywallOverlay').style.display = reportUnlocked ? 'none' : '';
     document.getElementById('reportReopen').hidden = !reportUnlocked;
