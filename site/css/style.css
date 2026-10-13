@@ -911,6 +911,10 @@ option:disabled { color: #9C8E7C; }
 .modal-box {
   width: 100%;
   max-width: 360px;
+  max-height: calc(100vh - 36px);    /* 키 작은 휴대폰에서도 결제 버튼까지 스크롤로 닿게 */
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1240,6 +1244,203 @@ option:disabled { color: #9C8E7C; }
 /* 리포트: 누재살 비방이 어떤 사주 값으로 골랐는지 */
 .guard-basis { display: block; margin-bottom: 6px; font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
 
+/* 결제창: 상품 안내 */
+.product-info { display: grid; grid-template-columns: 4.6em 1fr; gap: 6px 10px; padding: 12px; border-radius: 6px; border: 1px solid var(--paper-line); background: rgba(255, 252, 244, 0.6); font-size: 13.5px; line-height: 1.6; text-align: left; }
+.product-info dt { font-weight: 700; color: var(--ink-soft); }
+.product-info dd { color: var(--ink); }
+
+/* 공유 할인 안내 줄 */
+.coupon-line { display: block; margin-top: 6px; font-size: 13.5px; line-height: 1.6; color: var(--yellow); }
+.coupon-line s { opacity: 0.7; }
+.coupon-line .link-btn { margin-left: 4px; }
+.product-info .coupon-line, .modal-box .coupon-line { color: var(--cinnabar); }
+
+/* ── 백구의 비방 보따리 (대문 유료 진열) ─────────────────────────────── */
+.shop-shelf { display: flex; flex-direction: column; gap: 12px; }
+.shop-list { display: flex; flex-direction: column; gap: 10px; }
+.shop-item {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border-radius: var(--r-paper);
+  background-color: var(--paper);
+  background-image: var(--paper-grain);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: inset 0 0 0 1px var(--paper-line);
+}
+.shop-item:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.shop-seal { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 4px; background: var(--cinnabar); color: #F7E3B0; font-family: var(--font-display); font-size: 24px; line-height: 1; transform: rotate(-3deg); }
+.shop-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shop-name { font-family: var(--font-display); font-size: 18px; line-height: 1.35; }
+.shop-hook { font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
+.shop-price { font-weight: 700; font-size: 14.5px; color: var(--cinnabar); white-space: nowrap; }
+.shop-price s { font-weight: 400; color: var(--ink-soft); margin-right: 2px; }
+.shop-item-gold { box-shadow: inset 0 0 0 2px #C9A23A, inset 0 0 0 5px var(--paper), inset 0 0 0 6px rgba(201, 162, 58, 0.7); }
+.shop-item-gold .shop-seal { background: linear-gradient(135deg, #8A6414, #F2DA86 45%, #B98A26); color: #5A2A10; }
+.shop-coupon { text-align: center; }
+
+/* ── 유료 상품 공통: 봉인 카드 ─────────────────────────────────────── */
+.seal-card { position: relative; gap: 12px; box-shadow: inset 0 0 0 1px var(--paper-line), inset 0 0 0 5px var(--paper), inset 0 0 0 6px rgba(168, 42, 32, 0.45); }
+.seal-card-head { display: flex; align-items: center; gap: 10px; }
+.seal-card-stamp { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 3px; background: var(--cinnabar); color: #F7E3B0; font-family: var(--font-display); font-size: 19px; transform: rotate(-6deg); }
+.seal-hook { font-size: 15.5px; line-height: 1.85; color: var(--ink); }
+.seal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 6px; background: rgba(255, 252, 244, 0.6); border: 1px dashed rgba(168, 42, 32, 0.35); }
+.seal-list li { position: relative; padding-left: 20px; font-size: 14.5px; line-height: 1.65; color: var(--ink); }
+.seal-list li::before { content: '🔒'; position: absolute; left: 0; top: 0; font-size: 12px; }
+.seal-fog { display: flex; flex-direction: column; gap: 7px; padding: 4px 2px; filter: blur(3px); opacity: 0.55; }
+.seal-fog span { height: 10px; border-radius: 5px; background: var(--ink-soft); }
+.seal-fog span:nth-child(1) { width: 92%; } .seal-fog span:nth-child(2) { width: 78%; } .seal-fog span:nth-child(3) { width: 60%; }
+.seal-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.seal-price strong { font-family: var(--font-display); font-weight: 400; font-size: 28px; color: var(--cinnabar); }
+.seal-price s { color: var(--ink-soft); font-size: 15px; }
+.seal-price-note { font-size: 13px; color: var(--ink-soft); }
+.seal-card .coupon-line { color: var(--cinnabar); margin-top: 0; }
+
+/* ── 신년운세 ───────────────────────────────────────────────────── */
+.ny-head { gap: 12px; }
+.ny-year { font-size: 14.5px; color: var(--ink-soft); }
+.ny-bars { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ny-bar { display: grid; grid-template-columns: 4.4em 1fr 2em; grid-template-areas: 'm t s' '. k k'; align-items: center; gap: 0 8px; }
+.ny-bar-m { grid-area: m; font-weight: 700; font-size: 14px; }
+.ny-bar-track { grid-area: t; height: 10px; border-radius: 5px; background: rgba(43, 35, 29, 0.1); overflow: hidden; }
+.ny-bar-fill { display: block; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #C9A23A, var(--cinnabar)); }
+.ny-bar-s { grid-area: s; font-size: 13px; text-align: right; color: var(--ink-soft); }
+.ny-bar-k { grid-area: k; font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); }
+.ny-bar.is-chung .ny-bar-fill { background: linear-gradient(90deg, #7C6A5A, #4D4038); }
+.ny-picks { display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.ny-pick-tag { display: inline-block; padding: 1px 8px; margin-right: 4px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+.ny-pick-tag.good { background: rgba(201, 162, 58, 0.25); color: #6B4A08; }
+.ny-pick-tag.bad { background: rgba(77, 64, 56, 0.15); color: var(--ink); }
+.ny-months { display: flex; flex-direction: column; gap: 12px; }
+.ny-month { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 6px; background: rgba(255, 252, 244, 0.6); border: 1px solid var(--paper-line); }
+.ny-month header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.ny-month-m { font-family: var(--font-display); font-size: 22px; color: var(--cinnabar); }
+.ny-month-g { font-size: 13px; color: var(--ink-soft); }
+.ny-month-s { font-size: 13px; font-weight: 700; color: var(--ink); margin-left: auto; }
+.ny-month p { font-size: 14.5px; line-height: 1.75; color: var(--ink); }
+.ny-tag { display: inline-block; min-width: 2.6em; margin-right: 6px; padding: 0 6px; border-radius: 3px; font-size: 12px; font-weight: 700; text-align: center; vertical-align: 1px; }
+.ny-tag.do { background: rgba(201, 162, 58, 0.28); color: #6B4A08; }
+.ny-tag.avoid { background: rgba(168, 42, 32, 0.14); color: var(--cinnabar-deep); }
+.ny-tag.rel { background: rgba(43, 90, 120, 0.14); color: #23485E; }
+.ny-tag.fill { background: rgba(40, 110, 70, 0.14); color: #1E5234; }
+.ny-say { font-family: var(--font-display); font-size: 16px; line-height: 1.7; color: var(--cinnabar-deep); }
+.ny-fields { padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.75; color: var(--ink); }
+
+/* ── 궁합 상세 ──────────────────────────────────────────────────── */
+.compat-detail { gap: 10px; }
+.cd-h { margin-top: 6px; font-size: 15.5px; font-weight: 700; color: var(--cinnabar); }
+.cd-years { list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; line-height: 1.7; }
+.cd-years li { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--paper-line); }
+.cd-years li.good { background: rgba(201, 162, 58, 0.18); }
+.cd-years li.bad { background: rgba(77, 64, 56, 0.1); }
+
+/* ── 소원 부적 ──────────────────────────────────────────────────── */
+.feature-seal-gold { background: linear-gradient(135deg, #8A6414, #F2DA86 45%, #B98A26); color: #5A2A10; }
+.wish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wish-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; border-radius: 6px; text-align: left; color: var(--ink); background: rgba(255, 252, 244, 0.65); border: 1px solid var(--paper-line); }
+.wish-card.is-on { border-color: #C9A23A; box-shadow: 0 0 0 2px #C9A23A; background: #FFF6DA; }
+.wish-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.wish-seal { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 3px; background: var(--cinnabar); color: #F7E3B0; font-family: var(--font-display); font-size: 19px; }
+.wish-name { font-family: var(--font-display); font-size: 18px; }
+.wish-desc { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.wish-owned { position: absolute; top: 8px; right: 8px; padding: 0 6px; border-radius: 3px; background: #C9A23A; color: #3A2606; font-size: 11.5px; font-weight: 700; }
+.wish-stage { position: relative; align-items: center; overflow: hidden; background: radial-gradient(120% 80% at 50% 0%, #2A2C45, var(--night) 70%); box-shadow: inset 0 0 0 1px rgba(201, 162, 58, 0.5); }
+.wish-throw { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid #C9A23A; animation: dogArrive 0.7s ease-out both; }
+.wish-throw img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+.wish-talisman-wrap { position: relative; width: min(70%, 260px); animation: talismanThrow 0.9s 0.45s cubic-bezier(.2, .8, .25, 1) both; }
+.wish-talisman { display: block; width: 100%; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px rgba(201, 162, 58, 0.6), 0 18px 40px -12px rgba(227, 179, 65, 0.55); }
+.wish-stage.is-sealed .wish-talisman { filter: blur(7px) saturate(0.7) brightness(0.85); }
+.wish-seal-band { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 74px; height: 74px; border-radius: 4px; background: var(--cinnabar); color: #F7E3B0; font-family: var(--font-display); font-size: 42px; transform: translate(-50%, -50%) rotate(-8deg); box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.6); }
+.wish-caption { font-size: 14.5px; line-height: 1.7; color: var(--moon); text-align: center; }
+.wish-caption strong { color: var(--yellow); }
+@keyframes dogArrive { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes talismanThrow {
+  0% { transform: translateY(-120px) rotate(-420deg) scale(0.15); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* 결제창: 할인 코드 */
+.promo-row { display: flex; gap: 8px; }
+.promo-input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--paper-line); background: #FFFCF4; font-size: 16px; color: var(--ink); }
+.promo-apply { flex: none; padding: 0 16px; border-radius: 8px; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 14.5px; }
+
+/* ── 분위기: 안개 · 불티 · 어둠 (모든 화면 뒤) ───────────────────────── */
+.ambience { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.app-container { position: relative; z-index: 1; }
+.fog { position: absolute; inset: -20% -60%; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.006 .012' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 .78  0 0 0 0 .8  0 0 0 0 .9  0 0 0 .55 -.18'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>"); background-size: 600px 600px; opacity: 0.22; mix-blend-mode: screen; }
+.fog-a { animation: fogDrift 70s linear infinite; }
+.fog-b { opacity: 0.14; background-size: 900px 900px; animation: fogDrift 110s linear infinite reverse; top: 30%; }
+@keyframes fogDrift { from { transform: translateX(0); } to { transform: translateX(600px); } }
+.embers i { position: absolute; bottom: -10px; width: 3px; height: 3px; border-radius: 50%; background: #F08A3C; box-shadow: 0 0 6px 2px rgba(240, 120, 50, 0.6); opacity: 0; animation: ember 14s linear infinite; }
+.embers i:nth-child(1) { left: 8%; animation-delay: 0s; }  .embers i:nth-child(2) { left: 21%; animation-delay: 3.2s; animation-duration: 17s; }
+.embers i:nth-child(3) { left: 34%; animation-delay: 6.1s; } .embers i:nth-child(4) { left: 47%; animation-delay: 1.4s; animation-duration: 19s; }
+.embers i:nth-child(5) { left: 59%; animation-delay: 8.3s; } .embers i:nth-child(6) { left: 71%; animation-delay: 4.6s; animation-duration: 16s; }
+.embers i:nth-child(7) { left: 83%; animation-delay: 10.2s; } .embers i:nth-child(8) { left: 93%; animation-delay: 2.5s; animation-duration: 20s; }
+.embers i:nth-child(9) { left: 15%; animation-delay: 12s; animation-duration: 18s; } .embers i:nth-child(10) { left: 40%; animation-delay: 9s; }
+.embers i:nth-child(11) { left: 65%; animation-delay: 13.5s; animation-duration: 21s; } .embers i:nth-child(12) { left: 88%; animation-delay: 7s; }
+@keyframes ember {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 0.9; }
+  60% { opacity: 0.5; }
+  100% { transform: translate(-30px, -105vh); opacity: 0; }
+}
+.vignette { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(5, 5, 12, 0.75) 100%); }
+
+/* 대문 초상화: 등불이 흔들리는 빛 */
+.spirit-portrait-box { position: relative; }
+.spirit-portrait-box::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(60% 45% at 50% 85%, rgba(240, 150, 60, 0.28), transparent 70%); mix-blend-mode: screen; animation: lanternFlicker 3.2s ease-in-out infinite; }
+@keyframes lanternFlicker { 0%, 100% { opacity: 0.9; } 20% { opacity: 0.55; } 23% { opacity: 0.95; } 50% { opacity: 0.7; } 74% { opacity: 1; } 77% { opacity: 0.6; } }
+
+/* 벽사신견이란 */
+.lore-strip { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; border-left: 3px solid var(--cinnabar); background: linear-gradient(90deg, rgba(168, 42, 32, 0.16), transparent); color: var(--moon); text-align: left; }
+.lore-line { font-family: var(--font-display); font-size: 19px; line-height: 1.5; }
+.lore-line strong { color: var(--yellow); font-weight: 400; }
+.lore-sub { font-size: 14.5px; line-height: 1.8; color: var(--moon-soft); }
+.lore-sub strong { color: var(--moon); }
+.lore-hook { font-size: 14.5px; line-height: 1.8; color: var(--moon); }
+.lore-hook em { font-style: normal; color: #E58A7E; }
+
+/* ── 첫 진입 연출 ───────────────────────────────────────────────── */
+body.veil-on { overflow: hidden; }
+.opening-veil { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 26px; padding: 32px 26px 90px; background: #06060C; color: var(--moon); transition: opacity 0.9s ease; }
+.opening-veil[hidden] { display: none !important; }
+.opening-veil.is-leaving { opacity: 0; }
+.opening-lantern { position: absolute; top: 12%; left: 50%; width: 180px; height: 180px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle, rgba(240, 150, 60, 0.35), rgba(240, 150, 60, 0.05) 50%, transparent 70%); animation: lanternFlicker 2.6s ease-in-out infinite; }
+.opening-lines { position: relative; display: flex; flex-direction: column; gap: 18px; max-width: 26em; }
+.opening-lines p { font-family: var(--font-display); font-size: 18px; line-height: 1.75; text-align: center; opacity: 0; animation: lineIn 1.6s ease forwards; }
+.opening-lines p strong { color: var(--yellow); font-weight: 400; }
+.opening-lines .opening-last { font-size: 21px; color: #F2DDD8; }
+.opening-lines .opening-last strong { color: #E0574A; }
+.opening-veil.is-short .opening-lines p:not(.opening-last) { display: none; }
+@keyframes lineIn { 0% { opacity: 0; filter: blur(6px); transform: translateY(6px); } 100% { opacity: 1; filter: none; transform: none; } }
+.opening-eyes, .ritual-eyes { display: flex; gap: 34px; }
+.opening-eyes span, .ritual-eyes span { width: 16px; height: 7px; border-radius: 50%; background: #F5C04A; box-shadow: 0 0 12px 4px rgba(245, 192, 74, 0.7), 0 0 34px 10px rgba(245, 160, 40, 0.25); animation: eyesOpen 7.5s ease forwards; transform: scaleY(0); }
+.opening-veil.is-short .opening-eyes span { animation-duration: 1.4s; }
+@keyframes eyesOpen { 0%, 88% { transform: scaleY(0); opacity: 0; } 92% { transform: scaleY(1); opacity: 1; } 95% { transform: scaleY(0.1); } 100% { transform: scaleY(1); opacity: 1; } }
+.opening-skip { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(244, 238, 226, 0.25); color: var(--moon-soft); font-size: 14px; background: rgba(244, 238, 226, 0.04); }
+
+/* ── 풀이 의식 ──────────────────────────────────────────────────── */
+.ritual-veil { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px; background: rgba(6, 6, 12, 0.985); transition: opacity 0.6s ease; }
+.ritual-veil[hidden] { display: none !important; }
+.ritual-veil.is-leaving { opacity: 0; }
+.ritual-eyes span { animation: eyesBlink 1.4s ease-in-out infinite; transform: none; }
+@keyframes eyesBlink { 0%, 80%, 100% { transform: scaleY(1); } 85% { transform: scaleY(0.1); } }
+.ritual-line { font-family: var(--font-display); font-size: 18px; color: var(--moon); text-align: center; padding: 0 24px; }
+.ritual-line.flick { animation: lineIn 0.5s ease; }
+
+/* ── 음산한 실내: 제목과 도장에 등불빛, 한지 카드에 그을음 ───────────── */
+.feature-title, .spirit-main-title, .slip-heading { text-shadow: 0 0 18px rgba(224, 87, 74, 0.25); }
+.feature-seal { animation: sealGlow 4s ease-in-out infinite; }
+@keyframes sealGlow { 0%, 100% { box-shadow: inset 0 0 0 2.5px rgba(247, 227, 176, 0.6), 0 0 0 rgba(224, 87, 74, 0); } 50% { box-shadow: inset 0 0 0 2.5px rgba(247, 227, 176, 0.6), 0 0 22px rgba(224, 87, 74, 0.45); } }
+.feature-card, .dream-fit-card, .daeun-card, .oheng-card, .mind-scan-card, .ghost-warning-card, .sniff-teaser-card, .portfolio-section-card, .kpi-dashboard { box-shadow: inset 0 0 40px rgba(90, 50, 20, 0.16), 0 14px 34px -18px rgba(0, 0, 0, 0.8); }
+.ghost-warning-card { position: relative; }
+.ghost-warning-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(168, 42, 32, 0.5); animation: dangerPulse 2.8s ease-in-out infinite; }
+@keyframes dangerPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
 /* ── 결제 안내 · 약관 페이지 ─────────────────────────────────────────── */
 .payment-notice { text-align: left; font-size: 13.5px !important; line-height: 1.7 !important; color: var(--ink-soft) !important; padding: 10px 12px; border-radius: 6px; background: rgba(168, 42, 32, 0.06); border: 1px solid rgba(168, 42, 32, 0.18); }
 .payment-notice a { color: var(--cinnabar); text-underline-offset: 3px; }
@@ -1281,6 +1482,9 @@ option:disabled { color: #9C8E7C; }
 /* ── 움직임 줄이기 ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .opening-lines p { opacity: 1; }
+  .opening-eyes span, .ritual-eyes span { transform: none; opacity: 1; }
+  .embers, .fog { display: none; }
 }
 
 /* ── 인쇄(PDF 저장) ────────────────────────────────────────────── */
@@ -1288,7 +1492,7 @@ option:disabled { color: #9C8E7C; }
   body { background: #fff !important; color: #000 !important; padding: 0 !important; }
   .app-container { max-width: 100% !important; }
   header, .home-topbar, .slip-section, .event-strip, .site-footer, .action-bar, .btn-submit, .btn-nav-back, .btn-pay,
-  .paywall-overlay, .modal-overlay, .intro-modal-overlay, .hanji-scroll-overlay, .toast-msg, .btn-talisman-download, .feature-nav, .tab-bar, .report-reopen {
+  .paywall-overlay, .modal-overlay, .intro-modal-overlay, .hanji-scroll-overlay, .toast-msg, .btn-talisman-download, .feature-nav, .tab-bar, .report-reopen, .seal-card, .shop-shelf, #nyPrint, .wish-throw, #wishSave {
     display: none !important;
   }
   .character-card, .paywall-overlay { background: #fff !important; color: #000 !important; }

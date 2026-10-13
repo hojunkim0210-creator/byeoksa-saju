@@ -11,6 +11,7 @@ async function openPage(browser, { width = 390, height = 844, url = 'file://' + 
   page._errors = []; page._alerts = [];
   page.on('pageerror', e => page._errors.push(e.message));
   page.on('dialog', async d => { page._alerts.push(d.message()); await d.accept(); });
+  await page.addInitScript(() => { window.__BYEOKSA_TEST__ = true; });   // 첫 진입·풀이 의식 연출 건너뛰기
   if (now) await page.clock.setFixedTime(now);
   await page.route('**/*', r => {
     const u = r.request().url();

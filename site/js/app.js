@@ -24,6 +24,23 @@ const {
     eventEndsOn: null             // 종료일이 정해지면 'YYYY-MM-DD'. 지나면 이벤트 표시가 자동으로 꺼진다
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // 💳 결제 설정 — 결제대행사(PG) 계약 후 포트원(PortOne) 관리자 콘솔에서 값을 받아 여기만 채운다
+  //   mode: 'test'    = 지금처럼 "테스트로 봉인 해제" 버튼 (실제 돈이 나가지 않음)
+  //         'portone' = 실제 결제창 (storeId·channelKey 필수)
+  //   verifyUrl: 결제 확인 서버 주소. Cloudflare Pages로 옮기면 '/api/payment/complete' (functions/ 폴더)
+  //              비워 두면 결제창의 성공 응답만 보고 연다 (서버가 생기기 전 임시)
+  // ─────────────────────────────────────────────────────────────────────────
+  const PAYMENT = {
+    mode: 'test',
+    storeId: '',        // 예: 'store-00000000-0000-0000-0000-000000000000'
+    channelKey: '',     // 예: 'channel-key-00000000-0000-0000-0000-000000000000'
+    payMethod: 'CARD',
+    orderName: '벽사신견 천명 리포트',
+    verifyUrl: ''
+  };
+  const CONTACT_EMAIL = 'ghwnstm02@naver.com';
+
   function renderSale() {
     const priceText = SALE.price.toLocaleString('ko-KR');
     document.querySelectorAll('.sale-price').forEach(el => { el.textContent = priceText; });
@@ -39,6 +56,16 @@ const {
     }
   }
   document.addEventListener('DOMContentLoaded', renderSale);
+
+  /** 결제창 버튼·안내를 결제 모드에 맞춘다 */
+  function renderPaymentMode() {
+    const live = PAYMENT.mode === 'portone';
+    const btn = document.getElementById('payButton');
+    if (btn) btn.textContent = live ? `💳 ${won(priceFor('report').final)}원 결제하고 봉인 풀기` : '테스트로 봉인 해제해보기 🐾';
+    const note = document.getElementById('paymentTestNote');
+    if (note) note.hidden = live;
+  }
+  document.addEventListener('DOMContentLoaded', renderPaymentMode);
 
   // ─────────────────────────────────────────────────────────────────────────
   // 🐾 사주 맞춤 문장 데이터 — 같은 판정이 모든 사람에게 나오지 않도록
@@ -368,12 +395,14 @@ let currentSajuData = null;
     return u.href;
   }
   async function shareSite() {
-    const url = siteHomeUrl();
+    const url = siteHomeUrl() + '?from=share';   // 받은 친구도 할인을 받는다 (개인정보는 담지 않음)
+    const reward = () => { if (grantCoupon('share')) setTimeout(() => showToast(`🎁 공유 고맙다. 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인을 ${SHARE_DISCOUNT.days}일 동안 걸어 두었다.`), 2700); };
     if (navigator.share) {
-      try { await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url }); return; }
+      try { await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url }); reward(); return; }
       catch (e) { if (e && e.name === 'AbortError') return; /* 그 밖의 실패는 복사로 */ }
     }
     copyText(`${SHARE_TEXT}\n${url}`, '💬 소개 문구와 주소를 복사했다. 카톡 대화창에 붙여 넣거라.');
+    reward();
   }
 
   function goToStep(step) {
@@ -432,6 +461,57 @@ let currentSajuData = null;
 
     calculateSaju(y, m, d);
     goToStep(3);
+    playRitual();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🌑 분위기 연출: 첫 진입(어둠 속 한 줄씩) · 풀이 의식(냄새 맡는 중)
+  //   테스트(window.__BYEOKSA_TEST__)와 '움직임 줄이기' 설정에서는 건너뛰거나 짧게
+  // ─────────────────────────────────────────────────────────────────────────
+  const QUIET = () => !!window.__BYEOKSA_TEST__;
+  const REDUCED = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const SEEN_KEY = 'byeoksa.seen.v1';
+
+  function playOpening() {
+    const veil = document.getElementById('openingVeil');
+    if (!veil || QUIET()) return;
+    let seen = false; try { seen = !!localStorage.getItem(SEEN_KEY); localStorage.setItem(SEEN_KEY, '1'); } catch (e) { /* 무시 */ }
+    const lines = [...veil.querySelectorAll('.opening-lines p')];
+    const step = REDUCED() ? 0 : 1500;
+    veil.classList.toggle('is-short', seen);
+    lines.forEach((p, i) => { p.style.animationDelay = seen ? '0.2s' : `${i * step / 1000 + 0.4}s`; });
+    veil.hidden = false;
+    document.body.classList.add('veil-on');
+    const total = seen ? 2200 : (REDUCED() ? 4000 : lines.length * step + 2600);
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true;
+      veil.classList.add('is-leaving');
+      document.body.classList.remove('veil-on');
+      setTimeout(() => { veil.hidden = true; veil.classList.remove('is-leaving'); }, 900);
+    };
+    document.getElementById('openingSkip').onclick = finish;
+    setTimeout(finish, total);
+  }
+
+  const RITUAL_LINES = ['대문 밖 바람이 멎었다…', '백구가 네 냄새를 맡고 있다…', '네 등 뒤에서 무언가 움찔했다…', '명식이 드러난다.'];
+  let _ritualTimer = null;
+  function playRitual() {
+    const veil = document.getElementById('ritualVeil');
+    if (!veil || QUIET()) return;
+    const line = document.getElementById('ritualLine');
+    const gap = REDUCED() ? 350 : 700;
+    let i = 0;
+    clearInterval(_ritualTimer);
+    line.textContent = RITUAL_LINES[0];
+    veil.hidden = false; veil.classList.remove('is-leaving');
+    _ritualTimer = setInterval(() => {
+      i++;
+      if (i < RITUAL_LINES.length) { line.textContent = RITUAL_LINES[i]; line.classList.remove('flick'); void line.offsetWidth; line.classList.add('flick'); return; }
+      clearInterval(_ritualTimer);
+      veil.classList.add('is-leaving');
+      setTimeout(() => { veil.hidden = true; }, 600);
+    }, gap);
   }
 
   function acceptDestiny() {
@@ -488,6 +568,7 @@ let currentSajuData = null;
       dStemIdx, dBranchIdx, ohengResult, pillars
     };
     saveProfile({ y, m, d, hour: hourVal, gender: genderVal });
+    applyPaidState();
   }
 
   function updateAnimalCard(dStem, dBranch) {
@@ -961,7 +1042,7 @@ let currentSajuData = null;
         </div>
         <div class="dossier-title-group">
           <div class="dossier-org-title">壁 邪 神 犬 · 終 身 天 命 戰 略 報 告 書</div>
-          <div class="dossier-sub-title">1998년 겨울 강원도 영월 산자락 외딴 흙집 지박령의 1:1 맞춤형 인생 돌파 비방록</div>
+          <div class="dossier-sub-title">1998년 겨울 강원도 영월 산자락 외딴 흙집 지박령이 네 사주만 맡아 쓴 인생 돌파 비방록</div>
         </div>
         <div class="dossier-info-table">
           <div class="dossier-info-cell">
@@ -1165,8 +1246,13 @@ let currentSajuData = null;
     renderTalismanPreview(`${dStem.hanja}${dBranch.hanja}`);
   }
 
-    function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
-  function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
+    function openPaymentModal() {
+      const m = document.getElementById('paymentModal');
+      const slot = document.getElementById('reportPromo'); if (slot && !slot.innerHTML) slot.innerHTML = promoRowHtml();
+      if (!m.dataset.promoBound) { m.addEventListener('promo', () => { renderPaymentMode(); renderCouponLines(); }); m.dataset.promoBound = '1'; }
+      renderPaymentMode(); renderCouponLines(); m.style.display = 'flex';
+    }
+  function closePaymentModal() { ['paymentModal', 'productModal'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); }
 
     function showToast(text) {
     const t = document.getElementById('toastMsg');
@@ -1235,8 +1321,217 @@ let currentSajuData = null;
 
   let reportUnlocked = false;
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🛒 유료 상품 · 공유 할인 · 결제 (모든 상품 공통)
+  //   상품을 추가하면 functions/api/payment/complete.js 의 CATALOG 에도 같은 이름·가격을 넣는다
+  // ─────────────────────────────────────────────────────────────────────────
+  const PRODUCTS = {
+    report:  { name: '벽사신견 천명 리포트',     price: SALE.price, label: '천명 리포트' },
+    newyear: { name: '벽사신견 신년운세',         price: 4900,       label: '신년운세' },
+    compat:  { name: '벽사신견 궁합 상세 리포트', price: 3900,       label: '궁합 상세 리포트' },
+    wish:    { name: '벽사신견 소원 부적',         price: 1900,       label: '소원 부적' }
+  };
+  // 공유 할인: 사이트를 공유한 사람·공유 링크로 들어온 사람에게 유료 풀이 1건 1,000원 할인 (이 기기, 7일)
+  const SHARE_DISCOUNT = { amount: 1000, days: 7 };
+  const COUPON_KEY = 'byeoksa.coupon.v1';
+  // 할인 코드: 인스타·카톡 홍보용. 코드를 넣으면 공유 할인과 같은 1,000원 할인 1건 (서버 확인도 같은 금액만 인정)
+  //   새 코드는 여기 대문자로 추가한다. 예) 'OPEN2026': '오픈 기념 코드'
+  const PROMO_CODES = { 'BAEKGU': '백구 할인 코드' };
+  function applyPromoCode(raw) {
+    const code = String(raw || '').trim().toUpperCase();
+    if (!code) return;
+    if (!PROMO_CODES[code]) { showToast('그런 코드는 냄새가 안 난다. 다시 확인하거라.'); return; }
+    if (activeCoupon()) { showToast('이미 할인이 걸려 있다. 할인은 한 번에 한 건이다.'); return; }
+    if (grantCoupon('code:' + code)) { showToast(`🎁 ${PROMO_CODES[code]} 적용! 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인.`); renderPaymentMode(); }
+    else showToast('이 기기에서는 할인을 이미 한 번 썼다.');
+  }
+  /** 결제창 안의 할인 코드 칸 */
+  function promoRowHtml() {
+    return `<div class="promo-row"><input type="text" class="promo-input" maxlength="20" placeholder="할인 코드 (있으면)" aria-label="할인 코드" autocapitalize="characters"><button type="button" class="promo-apply" onclick="applyPromoCode(this.previousElementSibling.value); this.closest('.modal-overlay').dispatchEvent(new CustomEvent('promo'))">적용</button></div>`;
+  }
+  const won = n => n.toLocaleString('ko-KR');
+
+  function activeCoupon() {
+    try {
+      const c = JSON.parse(localStorage.getItem(COUPON_KEY) || 'null');
+      return (c && !c.used && c.until > Date.now()) ? c : null;
+    } catch (e) { return null; }
+  }
+  function grantCoupon(source) {
+    if (activeCoupon()) return false;
+    try {
+      const old = JSON.parse(localStorage.getItem(COUPON_KEY) || 'null');
+      if (old && old.used) return false;   // 한 기기에서 한 번만
+      localStorage.setItem(COUPON_KEY, JSON.stringify({ source, until: Date.now() + SHARE_DISCOUNT.days * 86400000, used: false }));
+      renderCouponLines();
+      return true;
+    } catch (e) { return false; }
+  }
+  function consumeCoupon() {
+    const c = activeCoupon(); if (!c) return;
+    try { localStorage.setItem(COUPON_KEY, JSON.stringify({ ...c, used: true })); } catch (e) { /* 무시 */ }
+    renderCouponLines();
+  }
+  /** 상품 가격 (할인이 있으면 할인가) */
+  function priceFor(productId) {
+    const list = PRODUCTS[productId].price, c = activeCoupon();
+    const final = c ? Math.max(0, list - SHARE_DISCOUNT.amount) : list;
+    return { list, final, coupon: c };
+  }
+  function couponUntilText(c) { const d = new Date(c.until); return `${d.getMonth() + 1}월 ${d.getDate()}일`; }
+  /** 가격 옆 할인 안내 줄: 할인 중이면 할인가, 아니면 공유 권유 */
+  function couponLineHtml(productId) {
+    const pr = priceFor(productId);
+    if (pr.coupon) return `🎁 할인 적용 중 · <s>${won(pr.list)}원</s> <strong>${won(pr.final)}원</strong> (${couponUntilText(pr.coupon)}까지, 1회)`;
+    let used = false; try { used = !!(JSON.parse(localStorage.getItem(COUPON_KEY) || 'null') || {}).used; } catch (e) { /* 무시 */ }
+    if (used) return '';
+    return `💬 친구에게 사이트를 공유하면 유료 풀이 1건 <strong>${won(SHARE_DISCOUNT.amount)}원 할인</strong> <button class="link-btn" onclick="shareSite()">공유하기</button>`;
+  }
+  function renderCouponLines() {
+    document.querySelectorAll('[data-coupon-line]').forEach(el => { el.innerHTML = couponLineHtml(el.dataset.couponLine); el.hidden = !el.innerHTML; });
+    if (window.BYEOKSA_SHOP) window.BYEOKSA_SHOP.renderShopShelf();
+  }
+  document.addEventListener('DOMContentLoaded', renderCouponLines);
+
+  // ── 결제 기억: 상품마다, 대상(생년월일·소원 등)마다 같은 기기에서 다시 열린다 ──
+  const PAID_PREFIX = 'byeoksa.paid.';
+  const PENDING_KEY = 'byeoksa.pending.v1';   // 휴대폰 결제 페이지에 다녀오는 동안만 잠깐 보관
+  function sajuKey(sd) { return SajuCore.hashSeed(`${sd.y}-${sd.m}-${sd.d}-${sd.hourVal}-${sd.genderVal}`).toString(36); }
+  function paidKeyOf(productId, subjectKey) { return `${PAID_PREFIX}${productId}.${subjectKey}`; }
+  function markPaidFor(productId, subjectKey, paymentId) { try { localStorage.setItem(paidKeyOf(productId, subjectKey), JSON.stringify({ paymentId, at: Date.now() })); } catch (e) { /* 저장 불가 환경 */ } }
+  function isPaidFor(productId, subjectKey) { try { return !!localStorage.getItem(paidKeyOf(productId, subjectKey)); } catch (e) { return false; } }
+  function markPaid(sd, paymentId) { markPaidFor('report', sajuKey(sd), paymentId); }
+  function isPaid(sd) { return isPaidFor('report', sajuKey(sd)); }
+  function savePending(obj) { try { localStorage.setItem(PENDING_KEY, JSON.stringify({ ...obj, at: Date.now() })); } catch (e) { /* 무시 */ } }
+  function loadPending() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch (e) { return null; } }
+  function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) { /* 무시 */ } }
+
+  /** 상품별: 결제 뒤 화면 열기(onPaid), 휴대폰 결제 복귀 때 화면 다시 그리기(resume) */
+  const PRODUCT_HOOKS = {};
+  function registerProduct(productId, hooks) { PRODUCT_HOOKS[productId] = hooks; }
+
+  /** 지금 풀이가 결제된 사주인지에 따라 결제 안내·리포트를 맞춘다 (다른 생년월일로 바꾸면 다시 잠긴다) */
+  function applyPaidState() {
+    reportUnlocked = !!currentSajuData && isPaid(currentSajuData);
+    document.getElementById('paywallOverlay').style.display = reportUnlocked ? 'none' : '';
+    document.getElementById('reportReopen').hidden = !reportUnlocked;
+    document.getElementById('unlockedReportContainer').style.display = reportUnlocked ? 'flex' : 'none';
+  }
+
+  let _portOneLoading = null;
+  function loadPortOne() {
+    if (window.PortOne) return Promise.resolve();
+    if (!_portOneLoading) {
+      _portOneLoading = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdn.portone.io/v2/browser-sdk.js';
+        sc.onload = () => resolve(); sc.onerror = () => { _portOneLoading = null; reject(new Error('sdk')); };
+        document.head.appendChild(sc);
+      });
+    }
+    return _portOneLoading;
+  }
+
+  /**
+   * 결제 한 건. 성공하면 결제 기억 + 할인 사용 처리 후 hooks.onPaid(data) 실행.
+   * data: 상품 화면을 다시 그리는 데 필요한 값 (휴대폰 결제 복귀 때 hooks.resume(data)로 다시 그린다)
+   */
+  async function purchase(productId, subjectKey, data, btn) {
+    const hooks = PRODUCT_HOOKS[productId] || {};
+    const pr = priceFor(productId);
+    if (PAYMENT.mode !== 'portone') {
+      markPaidFor(productId, subjectKey, 'test');
+      if (pr.coupon) consumeCoupon();
+      closePaymentModal();
+      if (hooks.onPaid) hooks.onPaid(data);
+      return true;
+    }
+    if (!PAYMENT.storeId || !PAYMENT.channelKey) { showToast('결제 설정(상점 아이디·채널 키)이 비어 있다.'); return false; }
+    if (btn) btn.disabled = true;
+    try {
+      await loadPortOne();
+      const paymentId = `byeoksa-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      savePending({ paymentId, productId, subjectKey, data });
+      const res = await window.PortOne.requestPayment({
+        storeId: PAYMENT.storeId,
+        channelKey: PAYMENT.channelKey,
+        paymentId,
+        orderName: PRODUCTS[productId].name,
+        totalAmount: pr.final,
+        currency: 'KRW',
+        payMethod: PAYMENT.payMethod,
+        customData: JSON.stringify({ product: productId, coupon: !!pr.coupon }),
+        redirectUrl: siteHomeUrl() + '?pay=return'   // 휴대폰은 결제 페이지에 다녀온 뒤 이 주소로 돌아온다
+      });
+      if (!res) return false;   // 결제 페이지로 넘어감 → 돌아오면 resumePaymentFromRedirect에서 마무리
+      return await finishPayment(res.paymentId || paymentId, res.code, res.message);
+    } catch (e) {
+      showToast('결제창을 열지 못했다. 잠시 후 다시 시도하거라.');
+      return false;
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  /** 결제 결과 마무리: 실패면 안내, 성공이면 (서버가 있으면 확인 후) 상품을 연다 */
+  async function finishPayment(paymentId, code, message) {
+    const pending = loadPending();
+    if (code) {
+      clearPending();
+      showToast(`결제가 완료되지 않았다. ${message || ''}`.trim());
+      return false;
+    }
+    if (!pending || pending.paymentId !== paymentId) { showToast('결제 정보를 찾지 못했다. 결제가 됐다면 문의해 주거라.'); return false; }
+    if (PAYMENT.verifyUrl) {
+      let ok = false;
+      try {
+        const r = await fetch(PAYMENT.verifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
+        ok = r.ok && (await r.json()).status === 'PAID';
+      } catch (e) { ok = false; }
+      if (!ok) { showToast(`결제 확인에 실패했다. 결제가 됐다면 ${CONTACT_EMAIL}로 결제 번호 ${paymentId}를 보내 주거라.`); return false; }
+    }
+    markPaidFor(pending.productId, pending.subjectKey, paymentId);
+    if (activeCoupon() && priceFor(pending.productId).final < PRODUCTS[pending.productId].price) consumeCoupon();
+    clearPending();
+    closePaymentModal();
+    const hooks = PRODUCT_HOOKS[pending.productId] || {};
+    if (hooks.onPaid) hooks.onPaid(pending.data);
+    return true;
+  }
+
+  /** 휴대폰 결제 페이지에서 돌아왔을 때: 상품 화면을 다시 그리고 결제를 마무리한다 */
+  function resumePaymentFromRedirect(params) {
+    const pid = params.get('paymentId');
+    if (!pid) return false;
+    try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* 주소 정리는 못 해도 진행 */ }   // 결제 번호가 담긴 주소를 지운다
+    const pending = loadPending();
+    if (!pending || pending.paymentId !== pid) { showToast('결제 정보를 찾지 못했다. 결제가 됐다면 문의해 주거라.'); return true; }
+    const intro = document.getElementById('introGateModal'); if (intro) intro.style.display = 'none';
+    const hooks = PRODUCT_HOOKS[pending.productId] || {};
+    if (hooks.resume) hooks.resume(pending.data);
+    finishPayment(pid, params.get('code'), params.get('message'));
+    return true;
+  }
+
+  /** 천명 리포트 결제창 버튼 */
+  function startPayment() {
+    if (!currentSajuData) return;
+    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream });
+    return purchase('report', sajuKey(currentSajuData), pick(currentSajuData), document.getElementById('payButton'));
+  }
+  registerProduct('report', {
+    onPaid: () => unlockContent(),
+    resume: sj => {
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.value = v; };
+      set('year', sj.y); set('month', sj.m); set('day', sj.d); set('hourSelect', String(sj.hourVal)); set('gender', sj.genderVal);
+      set('userJob', sj.userJob); set('userMajor', sj.userMajor); set('userHobby', sj.userHobby); set('userDream', sj.userDream);
+      submitAndGoToResult();
+    }
+  });
+
   /** 결제(현재는 테스트) 완료 → 리포트 전용 화면으로 */
   function unlockContent() {
+    if (PAYMENT.mode !== 'portone' && currentSajuData && !isPaid(currentSajuData)) markPaid(currentSajuData, 'test');
     reportUnlocked = true;
     document.getElementById('paywallOverlay').style.display = 'none';
     document.getElementById('reportReopen').hidden = false;
@@ -1442,6 +1737,12 @@ let currentSajuData = null;
 
   window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
+    if (resumePaymentFromRedirect(params)) return;
+    if (!params.get('y')) playOpening();
+    if (params.get('from') === 'share') {   // 친구가 공유한 링크로 들어옴 → 할인 1건
+      try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* 무시 */ }
+      if (grantCoupon('invite')) setTimeout(() => showToast(`🎁 친구가 보낸 문으로 들어왔구나. 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인을 걸어 두었다.`), 600);
+    }
     if (params.get('y') && params.get('m') && params.get('d')) {
       document.getElementById('year').value = params.get('y');
       document.getElementById('month').value = params.get('m');

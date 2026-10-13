@@ -1,0 +1,15 @@
+# Cloudflare Pages 전용 설정 (GitHub Pages에서는 무시됨)
+# 화면 파일은 매번 새로 확인 → 업데이트가 바로 반영된다
+/
+  Cache-Control: no-cache
+/*.html
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+/img/*
+  Cache-Control: public, max-age=86400
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

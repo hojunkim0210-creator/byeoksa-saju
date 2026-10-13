@@ -197,6 +197,8 @@
         </ul>
         <p class="feature-note">궁합 점수는 전통 명리의 합·충·생극을 바탕으로 한 재미 풀이이며, 두 사람의 관계를 정해 주지 않는다.</p>
       </div>`;
+    // 유료 '궁합 상세 리포트' 자리 (shop.js)
+    if (window.BYEOKSA_SHOP) window.BYEOKSA_SHOP.afterCompat(a, b, nameA, nameB, A, B, r);
     $('compatResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -544,5 +546,8 @@
   window.openFeature = openFeature;
   window.downloadShareCard = downloadShareCard;
   // 테스트용 내보내기 (화면 동작에는 쓰지 않음)
-  window.BYEOKSA_EXTRAS = { DECK, DAILY_TEXT, TOPICS, answer, readSaju, COMPAT_BANDS };
+  window.BYEOKSA_EXTRAS = { DECK, DAILY_TEXT, TOPICS, answer, readSaju, COMPAT_BANDS,
+    // 유료 상품(shop.js)이 함께 쓰는 도우미
+    withProfile, profileLine, bindProfileLinks, showCompatResult, subj, copula, HOUR_NAMES,
+    registerFeature: (name, view, render) => { FEATURES[name] = { view, render }; } };
 })();

@@ -140,9 +140,8 @@ test('공유하기: 주소에 개인정보(쿼리·해시) 없이 첫 화면만,
     return got;
   });
   assert.ok(shared && shared.url, 'navigator.share 호출');
-  assert.ok(!/[?#]/.test(shared.url), shared.url);
+  assert.ok(/\/\?from=share$/.test(shared.url), '첫 화면 주소 + 초대 표시만: ' + shared.url);
   assert.ok(!/2002|창업|대학생/.test(shared.text + shared.url), '개인정보가 공유 문구에 없어야 함');
-  assert.ok(shared.url.endsWith('/'), '첫 화면 주소: ' + shared.url);
   await ctx.close();
 });
 

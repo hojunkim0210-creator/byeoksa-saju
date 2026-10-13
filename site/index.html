@@ -100,6 +100,34 @@
 </div>
 
 
+<!-- 🌫️ 사이트 전체 분위기: 안개 · 불티 · 어둠 (내용 뒤에 깔림, 클릭 안 막음) -->
+<div class="ambience" aria-hidden="true">
+  <div class="fog fog-a"></div>
+  <div class="fog fog-b"></div>
+  <div class="embers"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="vignette"></div>
+</div>
+
+<!-- 🌑 첫 진입 연출: 어둠 속에서 한 줄씩 (처음 방문은 전체, 다시 오면 짧게) -->
+<div class="opening-veil" id="openingVeil" hidden>
+  <div class="opening-lantern" aria-hidden="true"></div>
+  <div class="opening-lines" id="openingLines" aria-live="polite">
+    <p>예로부터 개는 사람 눈에 보이지 않는 것을 본다 했다.</p>
+    <p>밤길에 흰 개가 허공을 보고 짖으면, 그 자리의 귀신이 물러갔다.</p>
+    <p>그래서 옛사람들은 대문 앞에 흰 개를 두었다. 이름하여 <strong>벽사(辟邪)</strong>, 삿된 것을 물리치는 개.</p>
+    <p>1998년 겨울, 영월 산자락 흙집 대문을 지키던 백구 한 마리가 그 문을 떠나지 못했다.</p>
+    <p class="opening-last">그 개가 지금, <strong>네 등 뒤</strong>를 보고 있다.</p>
+  </div>
+  <div class="opening-eyes" aria-hidden="true"><span></span><span></span></div>
+  <button class="opening-skip" id="openingSkip">대문 앞으로 ➔</button>
+</div>
+
+<!-- 🕯️ 풀이 의식: 생년월일을 대면 백구가 냄새를 맡는 동안 잠깐 -->
+<div class="ritual-veil" id="ritualVeil" hidden aria-hidden="true">
+  <div class="ritual-eyes"><span></span><span></span></div>
+  <p class="ritual-line" id="ritualLine">대문 밖 바람이 멎었다…</p>
+</div>
+
 <!-- 🚪 최초 진입 시 인생 전환 유도 인트로 게이트 모달 -->
 <div class="intro-modal-overlay" id="introGateModal">
   <div class="intro-modal-box">
@@ -166,6 +194,13 @@
         </div>
       </div>
 
+      <!-- 벽사신견이란: 개는 귀신을 본다 -->
+      <div class="lore-strip">
+        <p class="lore-line">예로부터 <strong>개는 귀신을 보고 짖어 쫓는다</strong> 했다.</p>
+        <p class="lore-sub">흰 개를 대문 앞에 두어 삿된 것을 막던 우리 옛 풍습, 그 개를 <strong>벽사견(辟邪犬)</strong>이라 불렀다. 백구는 지금도 대문 앞에서 지나가는 사람의 등 뒤를 본다.</p>
+        <p class="lore-hook">백구가 짖는 것은 둘 중 하나다. <em>네 등 뒤에 붙은 것</em>, 혹은 <em>너를 지키고 있는 것</em>. 어느 쪽인지는 생년월일을 대야 안다.</p>
+      </div>
+
       <!-- 신비로운 영적 분위기 티저 카드 (설화 전문은 한지 족자 버튼으로 열람) -->
       <div class="landing-teaser-box">
         <div class="landing-teaser-quote">
@@ -211,6 +246,34 @@
       </div>
     </section>
 
+    <!-- 백구의 비방 보따리: 유료 풀이 진열 (가격은 shop.js가 할인 반영해 채움) -->
+    <section class="shop-shelf" aria-labelledby="shopHeading">
+      <h2 class="slip-heading" id="shopHeading">백구가 물어 온 비방 보따리</h2>
+      <div class="shop-list">
+        <button class="shop-item" onclick="openMySaju()">
+          <span class="shop-seal" aria-hidden="true">秘</span>
+          <span class="shop-text"><span class="shop-name">천명 리포트</span><span class="shop-hook">평생 따라붙는 악연과 돈 새는 구멍, 여섯 장에 적었다</span></span>
+          <span class="shop-price" data-shop-price="report">4,900원</span>
+        </button>
+        <button class="shop-item" onclick="openFeature('newyear')">
+          <span class="shop-seal" aria-hidden="true">新</span>
+          <span class="shop-text"><span class="shop-name"><span id="shopNewYearYear">2027</span>년 신년운세</span><span class="shop-hook">열두 달 중 볕 드는 달과 몸 사릴 달, 미리 짚어 주마</span></span>
+          <span class="shop-price" data-shop-price="newyear">4,900원</span>
+        </button>
+        <button class="shop-item" onclick="openFeature('compat')">
+          <span class="shop-seal" aria-hidden="true">合</span>
+          <span class="shop-text"><span class="shop-name">궁합 상세 리포트</span><span class="shop-hook">점수 뒤에 숨은 싸움의 이유와 함께할 해</span></span>
+          <span class="shop-price" data-shop-price="compat">3,900원</span>
+        </button>
+        <button class="shop-item shop-item-gold" onclick="openFeature('wish')">
+          <span class="shop-seal" aria-hidden="true">願</span>
+          <span class="shop-text"><span class="shop-name">소원 부적</span><span class="shop-hook">금테 두른 부적 한 장, 백구가 물어다 던져 준다</span></span>
+          <span class="shop-price" data-shop-price="wish">1,900원</span>
+        </button>
+      </div>
+      <p class="coupon-line shop-coupon" data-coupon-line="report" hidden></p>
+    </section>
+
     <!-- 1. 한지 족자 설화록 풀어서 보기 버튼 -->
     <button class="btn-landing-scroll" onclick="openHanjiScroll()" title="한지 두루마리 설화록 펼쳐보기">
       📜 1998년 지박령 설화록 (한지 족자 풀기)
@@ -228,7 +291,7 @@
       <p class="footer-note">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠입니다.</p>
       <!-- 판매 전에 채울 것 (전자상거래법 10조, 첫 화면 표시 의무): 상호 · 대표자 · 사업자등록번호 · 통신판매업 신고번호 · 주소 · 전화 · 이메일
            예) <p class="footer-biz" id="footerBiz">상호 ○○ · 대표 ○○○ · 사업자등록번호 000-00-00000 · 통신판매업 제0000-서울○○-0000호 · 주소 … · 010-0000-0000 · mail@…</p> -->
-      <p class="footer-biz" id="footerBiz"></p>
+      <p class="footer-biz" id="footerBiz">백구당 · 대표 김호준 · ghwnstm02@naver.com · 사업자등록번호·통신판매업 신고 진행 중</p>
     </footer>
   </div>
 
@@ -452,8 +515,8 @@
           <div class="reason-item">
             <span class="reason-num">01</span>
             <div>
-              <strong>커피 한 잔 값(<span class="sale-price">4,900</span>원)으로 3년 치 액운 차단</strong>
-              <p>망설이다 날아갈 3년 치 피 같은 돈과 멘탈을 생각하면, 이 복채는 네 인생 가장 싼 보험이다.</p>
+              <strong>커피 한 잔 값(<span class="sale-price">4,900</span>원)으로 펼쳐 보는 3년 치 액운 지도</strong>
+              <p>망설이다 날아갈 3년 치 피 같은 돈과 멘탈을 생각하면, 이 복채는 앞길을 미리 비춰 보는 가장 싼 등불이다.</p>
             </div>
           </div>
           <div class="reason-item">
@@ -466,8 +529,8 @@
           <div class="reason-item">
             <span class="reason-num">03</span>
             <div>
-              <strong>지박령이 보증하는 1:1 맞춤형 인생 기밀 지침서</strong>
-              <p>1998년 겨울부터 이 대문 앞을 지키며 가려낸 벽사(辟邪) 비방과 소장용 디지털 황금 액막이 부적을 영구 제공한다.</p>
+              <strong>지박령이 네 사주만 맡아 쓴 맞춤형 인생 기밀 지침서</strong>
+              <p>1998년 겨울부터 이 대문 앞을 지키며 가려낸 벽사(辟邪) 비방과 소장용 디지털 황금 액막이 부적을 이미지로 저장해 간직할 수 있다.</p>
             </div>
           </div>
         </div>
@@ -476,6 +539,7 @@
           <div class="price-tag">
             <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비 ₩<span class="sale-price">4,900</span></strong>
           </div>
+          <p class="coupon-line" data-coupon-line="report" hidden></p>
           <div class="price-sub" id="saleSub">결제 후 열리는 리포트는 PDF로 저장해 소장할 수 있습니다</div>
           <div class="price-disclaimer">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않습니다.</div>
         </div>
@@ -557,11 +621,33 @@
     </div>
     <div id="chatBody" class="chat-panel"></div>
   </div>
+
+  <!-- 📍 신년운세 (유료) -->
+  <div class="view-step" id="viewNewYear" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">新</span>
+      <h2 class="feature-title" id="newYearTitle">신년운세</h2>
+      <p class="feature-lead">"한 해는 열두 개의 문으로 되어 있다. 어느 문 앞에서 볕이 들고 어느 문 앞에서 바람이 부는지 맡아 주마."</p>
+    </div>
+    <div id="newYearBody" class="feature-result"></div>
+  </div>
+
+  <!-- 📍 소원 부적 (유료) -->
+  <div class="view-step" id="viewWish" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal feature-seal-gold" aria-hidden="true">願</span>
+      <h2 class="feature-title">소원 부적</h2>
+      <p class="feature-lead">"소원 하나만 말해 보거라. 대문 밖에서 그 소원에 맞는 부적을 물어다 주마."</p>
+    </div>
+    <div id="wishBody" class="feature-result"></div>
+  </div>
   </div>
 
 <!-- 하단 메뉴: 어느 화면에서든 다른 풀이로 바로 간다 -->
 <nav class="tab-bar" id="tabBar" aria-label="메뉴">
-  <button class="tab-item" data-views="viewLanding" onclick="goToStep(1)"><span class="tab-seal" aria-hidden="true">門</span><span class="tab-label">대문</span></button>
+  <button class="tab-item" data-views="viewLanding viewNewYear viewWish" onclick="goToStep(1)"><span class="tab-seal" aria-hidden="true">門</span><span class="tab-label">대문</span></button>
   <button class="tab-item" data-views="viewInput viewResult viewReport" onclick="openMySaju()"><span class="tab-seal" aria-hidden="true">命</span><span class="tab-label">내 사주</span></button>
   <button class="tab-item" data-views="viewCompat" onclick="openFeature('compat')"><span class="tab-seal" aria-hidden="true">合</span><span class="tab-label">궁합</span></button>
   <button class="tab-item" data-views="viewDaily" onclick="openFeature('daily')"><span class="tab-seal" aria-hidden="true">日</span><span class="tab-label">오늘 운세</span></button>
@@ -573,11 +659,25 @@
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box">
     <h3>🕯️ 벽사신견 지박령 액막이 복채 안내</h3>
-    <p>실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br>액막이 복채(<span class="sale-price">4,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <p><span id="paymentTestNote">실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br></span>액막이 복채(<span class="sale-price">4,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <!-- 상품 안내: 결제대행사 심사에서 보는 항목 (상품명·가격·제공 방식·이용 기간) -->
+    <dl class="product-info">
+      <dt>상품</dt><dd>벽사신견 천명 리포트 (6개 장) + 맞춤 개운부 이미지</dd>
+      <dt>가격</dt><dd><span class="sale-price">4,900</span>원 (1회 결제, 자동 결제 없음)<span class="coupon-line" data-coupon-line="report" hidden></span></dd>
+      <dt>제공</dt><dd>결제 즉시 이 화면에서 열람 · PDF와 이미지로 저장 가능</dd>
+      <dt>다시 보기</dt><dd>같은 기기·같은 생년월일로 들어오면 다시 열림</dd>
+    </dl>
     <p class="payment-notice">결제 후 리포트가 열리면 디지털 콘텐츠의 특성상 청약철회(환불)가 제한됩니다. 리포트가 열리지 않았거나 내용이 정상적으로 보이지 않으면 환불해 드립니다. <a href="legal.html#refund" target="_blank" rel="noopener">환불 안내 보기</a></p>
-    <button class="btn-submit" onclick="unlockContent()">테스트로 봉인 해제해보기 🐾</button>
+    <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
+    <div id="reportPromo"></div>
+    <button class="btn-submit" id="payButton" onclick="startPayment()">테스트로 봉인 해제해보기 🐾</button>
     <button class="btn-close" onclick="closePaymentModal()">닫기</button>
   </div>
+</div>
+
+<!-- 상품 결제 모달 (신년운세·궁합 상세·소원 부적) — 내용은 shop.js가 채운다 -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-box" id="productModalBody"></div>
 </div>
 
 <div class="toast-msg" id="toastMsg"></div>
@@ -586,5 +686,6 @@
   <script src="js/saju-core.js"></script>
   <script src="js/app.js"></script>
   <script src="js/extras.js"></script>
+  <script src="js/shop.js"></script>
 </body>
 </html>
