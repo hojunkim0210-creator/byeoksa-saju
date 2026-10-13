@@ -68,11 +68,3 @@ test('site/ 코드에 포트원 비밀키 자리가 없다 (비밀키는 서버 
   const app = fs.readFileSync(path.resolve(__dirname, '../../site/js/app.js'), 'utf8');
   assert.ok(!/apiSecret|API_SECRET|PORTONE_API/i.test(app));
 });
-
-test('결제 확인 서버: 전부 묶음 보따리 10,900원 (공유 할인 9,900원)도 인정', async () => {
-  const { checkPayment } = await load();
-  const B = { status: 'PAID', amount: { total: 10900 }, currency: 'KRW', orderName: '벽사신견 전부 묶음 보따리', channel: { type: 'LIVE' } };
-  assert.equal(checkPayment(B).ok, true);
-  assert.equal(checkPayment({ ...B, amount: { total: 9900 } }).ok, true);
-  assert.equal(checkPayment({ ...B, amount: { total: 4900 } }).ok, false, '묶음을 리포트 값으로 결제 불가');
-});

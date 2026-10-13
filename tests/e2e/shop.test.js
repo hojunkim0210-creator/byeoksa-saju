@@ -14,12 +14,12 @@ async function withMe(page, p = ME) {
 }
 const text = (page, sel) => page.evaluate(s => document.querySelector(s).innerText, sel);
 
-test('대문 진열: 유료 풀이 4가지 + 전부 묶음과 가격', async () => {
+test('대문 진열: 유료 풀이 4가지와 가격', async () => {
   const { ctx, page } = await openPage(browser);
   await withMe(page);
   const items = await page.$$eval('.shop-item', els => els.map(e => e.innerText.replace(/\s+/g, ' ')));
-  assert.equal(items.length, 5);
-  for (const [name, price] of [['천명 리포트', '4,900원'], ['신년운세', '4,900원'], ['궁합 상세', '3,900원'], ['소원 부적', '1,900원'], ['전부 묶음', '10,900원']]) {
+  assert.equal(items.length, 4);
+  for (const [name, price] of [['천명 리포트', '4,900원'], ['신년운세', '4,900원'], ['궁합 상세', '3,900원'], ['소원 부적', '1,900원']]) {
     assert.ok(items.some(t => t.includes(name) && t.includes(price)), name + ' ' + price);
   }
   assert.deepEqual(page._errors, []);
@@ -177,6 +177,21 @@ test('휴대폰 결제 복귀: 소원 부적·신년운세도 돌아오면 열�
     await page.waitForTimeout(800);
     assert.ok(await page.$(check), productId);
     assert.deepEqual(page._errors, []);
+    await ctx.close();
+  }
+});
+
+test('한 화면 안에서 같은 문장이 되풀이되지 않는다 (신년운세·결과+리포트)', async () => {
+  const dup = text => {
+    const sents = text.replace(/\s+/g, ' ').split(/(?<=[.!?"”])\s+/).map(s => s.trim()).filter(s => s.length >= 25);
+    const c = {}; sents.forEach(s => (c[s] = (c[s] || 0) + 1));
+    return Object.keys(c).filter(k => c[k] > 1);
+  };
+  for (const p of PEOPLE.slice(0, 5)) {
+    const { ctx, page } = await openPage(browser);
+    await withMe(page, p);
+    await page.evaluate(() => openFeature('newyear')); await page.click('#nyBuy'); await page.click('#productPayBtn'); await page.waitForTimeout(200);
+    assert.deepEqual(dup(await text(page, '#viewNewYear')), [], `신년운세 ${p.y}`);
     await ctx.close();
   }
 });

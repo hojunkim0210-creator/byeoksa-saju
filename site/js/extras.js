@@ -348,6 +348,14 @@
     metal: '금(金)이 모자라면 숨이 얕아지고 피부와 목이 쉬이 건조해진다. 깊게 숨 쉬고 물을 자주 마셔라.',
     water: '수(水)가 모자라면 잠이 얕고 머리가 쉽게 달아오른다. 잠자리에 들기 전 화면을 멀리하거라.'
   };
+  // 돈 질문 전용: 올해 천간이 어떤 자리로 들어오느냐에 따른 돈 이야기 (일 질문의 연도 문장과 겹치지 않게)
+  const MONEY_YEAR = {
+    bi: '올해는 돈을 나눠 가질 사람이 붙는 해다. 공동 지출·더치페이·동업 이야기는 처음부터 몫을 글로 정해 두거라.',
+    sik: '올해는 재주가 돈으로 바뀌는 해다. 취미나 특기로 작은 부수입을 시험해 보기 좋다.',
+    jae: '올해는 돈이 직접 들어오는 해다. 들어온 만큼 바로 떼어 두는 통장 하나를 만들어라.',
+    gwan: '올해는 책임과 함께 돈이 오는 해다. 급여·직책이 오르는 만큼 체면 지출도 늘어나니 상한을 정해 두거라.',
+    in: '올해는 돈보다 배움과 문서가 먼저 오는 해다. 자격·계약에 쓰는 돈은 아끼지 말되, 충동적인 강의 결제는 삼가거라.'
+  };
   const TOPICS = [
     { id: 'love', label: '💘 연애운이 궁금해' },
     { id: 'money', label: '💰 돈은 언제 모여?' },
@@ -373,7 +381,7 @@
           + (loveYear ? `<br><br>올해(${NOW_Y}년)는 네게 <strong>${yearSipsin}</strong>의 해라, 인연의 문이 활짝 열리는 시기다. 소개와 모임을 마다하지 마라.` : '');
       }
       case 'money':
-        return `${wealthDiagnosis(ps)}<br><br>올해(${NOW_Y}년) 천간은 네게 <strong>${yearSipsin}</strong>${josa(yearSipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[yearSipsin]}`;
+        return `${wealthDiagnosis(ps, 'chat')}<br><br>올해(${NOW_Y}년) 천간은 네게 <strong>${yearSipsin}</strong>${josa(yearSipsin, '으로')} 들어온다. ${MONEY_YEAR[SIPSIN_GROUP[yearSipsin]]}`;
       case 'work':
         return `${CAREER_BY_EL[ps.dmEl]}<br><br>그리고 올해는 <strong>${yearSipsin}</strong>의 해다. ${YEAR_SIPSIN_TEXT_10[yearSipsin]}`;
       case 'body':

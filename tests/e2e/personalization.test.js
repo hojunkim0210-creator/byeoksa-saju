@@ -32,6 +32,8 @@ test.before(async () => {
         guard: ([...document.querySelectorAll('#unlockedReportContainer .portfolio-highlight')].find(e => e.innerText.includes('누재살 방어 3대 황금 비방')) || { innerText: '' }).innerText,
         plan: ([...document.querySelectorAll('#unlockedReportContainer .portfolio-highlight')].find(e => e.innerText.includes('몰입 결계')) || { innerText: '' }).innerText.split('➕')[0],
         mindPct: t('#mindBadge'), fitPct: t('#fitScore'),
+        ghostKind: (document.querySelector('#ghostPortrait .ghost-portrait') || { dataset: {} }).dataset.ghost || '', ghostLore: t('#ghostLore .ghost-lore'),
+        ghostSvg: !!document.querySelector('#ghostPortrait svg'), age: new Date().getFullYear() - +document.getElementById('year').value,
       };
     }));
     await ctx.close();
@@ -56,6 +58,19 @@ for (const [key, label, min] of [
     assert.ok(distinct(key) >= min, `${label} 서로 다른 결과 ${distinct(key)}가지`);
   });
 }
+
+test('등 뒤 귀신 그림: 모두에게 그림이 있고, 12명 중 4종 이상으로 갈린다', () => {
+  for (const r of results) { assert.ok(r.ghostSvg, '귀신 그림 없음'); assert.ok(r.ghostLore.length > 60, '귀신 설명 없음'); }
+  assert.ok(new Set(results.map(r => r.ghostKind)).size >= 4, `귀신 ${new Set(results.map(r => r.ghostKind)).size}종`);
+});
+
+test('만 19세 미만에게는 지난 연애를 단정하는 문장이 나오지 않는다', () => {
+  for (const r of results) {
+    if (r.age >= 19) continue;
+    assert.ok(!/거쳐간 인연|스쳐 지나간 인연|살을 섞/.test(r.sniff + r.lovers), '미성년 연애 문장');
+  }
+  assert.ok(results.some(r => r.age < 19), '미성년 표본 없음');
+});
 
 test('심리 투시·영적 조화율이 숫자로 나오고 범위 안이다', () => {
   for (const r of results) {

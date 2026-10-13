@@ -50,9 +50,8 @@
   // ─────────────────────────────────────────────────────────────────────
   // 공용: 봉인 카드(맛보기 + 결제 버튼), 상품 결제창
   // ─────────────────────────────────────────────────────────────────────
-  function sealCard({ productId, title, hook, items, buttonLabel, btnId, bundleFrom }) {
+  function sealCard({ productId, title, hook, items, buttonLabel, btnId }) {
     const pr = priceFor(productId);
-    const bundleLine = bundleFrom ? `<button class="btn-bundle" data-bundle-from="${bundleFrom}">📦 <span>이것까지 리포트·신년운세·소원 부적 5종·궁합 상세 <strong>전부 ${won(PRODUCTS.bundle.price)}원</strong></span></button>` : '';
     return `
       <div class="feature-card seal-card">
         <div class="seal-card-head">
@@ -68,7 +67,6 @@
         </div>
         <p class="coupon-line" data-coupon-line="${productId}" hidden></p>
         <button class="btn-pay" id="${btnId}">${buttonLabel}</button>
-        ${bundleLine}
         <p class="feature-note">전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않는다.</p>
       </div>`;
   }
@@ -113,11 +111,49 @@
     '편인': { key: '촉과 감각', good: ['직감이 날카로워지는 달이다. 낯선 공부·기술·취미를 파고들면 남다른 감각을 얻는다.', '혼자 생각을 정리하기 좋은 달이다. 일기나 메모로 머릿속을 꺼내 두거라.'], caution: ['생각만 많아지고 실행이 늦어지기 쉽다. 하루 한 가지는 손으로 끝내거라.', '사람을 의심하는 마음이 커지기 쉽다. 확인 없이 단정 짓지 마라.'], say: '촉이 오면 적어 두거라. 이번 달 네 촉은 잘 맞는 편이다.' },
     '정인': { key: '배움과 귀인', good: ['배움과 문서운이 좋은 달이다. 자격증·시험·계약 서류를 이번 달에 챙기거라.', '도와주는 사람이 나타나기 좋은 달이다. 어려운 일은 혼자 버티지 말고 먼저 물어보거라.'], caution: ['받기만 하다 보면 기대는 버릇이 든다. 도움을 받았으면 작게라도 갚아라.', '계획만 세우고 시작을 미루기 쉽다. 시작 날짜를 달력에 박아 두거라.'], say: '이번 달은 묻는 자가 얻는다. 모르는 걸 부끄러워하지 마라.' }
   };
-  const NY_REL = {
-    yukhap: '네 일지와 합을 맺는 달이라 사람과 인연이 부드럽게 이어진다. 만남·화해·협업에 좋다.',
-    samhap: '네 일지와 한 무리를 이루는 달이라 모임과 단체 일에서 힘을 얻는다.',
-    chung: '네 일지와 부딪치는 달이라 집·연애·생활 리듬이 흔들리기 쉽다. 이사·큰 계약·이별 같은 결정은 서두르지 마라.'
+  // 같은 십신이 한 해에 두 번 나오면 두 번째 문장을 쓴다 (한 화면 안에서 같은 말 반복 방지)
+  // 같은 십신이 한 해에 세 번째로 나올 때 쓰는 할 일·조심 문장
+  const NY_THIRD = {
+    '비견': ['오래 연락 못 한 친구를 다시 찾기 좋은 달이다.', '경쟁 상대와 비교하며 조급해지기 쉽다. 네 속도를 지켜라.'],
+    '겁재': ['정면 승부가 통하는 달이다. 기회가 오면 머뭇거리지 마라.', '주변의 부탁으로 지갑이 열리기 쉽다. 정한 금액만 쓰거라.'],
+    '식신': ['배우던 것을 결과물로 묶어 내기 좋은 달이다.', '즐거운 약속이 많아 일이 밀리기 쉽다. 마감부터 챙겨라.'],
+    '상관': ['기획과 제안이 통하는 달이다. 생각을 문서로 남겨 내밀어라.', '감정이 앞선 말이 오해를 부르기 쉽다. 글로 쓸 땐 한 번 더 읽어라.'],
+    '편재': ['흩어진 돈을 한곳으로 모으기 좋은 달이다.', '남의 말만 믿고 움직이면 손해 보기 쉽다. 직접 확인하거라.'],
+    '정재': ['미뤄 둔 정리를 끝내면 숨은 돈이 보이는 달이다.', '너무 아끼다 사람을 잃기 쉽다. 쓸 땐 시원하게 써라.'],
+    '편관': ['큰 시험이나 평가를 치르기에 나쁘지 않은 달이다. 준비한 만큼 나온다.', '몸이 보내는 신호를 무시하기 쉽다. 쉬는 날을 꼭 정해 두거라.'],
+    '정관': ['맡은 자리에서 인정받기 좋은 달이다. 한 걸음 더 책임을 져 보거라.', '규칙에 얽매여 기회를 놓치기 쉽다. 융통성을 조금 허락하거라.'],
+    '편인': ['낯선 분야를 맛보기 좋은 달이다. 짧은 강의 하나로 시작하거라.', '혼자 있는 시간이 길어지기 쉽다. 일주일에 한 번은 사람을 만나라.'],
+    '정인': ['선배나 스승의 조언이 길을 열어 주는 달이다.', '서류의 작은 실수가 일을 늦추기 쉽다. 제출 전에 다시 보거라.']
   };
+  const NY_SAY2 = {
+    '비견': '같은 길을 걷는 사람이 이번 달의 등불이다. 손을 내밀어 보거라.',
+    '겁재': '네 몫을 노리는 손이 가깝다. 웃으며 거절하는 법을 익혀라.',
+    '식신': '꾸준히 차린 밥상은 언젠가 손님을 부른다. 오늘도 한 숟갈 더 차려라.',
+    '상관': '번뜩이는 생각은 적어 두고, 내뱉는 말은 한 번 걸러라.',
+    '편재': '큰물이 들어올 때일수록 둑부터 살펴라.',
+    '정재': '쌓는 사람은 흔들리지 않는다. 이번 달도 한 칸 더 쌓아라.',
+    '편관': '버거운 달은 지나간다. 버틴 만큼 네 이름이 남는다.',
+    '정관': '반듯하게 한 일은 누군가 반드시 본다. 서두르지 마라.',
+    '편인': '혼자 파고드는 시간이 곧 네 무기를 벼리는 시간이다.',
+    '정인': '배운 것은 도망가지 않는다. 오늘 한 줄이라도 읽어라.'
+  };
+  const NY_REL = {
+    yukhap: ['네 일지와 합을 맺는 달이라 사람과 인연이 부드럽게 이어진다. 만남·화해·협업에 좋다.', '마음 맞는 사람과 손을 잡기 좋은 달이다. 미뤄 둔 연락을 먼저 해 보거라.', '틀어졌던 관계가 풀리기 쉬운 달이다. 사과든 고백이든 이때 꺼내거라.'],
+    samhap: ['네 일지와 한 무리를 이루는 달이라 모임과 단체 일에서 힘을 얻는다.', '여럿이 함께하는 일에 운이 붙는 달이다. 혼자보다 팀으로 움직여라.', '새 모임이나 동호회에 발을 들이기 좋은 달이다. 귀한 얼굴이 섞여 있다.'],
+    chung: ['네 일지와 부딪치는 달이라 집·연애·생활 리듬이 흔들리기 쉽다. 이사·큰 계약·이별 같은 결정은 서두르지 마라.', '생활의 자리가 다시 한번 흔들리는 달이다. 가까운 사람과 말다툼이 잦으니 말끝을 부드럽게 하거라.', '몸과 집안일이 동시에 바빠지기 쉬운 달이다. 일정을 비워 두고 무리한 약속은 미뤄라.']
+  };
+  const NY_FILL = [
+    el => `네 사주에 모자란 <strong>${el}</strong> 기운이 채워지는 달이다. 미뤄 둔 결심을 이때 실행하거라.`,
+    el => `빈자리였던 <strong>${el}</strong> 기운이 들어와 몸과 마음이 가벼워진다. 새 습관을 들이기 좋다.`,
+    el => `<strong>${el}</strong> 기운이 보태져 막혔던 일이 풀리기 쉽다. 멈춰 둔 계획을 다시 꺼내거라.`,
+    el => `모자란 <strong>${el}</strong> 기운이 차오르는 때다. 중요한 시작은 이 달에 맞추거라.`,
+    el => `<strong>${el}</strong> 기운이 곁을 지키는 달이다. 지친 몸을 추스르고 힘을 모아 두거라.`,
+    el => `한동안 비어 있던 <strong>${el}</strong> 기운이 다시 들어온다. 사람을 만나고 판을 넓혀도 좋은 때다.`,
+    el => `<strong>${el}</strong> 기운이 밀려와 균형이 맞춰지는 달이다. 큰 결정을 내려도 흔들림이 적다.`,
+    el => `<strong>${el}</strong> 기운이 한 번 더 보태지는 달이다. 앞서 시작한 일을 마무리 짓기 좋다.`,
+    el => `부족했던 <strong>${el}</strong> 기운이 넉넉히 들어온다. 미뤄 둔 건강 검진이나 정리를 해 두거라.`,
+    el => `<strong>${el}</strong> 기운이 도는 달이라 마음이 차분해진다. 공부와 계획 세우기에 좋다.`
+  ];
   const SCORE_BANDS = [[80, '볕 드는 달'], [66, '순한 달'], [52, '평이한 달'], [0, '몸 사릴 달']];
   const bandOf = s => SCORE_BANDS.find(b => s >= b[0])[1];
 
@@ -180,9 +216,8 @@
         title: `${D.TY}년 열두 달, 봉인된 이야기`,
         hook: `가장 몸을 사려야 할 달은 <strong>${mLabel(w)}</strong>이다. 그 달에 무엇이 네 발목을 잡는지, 그리고 <strong>${mLabel(b)}</strong>에 들어오는 볕을 붙잡으려면 언제부터 무엇을 준비해야 하는지는 이 봉인 안에 적어 두었다.`,
         items: ['달마다 <strong>할 일</strong>과 <strong>피할 일</strong>, 백구 한마디 (12달)', '돈 · 일 · 공부 · 인연 · 건강, <strong>분야별로 기운이 몰리는 달</strong>', '네 사주에 모자란 기운을 채우는 <strong>한 해 비방</strong> (색 · 방위 · 숫자)', 'PDF로 저장해 한 해 동안 꺼내 보기'],
-        buttonLabel: `📜 ${D.TY}년 봉인 풀기`, bundleFrom: 'newyear'
+        buttonLabel: `📜 ${D.TY}년 봉인 풀기`
       });
-      bindBundle(body, p, 'newyear');
       $('nyBuy').onclick = () => openProductModal('newyear', {
         title: `📜 ${D.TY}년 신년운세 봉인 풀기`,
         desc: `${esc(D.sj.ilju)}일주의 ${D.TY}년 열두 달 풀이와 분야별 흐름, 한 해 비방이 열린다.`,
@@ -200,18 +235,26 @@
 
   function newYearFull(D) {
     const sj = D.sj;
+    const occ = {}, relOcc = { yukhap: 0, samhap: 0, chung: 0 };
+    let fillOcc = 0;
     const cards = D.months.map(m => {
-      const t = NY[m.sipsin], s = hash(`${sj.ilju}|${m.y}-${m.m}|ny`);
-      const extra = m.rel.chung ? NY_REL.chung : m.rel.yukhap ? NY_REL.yukhap : m.rel.samhap ? NY_REL.samhap : '';
-      const fillTxt = m.fill ? `네 사주에 모자란 <strong>${EL_KO[sj.ps.weakKey]}</strong> 기운이 채워지는 달이다. 미뤄 둔 결심을 이때 실행하거라.` : '';
+      const t = NY[m.sipsin];
+      const k = occ[m.sipsin] = (occ[m.sipsin] || 0) + 1;   // 이 십신이 올해 몇 번째로 나오는지
+      const relKey = m.rel.chung ? 'chung' : m.rel.yukhap ? 'yukhap' : m.rel.samhap ? 'samhap' : '';
+      const extra = relKey ? NY_REL[relKey][relOcc[relKey]++ % NY_REL[relKey].length] : '';
+      const fillTxt = m.fill ? NY_FILL[fillOcc++ % NY_FILL.length](EL_KO[sj.ps.weakKey]) : '';
+      const base = hash(`${sj.ilju}|${m.sipsin}`) % 2;   // 사람마다 첫 문장은 다르게, 두 번째 등장엔 반드시 다른 문장
+      const good = k >= 3 ? NY_THIRD[m.sipsin][0] : t.good[(base + k - 1) % 2];
+      const caution = k >= 3 ? NY_THIRD[m.sipsin][1] : t.caution[(base + k) % 2];
+      const say = k % 2 === 1 ? t.say : NY_SAY2[m.sipsin];
       return `
         <article class="ny-month">
           <header><span class="ny-month-m">${mLabel(m)}</span><span class="ny-month-g">${m.ganji}(${m.ganjiHanja})월 · ${m.sipsin}</span><span class="ny-month-s">${m.score}점 · ${bandOf(m.score)}</span></header>
-          <p><span class="ny-tag do">할 일</span>${pickBy(t.good, s)}</p>
-          <p><span class="ny-tag avoid">조심</span>${pickBy(t.caution, s >>> 3)}</p>
+          <p><span class="ny-tag do">할 일</span>${good}</p>
+          <p><span class="ny-tag avoid">조심</span>${caution}</p>
           ${extra ? `<p><span class="ny-tag rel">인연</span>${extra}</p>` : ''}
           ${fillTxt ? `<p><span class="ny-tag fill">보충</span>${fillTxt}</p>` : ''}
-          <p class="ny-say">"${t.say}"</p>
+          <p class="ny-say">"${say}"</p>
         </article>`;
     }).join('');
     const pick = names => D.months.filter(m => names.includes(m.sipsin)).sort((a, b) => b.score - a.score).slice(0, 3);
@@ -296,16 +339,15 @@
     $('compatResult').appendChild(host);
     const key = compatKey(a, b);
     const D = compatDetailData(A, B, r, nameA, nameB);
-    if (!isPaidFor('compat', key) && !hasBundle(a) && !hasBundle(b)) {
+    if (!isPaidFor('compat', key)) {
       const firstSentence = D.fight.split('. ')[0] + '.';
       host.innerHTML = sealCard({
         productId: 'compat', btnId: 'compatBuy',
         title: '두 사람의 상세 궁합',
         hook: `점수는 숫자일 뿐이다. ${firstSentence} 이 다툼이 어떻게 풀리는지, 언제 함께 움직여야 하는지는 따로 적어 두었다.`,
         items: ['두 사람이 <strong>싸우는 패턴</strong>과 푸는 법', `${esc(nameA)}에게, ${esc(nameB)}에게 <strong>꼭 필요한 한마디</strong>`, `앞으로 6년 중 <strong>함께하면 좋은 해</strong>와 조심할 해`, '오래 가는 비결 · 두 사람에게 맞는 <strong>데이트 비방</strong>'],
-        buttonLabel: '💞 상세 궁합 봉인 풀기', bundleFrom: 'compat'
+        buttonLabel: '💞 상세 궁합 봉인 풀기'
       });
-      bindBundle(host, a, 'compat', { a, b, nameA, nameB });
       $('compatBuy').onclick = () => openProductModal('compat', {
         title: '💞 두 사람의 상세 궁합',
         desc: `${esc(nameA)} · ${esc(nameB)} 두 사람의 다툼 패턴, 필요한 한마디, 함께하면 좋은 해와 비방이 열린다.`,
@@ -316,7 +358,17 @@
       renderCouponLines();
       return;
     }
-    const yearLi = D.years.map(y => `<li class="${y.good ? 'good' : y.bad ? 'bad' : ''}"><strong>${y.y}년</strong> ${yearGanji(y.y)}년 — ${y.good ? '두 사람의 기운이 손을 잡는 해. 여행·동거·큰 약속 같은 함께하는 결정에 좋다.' : y.bad ? `${esc(y.who)}의 생활 자리가 흔들리는 해. 서로의 변화를 다그치지 말고 기다려 주거라.` : '크게 흔들리지도 붙지도 않는 해. 둘이 정한 대로 꾸준히 가면 된다.'}</li>`).join('');
+    const YT = {
+      good: ['두 사람의 기운이 손을 잡는 해. 여행·동거·큰 약속 같은 함께하는 결정에 좋다.', '함께 벌인 일이 순하게 굴러가는 해. 둘이 같이 모으는 돈이나 계획을 시작하거라.', '서로의 편이 되어 주기 쉬운 해. 가족·친구에게 두 사람을 소개하기 좋다.', '마음이 한곳으로 모이는 해. 오래 미뤄 둔 이야기를 꺼내 보거라.', '둘의 운이 서로를 끌어올리는 해. 한 사람의 좋은 일이 다른 사람에게도 번진다.', '손발이 척척 맞는 해. 같이 배우거나 같이 만드는 일을 하나 시작해 보거라.'],
+      bad: [w => `${w}의 생활 자리가 흔들리는 해. 서로의 변화를 다그치지 말고 기다려 주거라.`, w => `${w}에게 이사·이직 같은 변화가 몰리는 해. 결정은 함께 상의하고 천천히 하거라.`, w => `${w}의 마음이 예민해지기 쉬운 해. 사소한 말에 서운함이 쌓이지 않게 자주 묻거라.`, w => `${w}에게 바깥일이 몰려 둘의 시간이 줄어드는 해. 짧아도 매일 연락하는 약속을 지키거라.`, w => `${w}의 기운이 들쑥날쑥한 해. 큰 다툼은 하룻밤 자고 나서 이야기하거라.`, w => `${w}에게 피로가 쌓이는 해. 서운함을 따지기 전에 먼저 쉬게 해 주거라.`],
+      flat: ['크게 흔들리지도 붙지도 않는 해. 둘이 정한 대로 꾸준히 가면 된다.', '조용히 쌓이는 해. 작은 기념일을 챙기는 것만으로 충분하다.', '무난하게 흘러가는 해. 함께하는 습관 하나를 만들어 두거라.', '잔잔한 물처럼 고요한 해. 이럴 때 둘만의 계획을 차분히 세워 두거라.', '별일 없이 지나가는 해. 그 평범함을 지루함으로 오해하지 말거라.', '숨 고르기 좋은 해. 서로에게 고마웠던 일을 한 번씩 말로 꺼내 보거라.']
+    };
+    const yc = { good: 0, bad: 0, flat: 0 };
+    const yearLi = D.years.map(y => {
+      const kind = y.good ? 'good' : y.bad ? 'bad' : 'flat';
+      const arr = YT[kind], txt = arr[yc[kind]++ % arr.length];
+      return `<li class="${y.good ? 'good' : y.bad ? 'bad' : ''}"><strong>${y.y}년</strong> ${yearGanji(y.y)}년 — ${typeof txt === 'function' ? txt(esc(y.who)) : txt}</li>`;
+    }).join('');
     host.innerHTML = `
       <div class="feature-card compat-detail">
         <h3 class="feature-card-title">💞 두 사람의 상세 궁합</h3>
@@ -330,7 +382,9 @@
         <h4 class="cd-h">오래 가는 비결</h4>
         <p class="feature-text">${D.last}</p>
         <h4 class="cd-h">데이트 비방</h4>
-        <p class="feature-text">${esc(nameA)}에게는 <strong>${D.placeA}</strong>, ${esc(nameB)}에게는 <strong>${D.placeB}</strong>이 기운을 채우는 곳이다. 번갈아 가 보고, 그날은 <strong>${D.colorA}</strong>과 <strong>${D.colorB}</strong>을 하나씩 걸쳐 보거라.</p>
+        <p class="feature-text">${D.placeA === D.placeB
+          ? `두 사람 모두 <strong>${D.placeA}</strong>${josa(D.placeA, '이')} 기운을 채우는 곳이다. 둘이 같이 가 보고, 그날은 <strong>${D.colorA}</strong> 옷이나 소품을 맞춰 걸쳐 보거라.`
+          : `${esc(nameA)}에게는 <strong>${D.placeA}</strong>, ${esc(nameB)}에게는 <strong>${D.placeB}</strong>${josa(D.placeB, '이')} 기운을 채우는 곳이다. 번갈아 가 보고, 그날은 <strong>${D.colorA}</strong>${josa(D.colorA, '과')} <strong>${D.colorB}</strong>${josa(D.colorB, '을')} 하나씩 걸쳐 보거라.`}</p>
         <p class="ny-say">"궁합은 정해진 답이 아니라 서로를 읽는 지도다. 지도를 봤으면 이제 같이 걷거라."</p>
         <p class="feature-note">전통 명리 해석을 바탕으로 한 재미 풀이이며, 두 사람의 관계를 정해 주지 않는다.</p>
       </div>`;
@@ -580,9 +634,8 @@
         title: `${W.ko} 소원 부적 받기`,
         hook: `네 사주에서 ${W.ko}의 자리는 <strong>${R.label}</strong>로 드러난다. 이 숫자가 네 ${W.ko}에 무슨 뜻인지, 앞으로 열두 달 중 이 부적이 가장 힘을 쓰는 달이 언제인지는 봉인 안에 적어 두었다.`,
         items: ['금테 두른 <strong>소원 부적 원본</strong> + 휴대폰 <strong>배경화면</strong>(1080×1920) 저장', `네 사주로 본 <strong>${W.ko}의 자리</strong> 풀이`, `앞으로 12달 중 <strong>부적이 힘을 쓰는 달</strong> 3개`, '부적 쓰는 법 (방위 · 색 · 숫자)과 백구 한마디'],
-        buttonLabel: `🧧 ${W.ko} 부적 받기`, bundleFrom: 'wish'
+        buttonLabel: `🧧 ${W.ko} 부적 받기`
       });
-      bindBundle($('wishText'), p, 'wish', { wishId });
       $('wishBuy').onclick = () => openProductModal('wish', {
         title: `🧧 ${W.ko} 소원 부적`,
         desc: `${esc(sj.ilju)}일주에 맞춘 금테 ${W.ko} 부적과 풀이가 열린다.`,
@@ -598,7 +651,7 @@
           <h3 class="feature-card-title">${W.ko}의 자리 · ${esc(R.label)}</h3>
           <p class="feature-text">${R.text}</p>
           <h4 class="cd-h">부적이 힘을 쓰는 달</h4>
-          <p class="feature-text"><strong>${R.goodMonths.map(m => `${m.y !== new Date().getFullYear() ? m.y + '년 ' : ''}${m.m}월`).join(' · ')}</strong> — 이 달에 ${W.ko}에 관한 일을 시작하거나 결정하거라.${R.watch.length ? ` ${R.watch.map(m => `${m.m}월`).join(' · ')}에는 생활의 자리가 흔들리니 서두르지 마라.` : ''}</p>
+          <p class="feature-text"><strong>${R.goodMonths.map(m => `${m.y !== new Date().getFullYear() ? m.y + '년 ' : '올해 '}${m.m}월`).join(' · ')}</strong> — 이 달에 ${W.ko}에 관한 일을 시작하거나 결정하거라.${R.watch.length ? ` ${R.watch.map(m => `${m.y !== new Date().getFullYear() ? m.y + '년 ' : '올해 '}${m.m}월`).join(' · ')}에는 생활의 자리가 흔들리니 서두르지 마라.` : ''}</p>
           <h4 class="cd-h">부적 쓰는 법</h4>
           <ul class="ny-fields">
             <li>휴대폰 배경화면으로 걸어 두고, 아침에 한 번 눈을 맞추거라.</li>
@@ -613,69 +666,6 @@
     }
     if (scroll) stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-
-  // ═════════════════════════════════════════════════════════════════════
-  // ④ 전부 묶음 보따리 (10,900원): 한 사람 기준 리포트·신년운세·소원 부적 5종·궁합 상세
-  // ═════════════════════════════════════════════════════════════════════
-  function bindBundle(root, p, from, extra) {
-    if (!root) return;
-    root.querySelectorAll('[data-bundle-from]').forEach(b => {
-      if (hasBundle(p)) { b.remove(); return; }
-      b.onclick = () => { closePaymentModal(); openBundle(p, from, extra); };
-    });
-  }
-
-  function openBundle(p, from = 'shelf', extra = null) {
-    if (!p) return;
-    if (hasBundle(p)) { showToast('이 생년월일은 이미 보따리를 다 풀었다.'); return; }
-    const sj = X.readSaju(p);
-    const rows = BUNDLE_ITEMS.map(it => `<li><span>${it.text}</span><span class="bundle-each">${won(it.price)}원</span></li>`).join('');
-    openProductModal('bundle', {
-      title: '📦 백구의 전부 묶음 보따리',
-      desc: `<strong>${esc(sj.ilju)}일주</strong>(${p.y}년 ${p.m}월 ${p.d}일) 한 사람 몫의 유료 풀이가 한 번에 모두 열린다.
-        <ul class="bundle-list">${rows}</ul>
-        <p class="bundle-sum">따로 사면 <s>${won(BUNDLE_LIST_TOTAL)}원</s> → 묶음 <strong>${won(PRODUCTS.bundle.price)}원</strong></p>
-        <p class="feature-note">이미 따로 산 풀이가 있어도 묶음 가격은 같다. 다른 생년월일에는 열리지 않는다.</p>`,
-      provide: '결제 즉시 리포트·신년운세·소원 부적 5종·궁합 상세가 이 화면에서 열림 · PDF·이미지 저장 가능',
-      again: '같은 기기·같은 생년월일로 들어오면 모두 다시 열림',
-      subjectKey: personKeyOf(p), data: { p, from, extra }
-    });
-  }
-
-  /** 대문 진열의 '전부 묶음' */
-  function openBundleFromShelf() {
-    const p = loadProfile();
-    if (!p) { showToast('보따리를 묶으려면 먼저 네 생년월일부터 알려 주거라.'); openMySaju(); return; }
-    openBundle(p, 'shelf');
-  }
-
-  /** 묶음 결제 뒤: 보던 화면을 그대로 다시 그려 열린 모습을 보여 준다 */
-  function afterBundle(d) {
-    saveProfile(d.p);
-    const vis = id => { const v = $(id); return !!v && v.style.display !== 'none'; };
-    const msg = '📦 보따리가 풀렸다! 리포트·신년운세·소원 부적 5종·궁합 상세가 모두 열렸다.';
-    if (d.from === 'report' && typeof currentSajuData !== 'undefined' && currentSajuData) { unlockContent(); showToast(msg); return; }
-    if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }
-    else if (d.from === 'wish') { if (d.extra) wishPicked = d.extra.wishId; openFeature('wish'); }
-    else if (d.from === 'newyear' || vis('viewNewYear')) openFeature('newyear');
-    else renderShopShelf();
-    showToast(msg);
-  }
-
-  /** 휴대폰 결제 페이지에서 돌아왔을 때 보던 화면부터 다시 그린다 */
-  function resumeBundle(d) {
-    saveProfile(d.p);
-    if (d.from === 'report' && d.extra) {
-      const sj = d.extra;
-      const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
-      set('year', sj.y); set('month', sj.m); set('day', sj.d); set('hourSelect', String(sj.hourVal)); set('gender', sj.genderVal);
-      set('userJob', sj.userJob); set('userMajor', sj.userMajor); set('userHobby', sj.userHobby); set('userDream', sj.userDream);
-      submitAndGoToResult();
-    } else if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }
-    else if (d.from === 'wish') { if (d.extra) wishPicked = d.extra.wishId; openFeature('wish'); }
-    else if (d.from === 'newyear') openFeature('newyear');
-  }
-  registerProduct('bundle', { onPaid: afterBundle, resume: resumeBundle });
 
   // ═════════════════════════════════════════════════════════════════════
   // 결제 연결 · 진입점
@@ -703,12 +693,8 @@
       el.innerHTML = pr.coupon ? `<s>${won(pr.list)}원</s> ${won(pr.final)}원` : `${won(pr.list)}원`;
     });
     const ty = $('shopNewYearYear'); if (ty) ty.textContent = targetYear();
-    const bl = $('shopBundleList'); if (bl) bl.textContent = `${won(BUNDLE_LIST_TOTAL)}원`;
-    const bp = document.querySelector('[data-shop-price="bundle"]');
-    if (bp && hasBundle(loadProfile())) { bp.textContent = '다 풀었다'; if (bl) bl.hidden = true; }
   }
   document.addEventListener('DOMContentLoaded', renderShopShelf);
 
-  window.openBundleFromShelf = openBundleFromShelf;
-  window.BYEOKSA_SHOP = { openBundle, openBundleFromShelf, afterCompat, renderShopShelf, newYearData, compatDetailData, wishReading, WISHES, NY, drawWishTalisman, targetYear };
+  window.BYEOKSA_SHOP = { afterCompat, renderShopShelf, newYearData, compatDetailData, wishReading, WISHES, NY, drawWishTalisman, targetYear };
 })();

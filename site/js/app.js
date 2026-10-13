@@ -9,6 +9,8 @@ const {
   const NOW_Y = new Date().getFullYear();
   const Y_PAST1 = NOW_Y - 2, Y_PAST2 = NOW_Y - 1;          // "불과 1~2년 전"
   const Y_R0 = NOW_Y, Y_R1 = NOW_Y + 1, Y_R2 = NOW_Y + 2;  // 3개년 로드맵
+  let CUR_AGE = 30;
+  const isYoung = () => CUR_AGE < 19;
   function yearGanji(y, useHanja) {
     const s = ((y - 4) % 10 + 10) % 10, b = ((y - 4) % 12 + 12) % 12;
     return useHanja ? STEMS[s].hanja + BRANCHES[b].hanja : STEMS[s].char + BRANCHES[b].char;
@@ -209,6 +211,19 @@ const {
     gwan: '책임과 압박이 어깨를 짓누르는 해다. 그 무게를 버텨내면 직함과 명예가 따라오니 피하지 말고 맞서라.',
     in: '배움과 귀인의 도움이 깃드는 해다. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 된다.'
   };
+  // 결과 화면 '일의 냄새'용 짧은 한마디 (리포트 로드맵의 연도 해설과 겹치지 않게)
+  const CAREER_SIPSIN_HINT = {
+    '비견': '혼자보다 함께 뛸 동료를 찾을 때 판이 커진다.',
+    '겁재': '경쟁자가 바짝 붙는다. 네 몫의 성과는 기록으로 남겨 두거라.',
+    '식신': '손에 익은 재주가 그대로 일감이 된다.',
+    '상관': '말과 아이디어로 판을 흔들 때다. 다만 윗선과의 충돌은 피하거라.',
+    '편재': '바깥에서 큰 기회가 굴러든다. 발 넓게 움직여라.',
+    '정재': '성실하게 쌓은 실적이 연봉과 자리로 돌아온다.',
+    '편관': '무거운 일이 몰리지만, 버티면 직함이 따라온다.',
+    '정관': '공식적인 인정이 온다. 승진·합격 같은 문을 두드려라.',
+    '편인': '남다른 기술 하나를 파고들면 대체 불가능한 사람이 된다.',
+    '정인': '자격과 배움이 다음 자리를 열어 준다.'
+  };
   const SIPSIN_GROUP = { '비견': 'bi', '겁재': 'bi', '식신': 'sik', '상관': 'sik', '편재': 'jae', '정재': 'jae', '편관': 'gwan', '정관': 'gwan', '편인': 'in', '정인': 'in' };
 
   // ── 누재살 방어 비방: 사주에 따라 고르는 문장 (원래 문장은 각각 한 유형으로 보존) ──
@@ -290,8 +305,19 @@ const {
   }
 
   /** 재성 개수에 따른 재물 진단 한 단락 */
-  function wealthDiagnosis(ps) {
+  function wealthDiagnosis(ps, where) {
     const label = `<strong class="impact-gold">[${EL_KO[ps.wealthEl]}] 재성(財星)</strong>`;
+    // 같은 사람이 결과 화면·리포트·묻기에서 같은 문단을 두 번 읽지 않게, 자리마다 다른 문장
+    if (where === 'teaser') {
+      if (ps.wealthCount === 0) return `네 원국에는 ${label}이 보이지 않는다. 벌어도 머물 자리가 없으니 돈이 손가락 사이로 빠진다.`;
+      if (ps.wealthCount === 1) return `네 원국의 ${label}은 단 한 줄기다. 가는 물줄기라 작은 구멍 하나에도 금세 마른다.`;
+      return `네 원국에는 ${label}이 ${ps.wealthCount}글자나 된다. 물은 넘치는데 담을 독이 작다.`;
+    }
+    if (where === 'chat') {
+      if (ps.wealthCount === 0) return `재물 글자인 ${label}이 원국에 없다. 그래서 너는 "모으는 법"부터 배워야 돈이 붙는 사람이다.`;
+      if (ps.wealthCount === 1) return `재물 글자인 ${label}이 하나뿐이라, 큰돈보다 꾸준한 돈이 네 편이다.`;
+      return `재물 글자인 ${label}이 넉넉하다. 버는 재주는 있으니, 지키는 재주만 붙이면 된다.`;
+    }
     if (ps.wealthCount === 0) return `특히 네 원국에는 재물을 뜻하는 ${label}이 한 글자도 드러나 있지 않다. 돈이 제 발로 찾아오는 팔자가 아니니, 네 손으로 그릇을 빚고 길목을 지켜야만 고인다.`;
     if (ps.wealthCount === 1) return `네 원국에서 재물을 뜻하는 ${label}은 단 한 글자뿐이다. 들어오는 물줄기가 가늘어 한 번 새기 시작하면 바닥이 금세 드러나니, 작은 지출 구멍부터 틀어막아라.`;
     return `네 원국에는 재물을 뜻하는 ${label}이 ${ps.wealthCount}글자나 깔려 있다. 돈이 들어오는 길은 넓지만 감당할 그릇보다 물이 많아 넘쳐흐르는 형국이니, 들어오는 족족 묶어두지 않으면 남의 주머니로 흘러간다.`;
@@ -543,6 +569,7 @@ let currentSajuData = null;
     } = pillars;
 
     // 렌더링 파이프라인
+    CUR_AGE = NOW_Y - y;   // 만 19세 미만이면 연애 문장을 '앞으로 올 인연' 쪽으로 순하게
     updateAnimalCard(dStem, dBranch);
     renderPillars({ yStem, yBranch, mStem, mBranch, dStem, dBranch, hStem, hBranch, dStemIdx });
     const ohengResult = renderOheng({ yStem, yBranch, mStem, mBranch, dStem, dBranch, hStem, hBranch });
@@ -834,9 +861,141 @@ let currentSajuData = null;
     return { potScore, potGrade, potColor, timScore, timGrade, timColor, wScore, wGrade, wColor, kScore, kGrade, kColor, alertHtml };
   }
 
+  // ─────────────────────────────────────────────────────────────────────
+  // 👹 백구가 등 뒤에서 본 것 — 가장 모자란 오행(weakKey)의 틈으로 들어온 귀신 5종 (직접 그린 SVG)
+  // ─────────────────────────────────────────────────────────────────────
+  const GHOST_SVG_HEAD = `<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" focusable="false">
+    <defs>
+      <radialGradient id="gpBg" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#2a1712"/><stop offset=".6" stop-color="#120a08"/><stop offset="1" stop-color="#050302"/></radialGradient>
+      <filter id="gpRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+      <filter id="gpGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="gpSmoke"><feGaussianBlur stdDeviation="5"/></filter>
+    </defs>
+    <rect width="240" height="240" fill="url(#gpBg)"/>`;
+  const GHOST_SVG_FOOT = `<ellipse class="gp-fog" cx="120" cy="232" rx="150" ry="26" fill="#d9cfc0" opacity=".10" filter="url(#gpSmoke)"/></svg>`;
+  const rep = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join('');
+
+  const GHOSTS = {
+    // 목(木) 결핍 → 고목귀: 속 빈 고목, 가지 뿔, 구멍 눈
+    wood: {
+      name: '고목귀', hanja: '枯木鬼',
+      lore: '속이 텅 빈 고목에 깃들어 사는 귀신이다. 네 원국에 목(木)이 모자란 틈으로 들어와, 네가 무언가 시작하려 할 때마다 마른 가지 같은 손가락으로 발목을 감는다. 결심이 자꾸 내일로 밀렸다면 이것이 붙어 있었던 탓이다.',
+      svg: () => `<g filter="url(#gpRough)">
+        <path d="M86 70 C70 40 52 34 40 14 M78 66 C66 52 60 30 66 8 M154 70 C170 40 190 34 202 12 M162 66 C176 50 178 30 172 6 M60 40 L44 44 M184 38 L200 46" stroke="#2b1d12" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path d="M72 78 C70 52 170 52 168 78 L176 160 C178 196 150 226 120 228 C90 226 62 196 64 160 Z" fill="#3a2a1b"/>
+        <path d="M92 70 L88 120 L96 170 M120 60 L118 100 M148 72 L152 118 L144 176 M104 190 L110 222 M136 192 L130 224" stroke="#1d130b" stroke-width="2.4" fill="none"/>
+        <ellipse cx="96" cy="118" rx="17" ry="22" fill="#050302"/><ellipse cx="146" cy="116" rx="15" ry="24" fill="#050302"/>
+        <path d="M104 160 C112 150 128 150 136 160 L134 206 C126 214 114 214 106 206 Z" fill="#050302"/>
+        <path d="M106 160 L111 172 L116 158 L121 174 L126 158 L131 172 L135 160 M107 206 L112 196 L118 208 L124 194 L130 207" stroke="#8a7a5c" stroke-width="2" fill="none"/>
+        <path d="M70 150 C66 170 74 182 70 198 M170 148 C176 168 166 186 172 204" stroke="#3f5a2a" stroke-width="4" fill="none" opacity=".7"/>
+      </g>
+      <g class="gp-eyes" filter="url(#gpGlow)"><circle cx="98" cy="122" r="3.2" fill="#c9f7a6"/><circle cx="144" cy="120" r="3.2" fill="#c9f7a6"/></g>`
+    },
+    // 화(火) 결핍 → 그을음귀: 꺼진 아궁이의 연기 덩어리, 숯불 눈
+    fire: {
+      name: '그을음귀', hanja: '煤煙鬼',
+      lore: '꺼진 아궁이의 그을음 속에 사는 귀신이다. 네 원국에 화(火)가 모자란 틈으로 들어와, 네 안의 불씨를 하나씩 불어 끈다. 남들 앞에선 웃다가도 혼자 있으면 싸늘하게 식어 버렸다면, 이것이 네 어깨에 앉아 있었던 것이다.',
+      svg: () => `<g filter="url(#gpSmoke)" opacity=".9">${rep(9, i => `<circle cx="${70 + (i * 37) % 100}" cy="${210 - i * 20}" r="${44 - i * 2}" fill="${i % 2 ? '#1c1714' : '#2a2420'}"/>`)}</g>
+      <g filter="url(#gpRough)">
+        <path d="M60 120 C56 64 96 40 122 42 C152 44 186 70 180 124 C176 168 150 196 120 198 C88 196 64 170 60 120 Z" fill="#141110"/>
+        <ellipse cx="94" cy="114" rx="18" ry="11" fill="#050403" transform="rotate(18 94 114)"/><ellipse cx="146" cy="110" rx="11" ry="13" fill="#050403"/>
+        <path d="M76 156 C94 144 108 172 122 158 C136 146 150 170 166 150 C160 178 92 184 76 156 Z" fill="#050403"/>
+      </g>
+      <g class="gp-eyes" filter="url(#gpGlow)">
+        <ellipse cx="94" cy="114" rx="9" ry="4" fill="#ff6a1a" transform="rotate(18 94 114)"/><circle cx="146" cy="110" r="3.2" fill="#ffb35a"/>
+        <path d="M82 158 C96 150 108 166 122 156 C134 148 146 166 160 152" stroke="#ff7a24" stroke-width="2.2" fill="none"/>
+        <path d="M100 160 C101 172 98 182 100 194 M128 156 C129 168 131 176 129 186" stroke="#ff5a14" stroke-width="1.8" fill="none" opacity=".8"/>
+      </g>
+      ${rep(14, i => `<circle class="gp-ash" cx="${20 + (i * 53) % 200}" cy="${30 + (i * 71) % 170}" r="${1 + (i % 3) * .6}" fill="#ff7b2e" opacity="${.35 + (i % 4) * .15}"/>`)}`
+    },
+    // 토(土) 결핍 → 흙아귀: 바늘 목에 끝없이 벌어진 입, 긴 손가락
+    earth: {
+      name: '흙아귀', hanja: '土餓鬼',
+      lore: '목구멍은 바늘구멍만 한데 배는 끝없이 고픈 굶주린 귀신이다. 네 원국에 토(土)가 모자란 틈으로 들어와, 네가 쌓아 둔 것을 밤마다 갉아 먹는다. 모아도 모아도 바닥이 드러났다면, 이것이 네 그릇에 입을 대고 있었던 것이다.',
+      svg: () => `<g filter="url(#gpRough)">
+        <path d="M112 186 L108 240 M128 186 L132 240" stroke="#4e3520" stroke-width="9"/>
+        <path d="M50 108 C44 50 196 50 190 108 C188 160 160 192 120 192 C80 192 52 160 50 108 Z" fill="#6b4a2a"/>
+        <path d="M70 80 L84 96 L78 112 M168 78 L156 98 L164 110 M120 56 L116 74 M100 176 L94 190 M144 178 L150 190" stroke="#3a2614" stroke-width="2.4" fill="none"/>
+        <path d="M72 120 C80 100 160 100 168 120 C170 160 148 184 120 186 C92 184 70 160 72 120 Z" fill="#0a0503"/>
+        <path d="M74 120 ${rep(12, i => `L${80 + i * 8} ${i % 2 ? 120 : 132}`)} L166 120" stroke="#d8cdb0" stroke-width="2" fill="#d8cdb0"/>
+        <path d="M84 176 ${rep(10, i => `L${88 + i * 7} ${i % 2 ? 178 : 166}`)} L156 176" stroke="#c9bd9e" stroke-width="2" fill="#c9bd9e"/>
+        <path d="M150 140 C146 160 152 170 150 184" stroke="#6b1010" stroke-width="3" fill="none" opacity=".8"/>
+        <ellipse cx="94" cy="86" rx="10" ry="7" fill="#0a0503"/><ellipse cx="146" cy="86" rx="10" ry="7" fill="#0a0503"/>
+        <path d="M20 240 C26 210 30 196 40 186 M40 186 L30 170 M40 186 L44 166 M40 186 L54 172 M220 240 C214 210 210 196 200 186 M200 186 L210 170 M200 186 L196 166 M200 186 L186 172" stroke="#5a3d22" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </g>
+      <g class="gp-eyes" filter="url(#gpGlow)"><circle cx="95" cy="86" r="2.4" fill="#f5efe0"/><circle cx="145" cy="86" r="2.4" fill="#f5efe0"/></g>`
+    },
+    // 금(金) 결핍 → 외뿔도깨비: 녹슨 쇠뿔 하나, 툭 불거진 눈, 위로 솟은 엄니
+    metal: {
+      name: '외뿔도깨비', hanja: '獨角鬼',
+      lore: '녹슨 쇠뿔 하나를 단 도깨비다. 네 원국에 금(金)이 모자란 틈으로 들어와, 끊어야 할 인연 앞에서 네 칼날을 무디게 만든다. 아니다 싶은 사람을 끝내 놓지 못했다면, 이 도깨비가 네 손목을 붙들고 있었던 것이다.',
+      svg: () => `<g filter="url(#gpRough)">
+        ${rep(11, i => `<path d="M${58 + i * 12} 74 L${50 + i * 13} ${30 + (i % 3) * 10} L${66 + i * 12} 70" fill="#120d0b"/>`)}
+        <path d="M116 58 C108 30 118 12 138 2 C128 22 132 40 128 58 Z" fill="#cbbfa0"/>
+        <path d="M118 46 L130 44 M120 34 L132 30" stroke="#7a6a4c" stroke-width="2"/>
+        <path d="M52 110 C48 66 192 66 188 110 L182 168 C176 204 150 222 120 222 C90 222 64 204 58 168 Z" fill="#4a5150"/>
+        <path d="M64 96 C80 120 70 150 86 168 M176 104 C166 130 178 150 160 178 M110 200 C120 190 132 196 140 206" stroke="#7a3a1a" stroke-width="9" fill="none" opacity=".55"/>
+        <path d="M66 98 L108 112 M174 98 L132 112" stroke="#120d0b" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="92" cy="126" r="17" fill="#d9c34a"/><circle cx="148" cy="126" r="17" fill="#d9c34a"/>
+        <path d="M110 140 L120 160 L130 140" fill="#2c3130"/>
+        <path d="M72 172 C92 200 148 200 168 172 C150 182 90 182 72 172 Z" fill="#0a0605"/>
+        <path d="M84 178 L90 150 L98 182 Z M156 178 L150 150 L142 182 Z" fill="#e8dfc4"/>
+        <path d="M100 184 L104 192 L110 185 L116 194 L122 185 L128 193 L134 185 L140 191" stroke="#e8dfc4" stroke-width="2" fill="none"/>
+      </g>
+      <g class="gp-eyes" filter="url(#gpGlow)"><circle cx="94" cy="128" r="6" fill="#b3120b"/><circle cx="146" cy="128" r="6" fill="#b3120b"/><circle cx="94" cy="128" r="2" fill="#050302"/><circle cx="146" cy="128" r="2" fill="#050302"/></g>`
+    },
+    // 수(水) 결핍 → 물귀신: 젖은 머리칼 사이로 한쪽 눈, 물방울
+    water: {
+      name: '물귀신', hanja: '水鬼',
+      lore: '젖은 머리칼을 늘어뜨린 채 물가에서 사람을 기다리는 귀신이다. 네 원국에 수(水)가 모자란 틈으로 들어와, 네 생각을 흙탕물처럼 흐린다. 밤마다 머리가 달아올라 잠들지 못했다면, 이것이 네 베갯머리에 앉아 있었던 것이다.',
+      svg: () => `<g filter="url(#gpRough)">
+        <path d="M70 108 C66 60 174 60 170 108 L168 170 C164 200 142 216 120 216 C98 216 76 200 72 170 Z" fill="#a9bcbf"/>
+        <path d="M84 150 C88 170 96 196 100 214 M154 140 C150 170 146 196 140 214" stroke="#7d9396" stroke-width="2" fill="none"/>
+        <ellipse cx="138" cy="128" rx="14" ry="10" fill="#f4f6f2"/><circle cx="140" cy="129" r="3.6" fill="#050302"/>
+        <path d="M108 186 C114 182 126 182 132 186 C126 192 114 192 108 186 Z" fill="#2a1414"/>
+        <path d="M138 140 C140 160 136 176 138 198" stroke="#5b2a2a" stroke-width="1.6" fill="none" opacity=".7"/>
+      </g>
+      <g fill="none" stroke-linecap="round">${rep(26, i => { const x = 56 + i * 5.2; const skip = x > 124 && x < 152; const top = 46 + Math.round((x - 120) * (x - 120) / 160); return skip ? `<path d="M${x} ${top} C${x - 8} 90 ${x + 6} 100 ${x - 2} 110" stroke="#050403" stroke-width="5"/>` : `<path d="M${x} ${top} C${x - 10 + (i % 4) * 5} 110 ${x + 8 - (i % 3) * 6} 170 ${x - 4 + (i % 5) * 2} ${226 + (i % 4) * 6}" stroke="${i % 3 ? '#070606' : '#151414'}" stroke-width="${5 + (i % 3)}"/>`; })}</g>
+      ${rep(7, i => `<path class="gp-drip" d="M${64 + i * 19} ${222 + (i % 3) * 6} q3 6 0 9 q-3 -3 0 -9 Z" fill="#7fa3b0" opacity=".75"/>`)}
+      <g class="gp-eyes" filter="url(#gpGlow)"><circle cx="140" cy="129" r="1.4" fill="#e8f6ff"/></g>`
+    }
+  };
+
+  function ghostFor(weakKey) { return GHOSTS[weakKey] || GHOSTS.water; }
+  function ghostPortraitHtml(weakKey) {
+    const g = ghostFor(weakKey);
+    return `<figure class="ghost-portrait" data-ghost="${weakKey}">
+        <p class="ghost-mirror-title">백구가 네 등 뒤를 비춰 본 거울</p>
+        <p class="ghost-warn">⚠️ 아래 그림은 무섭거나 불쾌할 수 있습니다. 어린이·노약자·임산부, 공포 그림을 힘들어하는 분은 보지 않는 것을 권합니다.</p>
+        <div class="ghost-portrait-frame">${GHOST_SVG_HEAD}${g.svg()}${GHOST_SVG_FOOT}<img class="ghost-img" src="img/ghosts/${weakKey}.jpg" width="640" height="640" alt="${g.name}(${g.hanja}) 그림" decoding="async" onload="this.parentNode.classList.add('has-img')" onerror="this.remove()">
+          <svg class="ghost-mirror-crack" viewBox="0 0 100 125" preserveAspectRatio="none" aria-hidden="true"><path d="M71 8 L64 30 L70 41 L58 62 M64 30 L80 36 M70 41 L86 52 M58 62 L49 70 M58 62 L66 80" fill="none" stroke="rgba(235,230,220,.45)" stroke-width=".45"/><path d="M12 96 L22 88 L27 94 L36 86" fill="none" stroke="rgba(235,230,220,.3)" stroke-width=".4"/></svg>
+          <button type="button" class="ghost-gate">👁 거울을 들여다보겠느냐<small>눌러서 네 등 뒤 보기</small></button>
+        </div>
+        <figcaption><span class="ghost-portrait-name">${g.name}</span> <span class="ghost-portrait-hanja">${g.hanja}</span></figcaption>
+        <p class="ghost-ai-note">위 그림은 AI로 생성한 이미지입니다.</p>
+      </figure>`;
+  }
+  // 경고를 읽고 직접 눌러야 그림이 드러난다
+  function revealGhost(el) {
+    if (!el) return;
+    const gate = el.querySelector('.ghost-gate');
+    if (!gate) { el.classList.add('is-seen'); return; }
+    gate.onclick = () => { el.classList.add('is-seen'); gate.remove(); };
+  }
+
   function updateGhostWarningCard(dStem, dBranch, oheng, dayStemIdx) {
     const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
     const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
+    const ghost = ghostFor(ps.weakKey);
+    const gp = document.getElementById('ghostPortrait');
+    if (gp) {
+      gp.innerHTML = ghostPortraitHtml(ps.weakKey);
+      revealGhost(gp.querySelector('.ghost-portrait'));
+    }
+    const gl = document.getElementById('ghostLore');
+    if (gl) {
+      gl.innerHTML = `<p class="ghost-lore">🐾 <strong>백구가 네 등 뒤에서 똑똑히 봤다. <span class="impact-red">${ghost.name}(${ghost.hanja})</span>.</strong> ${ghost.lore} 내가 이빨을 드러내자 한 걸음 물러섰지만, 그림자 끝은 아직 네 뒤꿈치에 걸려 있다.</p>`;
+    }
     document.getElementById('ghostDesc').innerHTML = 
       `당장 네 등 뒤를 돌아보아라. 끈적한 악취가 진동한다.<br><br>` +
       `네 주변에 분명히 있다. <strong>평소엔 살갑게 굴다가도, 네가 조금만 좋은 일이 생기면 눈빛이 묘하게 차가워지며 '그게 잘될까?' 하고 초를 치는 인간!</strong><br>` +
@@ -851,13 +1010,15 @@ let currentSajuData = null;
     const careerSipsin = getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10);
     const loveScent = SOULMATE_SCENTS[ps.weakKey].short;
     document.getElementById('sniffLoveText').innerHTML = 
-      `"코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
+      (isYoung()
+        ? `"아직 여물지 않은 인연의 냄새가 잡힌다. 앞으로 네 곁을 스쳐 갈 사람들 가운데에는 네 마음을 갉아먹으려 드는 <strong class="impact-red">악연</strong>도 섞여 있을 것이다. 달콤한 말 뒤에 숨은 곰팡이 냄새를 가려낼 줄 알아야 한다. 하지만`
+        : `"코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만`) + ` 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."` + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
-      `"아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."` + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps)}</span>`;
+      `"아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."` + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps, 'teaser')}</span>`;
 
     document.getElementById('sniffCareerText').innerHTML = 
-      `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[careerSipsin]}</span>`;
+      `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${CAREER_SIPSIN_HINT[careerSipsin]}</span>`;
   }
 
   function renderTileHtml(item) {
@@ -1115,14 +1276,14 @@ let currentSajuData = null;
         <div class="portfolio-section-title">🕯️ 인연과 사랑의 체취 감별 (벽사신견 후각 투시록)</div>
         <div class="portfolio-text">
           벽사신견의 코는 거짓말을 하지 않는다. 사람이 입으로는 온갖 달콤한 사랑을 맹세해도, 그 영혼에서 뿜어져 나오는 냄새는 숨길 수 없는 법이다.<br><br>
-          너를 스쳐 지나간 인연들을 돌아보아라. <strong>처음엔 눈이 멀 것처럼 설레었지만 결국 네 가슴에 지독한 생채기를 남기고 떠난 자들...</strong> 그들의 냄새를 복기해보아라.
+          ${isYoung() ? `네 앞에 다가올 인연들의 냄새를 미리 맡아 두어라. <strong>처음엔 눈이 멀 것처럼 설레지만 결국 네 가슴에 생채기를 남기고 떠날 자들...</strong> 그 냄새를 알아 두면 비켜 갈 수 있다.` : `너를 스쳐 지나간 인연들을 돌아보아라. <strong>처음엔 눈이 멀 것처럼 설레었지만 결국 네 가슴에 지독한 생채기를 남기고 떠난 자들...</strong> 그들의 냄새를 복기해보아라.`}
         </div>
 
         <div class="portfolio-highlight" style="border-left: 4.5px solid #b91c1c; background: #fff8f8;">
           <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: ${ruin.title}</strong>
           • <strong>영적 체취</strong>: ${ruin.scent}<br>
           • <strong>소름 돋는 특징</strong>: ${ruin.trait}<br>
-          • <strong>경고</strong>: 이 자와 살을 섞거나 깊은 연인으로 들이면, 네 사주 원국의 명예운과 금전운이 3년간 송두리째 잿더미가 된다. 지금 그런 냄새가 나는 자가 주변에 있다면 뒤도 돌아보지 말고 뛰어 도망쳐라!
+          • <strong>경고</strong>: 이 자를 깊은 연인으로 들이면, 네 사주 원국의 명예운과 금전운이 3년간 송두리째 잿더미가 된다. 지금 그런 냄새가 나는 자가 주변에 있다면 뒤도 돌아보지 말고 뛰어 도망쳐라!
         </div>
 
         <div class="portfolio-highlight" style="border-left: 4.5px solid #15803d; background: #f6fdf7; margin-top:12px;">
@@ -1329,18 +1490,8 @@ let currentSajuData = null;
     report:  { name: '벽사신견 천명 리포트',     price: SALE.price, label: '천명 리포트' },
     newyear: { name: '벽사신견 신년운세',         price: 4900,       label: '신년운세' },
     compat:  { name: '벽사신견 궁합 상세 리포트', price: 3900,       label: '궁합 상세 리포트' },
-    wish:    { name: '벽사신견 소원 부적',         price: 1900,       label: '소원 부적' },
-    bundle:  { name: '벽사신견 전부 묶음 보따리',  price: 10900,      label: '전부 묶음 보따리' }
+    wish:    { name: '벽사신견 소원 부적',         price: 1900,       label: '소원 부적' }
   };
-  // 전부 묶음: 한 사람(생년월일) 기준으로 아래가 모두 열린다. 따로 사면 합계(BUNDLE_LIST_TOTAL)를 그대로 보여 준다 (실제 가격 합)
-  const WISH_KINDS = 5;
-  const BUNDLE_ITEMS = [
-    { id: 'report',  text: '천명 리포트 (6개 장 + 맞춤 개운부)', price: SALE.price },
-    { id: 'newyear', text: '신년운세 (열두 달 풀이)',            price: 4900 },
-    { id: 'wish',    text: `소원 부적 ${WISH_KINDS}종 전부 (재물·연애·합격·건강·액막이)`, price: 1900 * WISH_KINDS },
-    { id: 'compat',  text: '궁합 상세 리포트 (내가 들어간 궁합이면 상대 제한 없음)', price: 3900 }
-  ];
-  const BUNDLE_LIST_TOTAL = BUNDLE_ITEMS.reduce((n, it) => n + it.price, 0);
   // 공유 할인: 사이트를 공유한 사람·공유 링크로 들어온 사람에게 유료 풀이 1건 1,000원 할인 (이 기기, 7일)
   const SHARE_DISCOUNT = { amount: 1000, days: 7 };
   const COUPON_KEY = 'byeoksa.coupon.v1';
@@ -1400,7 +1551,6 @@ let currentSajuData = null;
   function renderCouponLines() {
     document.querySelectorAll('[data-coupon-line]').forEach(el => { el.innerHTML = couponLineHtml(el.dataset.couponLine); el.hidden = !el.innerHTML; });
     if (window.BYEOKSA_SHOP) window.BYEOKSA_SHOP.renderShopShelf();
-    renderPlanBox();
   }
   document.addEventListener('DOMContentLoaded', renderCouponLines);
 
@@ -1410,17 +1560,7 @@ let currentSajuData = null;
   function sajuKey(sd) { return SajuCore.hashSeed(`${sd.y}-${sd.m}-${sd.d}-${sd.hourVal}-${sd.genderVal}`).toString(36); }
   function paidKeyOf(productId, subjectKey) { return `${PAID_PREFIX}${productId}.${subjectKey}`; }
   function markPaidFor(productId, subjectKey, paymentId) { try { localStorage.setItem(paidKeyOf(productId, subjectKey), JSON.stringify({ paymentId, at: Date.now() })); } catch (e) { /* 저장 불가 환경 */ } }
-  function rawPaid(productId, subjectKey) { try { return !!localStorage.getItem(paidKeyOf(productId, subjectKey)); } catch (e) { return false; } }
-  /** 결제했는지: 그 상품을 직접 샀거나, 같은 사람(생년월일)의 전부 묶음을 샀으면 열린다
-   *  대상 키 모양 — 리포트: 사람키 / 신년운세: 사람키.해 / 소원 부적: 사람키.소원 / 묶음: 사람키 */
-  function isPaidFor(productId, subjectKey) {
-    if (rawPaid(productId, subjectKey)) return true;
-    if (productId === 'report' || productId === 'newyear' || productId === 'wish') return rawPaid('bundle', String(subjectKey).split('.')[0]);
-    return false;
-  }
-  /** 이 사람(생년월일 프로필 {y,m,d,hour,gender})이 전부 묶음을 샀는지 */
-  function personKey(p) { return SajuCore.hashSeed(`${p.y}-${p.m}-${p.d}-${p.hour}-${p.gender}`).toString(36); }
-  function hasBundle(p) { return !!p && rawPaid('bundle', personKey(p)); }
+  function isPaidFor(productId, subjectKey) { try { return !!localStorage.getItem(paidKeyOf(productId, subjectKey)); } catch (e) { return false; } }
   function markPaid(sd, paymentId) { markPaidFor('report', sajuKey(sd), paymentId); }
   function isPaid(sd) { return isPaidFor('report', sajuKey(sd)); }
   function savePending(obj) { try { localStorage.setItem(PENDING_KEY, JSON.stringify({ ...obj, at: Date.now() })); } catch (e) { /* 무시 */ } }
@@ -1432,18 +1572,7 @@ let currentSajuData = null;
   function registerProduct(productId, hooks) { PRODUCT_HOOKS[productId] = hooks; }
 
   /** 지금 풀이가 결제된 사주인지에 따라 결제 안내·리포트를 맞춘다 (다른 생년월일로 바꾸면 다시 잠긴다) */
-  function renderPlanBox() {
-    const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
-    set('planBundleList', `${won(BUNDLE_LIST_TOTAL)}원`);
-    set('planBundlePrice', won(priceFor('bundle').final));
-    const d = new Date(), ty = d.getMonth() + 1 >= 9 ? d.getFullYear() + 1 : d.getFullYear();
-    document.querySelectorAll('.plan-ny-year').forEach(el => { el.textContent = ty; });
-    document.querySelectorAll('[data-plan-price]').forEach(el => { el.textContent = `${won(priceFor(el.dataset.planPrice).final)}원 ›`; });
-  }
-  document.addEventListener('DOMContentLoaded', renderPlanBox);
-
   function applyPaidState() {
-    renderPlanBox();
     reportUnlocked = !!currentSajuData && isPaid(currentSajuData);
     document.getElementById('paywallOverlay').style.display = reportUnlocked ? 'none' : '';
     document.getElementById('reportReopen').hidden = !reportUnlocked;
@@ -1577,131 +1706,6 @@ let currentSajuData = null;
   function openReport() {
     renderReportSummary();
     showView('viewReport');
-    setupReportBook();
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 📖 리포트 책 넘김: 요약 → 기밀 표지 → 1~5장 → 개운부, 한 번에 한 장씩.
-  //   넘길 때마다 그 장의 첫머리가 화면 맨 위에 딱 맞춰진다. 인쇄(PDF)는 모든 장이 다 나온다.
-  // ─────────────────────────────────────────────────────────────────────────
-  const BOOK = { pages: [], idx: 0, busy: false };
-  const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function bookPagesNow() {
-    const box = document.getElementById('unlockedReportContainer');
-    const kids = [...box.children];
-    const isChapter = el => el.matches('.portfolio-section-card, .talisman-section-card');
-    const pages = [{ name: '먼저 맡은 냄새', els: [document.getElementById('reportSummary')] }];
-    const cover = kids.filter(el => !isChapter(el));
-    if (cover.length) pages.push({ name: '기밀 문서 표지', els: cover });
-    kids.filter(isChapter).forEach(el => {
-      const t = el.querySelector('.portfolio-section-title');
-      const name = t ? t.textContent.replace(/^[^가-힣0-9《\[(]+/, '').replace(/\s+/g, ' ').trim() : '';
-      pages.push({ name: name.length > 22 ? name.slice(0, 21) + '…' : name, els: [el] });
-    });
-    return pages;
-  }
-
-  function setupReportBook() {
-    BOOK.pages = bookPagesNow();
-    BOOK.idx = 0;
-    const dots = document.getElementById('bookDots');
-    dots.innerHTML = BOOK.pages.map((pg, i) => `<button class="book-dot" role="tab" aria-label="${i + 1}장 ${pg.name}" onclick="bookGo(${i})"></button>`).join('');
-    document.getElementById('bookBar').hidden = false;
-    document.getElementById('bookNav').hidden = false;
-    document.getElementById('viewReport').classList.add('is-book');
-    showBookPage(0);
-    fitBookNav();
-    bindBookSwipe();
-    snapBookTop();
-  }
-
-  function showBookPage(i) {
-    BOOK.idx = i;
-    BOOK.pages.forEach((pg, n) => pg.els.forEach(el => el.classList.toggle('book-off', n !== i)));
-    const last = BOOK.pages.length - 1;
-    document.getElementById('bookCount').textContent = `${i + 1} / ${BOOK.pages.length}`;
-    document.getElementById('bookName').textContent = BOOK.pages[i].name;
-    document.querySelectorAll('#bookDots .book-dot').forEach((d, n) => { d.classList.toggle('is-on', n === i); d.classList.toggle('is-read', n < i); d.setAttribute('aria-selected', n === i); });
-    const prev = document.getElementById('bookPrev'), next = document.getElementById('bookNext');
-    prev.disabled = i === 0;
-    next.textContent = i === last ? '↺ 첫 장으로' : '다음 장 ›';
-    document.getElementById('bookHint').textContent = i === last ? '마지막 장이다' : '옆으로 밀어도 넘어간다';
-    // 개운부 캔버스는 숨어 있을 때 그려졌을 수 있으니 보일 때 한 번 더 그린다
-    if (BOOK.pages[i].els.some(el => el.classList.contains('talisman-section-card')) && currentSajuData) {
-      try { renderTalismanPreview(`${currentSajuData.dStem.hanja}${currentSajuData.dBranch.hanja}`); } catch (e) { /* 미리보기 실패는 무시 */ }
-    }
-  }
-
-  /** 책 맨 위(쪽 표시줄)가 화면 맨 위에 오도록 */
-  /** 아래 메뉴(탭바)가 떠 있으면 넘김 버튼을 그 바로 위에 붙인다 */
-  function fitBookNav() {
-    const tb = document.getElementById('tabBar');
-    const h = tb && getComputedStyle(tb).display !== 'none' ? tb.getBoundingClientRect().height : 0;
-    document.getElementById('viewReport').style.setProperty('--book-nav-bottom', `${Math.round(h)}px`);
-  }
-  window.addEventListener('resize', () => { if (BOOK.pages.length) fitBookNav(); });
-
-  function snapBookTop() {
-    // 쪽 표시줄은 화면 위에 붙어 있으므로(sticky) 책 본문 위치에서 표시줄 높이만큼 뺀다
-    const bar = document.getElementById('bookBar'), book = document.getElementById('reportBook');
-    const y = book.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 14;
-    window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
-  }
-
-  function bookGo(i) {
-    if (BOOK.busy || !BOOK.pages.length) return;
-    const n = Math.max(0, Math.min(BOOK.pages.length - 1, i));
-    if (n === BOOK.idx) { snapBookTop(); return; }
-    const dir = n > BOOK.idx ? 1 : -1;
-    const book = document.getElementById('reportBook');
-    if (reduceMotion() || window.__BYEOKSA_TEST__) { showBookPage(n); snapBookTop(); return; }
-    BOOK.busy = true;
-    book.classList.add(dir > 0 ? 'turn-out-next' : 'turn-out-prev');
-    setTimeout(() => {
-      book.classList.remove('turn-out-next', 'turn-out-prev');
-      showBookPage(n);
-      snapBookTop();
-      book.classList.add(dir > 0 ? 'turn-in-next' : 'turn-in-prev');
-      setTimeout(() => { book.classList.remove('turn-in-next', 'turn-in-prev'); BOOK.busy = false; }, 380);
-    }, 260);
-  }
-
-  function bookTurn(d) {
-    const last = BOOK.pages.length - 1;
-    if (d > 0 && BOOK.idx === last) { bookGo(0); return; }
-    bookGo(BOOK.idx + d);
-  }
-
-  let _bookSwipeBound = false;
-  function bindBookSwipe() {
-    if (_bookSwipeBound) return; _bookSwipeBound = true;
-    const book = document.getElementById('reportBook');
-    let sx = 0, sy = 0, st = 0;
-    book.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); }, { passive: true });
-    book.addEventListener('touchend', e => {
-      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - st < 700) bookTurn(dx < 0 ? 1 : -1);
-    }, { passive: true });
-    document.addEventListener('keydown', e => {
-      const v = document.getElementById('viewReport');
-      if (!v || v.style.display === 'none' || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName)) return;
-      if (e.key === 'ArrowRight') bookTurn(1);
-      else if (e.key === 'ArrowLeft') bookTurn(-1);
-    });
-  }
-
-  // PDF·인쇄에는 모든 장이 나오게: 인쇄 직전에 펼쳤다가 끝나면 보던 장으로
-  window.addEventListener('beforeprint', () => { document.querySelectorAll('.book-off').forEach(el => el.classList.remove('book-off')); });
-  window.addEventListener('afterprint', () => { if (BOOK.pages.length) showBookPage(BOOK.idx); });
-
-  /** 리포트 결제창의 '전부 묶음' 버튼 */
-  function openBundleForReport() {
-    if (!currentSajuData || !window.BYEOKSA_SHOP) return;
-    const sd = currentSajuData;
-    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream });
-    closePaymentModal();
-    window.BYEOKSA_SHOP.openBundle({ y: sd.y, m: sd.m, d: sd.d, hour: sd.hourVal, gender: sd.genderVal }, 'report', pick(sd));
   }
 
   /** 리포트 첫머리: 무료 풀이에서 본 내용을 한눈에 정리 */

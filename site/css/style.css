@@ -1488,90 +1488,11 @@ body.veil-on { overflow: hidden; }
 }
 
 /* ── 인쇄(PDF 저장) ────────────────────────────────────────────── */
-/* ── 📖 리포트 책 넘김 ── */
-.book-bar { position: sticky; top: 0; z-index: 20; margin: 4px -4px 12px; padding: 10px 12px 9px; border-radius: 0 0 10px 10px;
-  background: rgba(250, 245, 232, 0.96); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  border: 1px solid var(--paper-line); border-top: 0; box-shadow: 0 6px 14px -10px rgba(40, 20, 10, 0.45); }
-.book-bar-top { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.book-count { flex: none; font-weight: 800; font-size: 13px; color: var(--cinnabar); letter-spacing: 0.04em; }
-.book-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 700; color: var(--ink); }
-.book-dots { display: flex; gap: 5px; margin-top: 8px; }
-.book-dot { flex: 1; height: 5px; min-width: 0; padding: 0; border: 0; border-radius: 3px; background: rgba(120, 90, 60, 0.18); cursor: pointer; transition: background 0.25s; }
-.book-dot.is-read { background: rgba(178, 34, 34, 0.38); }
-.book-dot.is-on { background: var(--cinnabar); }
-/* 손가락으로 누르기 쉽게 점 위아래로 터치 영역 확대 */
-.book-dot { position: relative; }
-.book-dot::after { content: ""; position: absolute; inset: -9px 0; }
-.report-book { min-height: calc(100svh - 150px); perspective: 1400px; }
-.report-book .book-off { display: none !important; }
-.report-book > .unlocked-report-container { margin-top: 0; }
-.is-book .report-book > .report-summary.book-off + .unlocked-report-container { margin-top: 0; }
-.book-nav { position: sticky; bottom: var(--book-nav-bottom, 0px); z-index: 20; display: flex; align-items: center; gap: 8px; margin: 14px -4px 0; padding: 10px 8px;
-  background: rgba(250, 245, 232, 0.97); border: 1px solid var(--paper-line); border-bottom: 0; border-radius: 10px 10px 0 0; box-shadow: 0 -6px 14px -10px rgba(40, 20, 10, 0.45); }
-.book-btn { flex: none; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--paper-line); background: #fffaf0; color: var(--ink); font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
-.book-btn.book-prev { padding: 0 14px; }
-.book-btn.book-next { margin-left: auto; background: var(--cinnabar); border-color: var(--cinnabar); color: #fff8ec; }
-.book-btn:disabled { opacity: 0.35; cursor: default; }
-.book-hint { flex: 1; min-width: 0; text-align: center; font-size: 11.5px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 넘김 연출: 종이가 한쪽 모서리를 축으로 젖혀지며 넘어간다 */
-.report-book.turn-out-next { transform-origin: left center; animation: bookOutNext 0.26s ease-in forwards; }
-.report-book.turn-out-prev { transform-origin: right center; animation: bookOutPrev 0.26s ease-in forwards; }
-.report-book.turn-in-next  { transform-origin: right center; animation: bookInNext 0.38s cubic-bezier(.2,.8,.25,1) both; }
-.report-book.turn-in-prev  { transform-origin: left center; animation: bookInPrev 0.38s cubic-bezier(.2,.8,.25,1) both; }
-@keyframes bookOutNext { to { transform: rotateY(-28deg) translateX(-14%); opacity: 0; filter: brightness(0.9); } }
-@keyframes bookOutPrev { to { transform: rotateY(28deg) translateX(14%); opacity: 0; filter: brightness(0.9); } }
-@keyframes bookInNext  { from { transform: rotateY(24deg) translateX(12%); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes bookInPrev  { from { transform: rotateY(-24deg) translateX(-12%); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .report-book[class*="turn-"] { animation: none !important; } }
-
-/* ── 📦 전부 묶음 보따리 ── */
-.btn-bundle { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 10px; min-height: 46px; padding: 9px 12px;
-  border-radius: 8px; border: 1.5px solid #B98A26; background: linear-gradient(135deg, #FFF6D8, #F6E3A6 55%, #FBEFC6); color: #5A2A10;
-  font: inherit; font-size: 13.5px; line-height: 1.45; text-align: left; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55); }
-.btn-bundle strong { color: var(--cinnabar); white-space: nowrap; }
-.bundle-list { list-style: none; margin: 10px 0 6px; padding: 0; border-top: 1px dashed var(--paper-line); text-align: left; }
-.bundle-list li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--paper-line); font-size: 13.5px; line-height: 1.5; }
-.bundle-each { flex: none; color: var(--ink-soft); }
-.bundle-sum { margin: 8px 0 4px; font-size: 15px; text-align: right; }
-.bundle-sum s { color: var(--ink-soft); }
-.bundle-sum strong { color: var(--cinnabar); font-size: 18px; }
-.shop-item-bundle { box-shadow: inset 0 0 0 2px #C9A23A, inset 0 0 0 5px var(--paper), inset 0 0 0 6px rgba(201, 162, 58, 0.7); background: linear-gradient(135deg, #FFF8E2, #F7E8B8); }
-.shop-item-bundle .shop-seal { background: linear-gradient(135deg, #8A1F1F, #C0392B 50%, #7A1414); color: #F6E3A6; }
-.shop-item-bundle .shop-price { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3; }
-.shop-list-price { font-size: 12px; }
-
-/* ── 액막이 헌화비: 두 가지 고르기 ── */
-.plan-lead { margin: 6px 0 12px; font-size: 14px; color: var(--moon-soft); }
-.plan-list { display: flex; flex-direction: column; gap: 12px; text-align: left; }
-.plan-card { position: relative; padding: 16px 14px 14px; border-radius: 10px; border: 1px solid var(--paper-line); background: #F6EFDF; }
-.plan-bundle { padding-top: 22px; border: 1.5px solid #B98A26; background-color: #FBEFC6; background-image: linear-gradient(135deg, #FFF8E2, #F7E8B8);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.6), 0 6px 18px -10px rgba(120, 80, 10, 0.6); }
-.plan-ribbon { position: absolute; top: -11px; left: 14px; padding: 3px 10px; border-radius: 999px; background: var(--cinnabar); color: #FFF3DC; font-size: 12px; font-weight: 800; letter-spacing: 0.02em; }
-.plan-name { margin: 0 0 4px; font-size: 16.5px; color: var(--ink); }
-.plan-price { margin: 0 0 8px; font-size: 14px; color: var(--ink-soft); }
-.plan-price s { margin-right: 4px; }
-.plan-price strong { font-size: 22px; color: var(--cinnabar); }
-.plan-items { margin: 0 0 12px; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: var(--ink); }
-.plan-card .btn-pay { width: 100%; margin: 0; }
-.btn-pay.btn-pay-bundle { font-size: 16px; }
-.plan-ny-year { font-variant-numeric: tabular-nums; }
-.plan-singles { padding: 12px 12px 10px; }
-.plan-name-sm { font-size: 14px; color: var(--ink-soft); margin-bottom: 6px; }
-.plan-rows { list-style: none; margin: 0; padding: 0; }
-.plan-rows li + li { border-top: 1px dashed var(--paper-line); }
-.plan-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; padding: 8px 2px;
-  border: 0; background: none; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
-.plan-row-name { min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.4; }
-.plan-row-name small { display: block; font-size: 12px; font-weight: 400; color: var(--ink-soft); }
-.plan-row-price { flex: none; font-size: 14px; font-weight: 700; color: var(--cinnabar); white-space: nowrap; }
-.plan-rows-note { margin: 6px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); }
-.btn-pay.btn-pay-single { background: #fffaf0; color: var(--cinnabar); border: 1.5px solid var(--cinnabar); box-shadow: none; }
-
 @media print {
   body { background: #fff !important; color: #000 !important; padding: 0 !important; }
   .app-container { max-width: 100% !important; }
   header, .home-topbar, .slip-section, .event-strip, .site-footer, .action-bar, .btn-submit, .btn-nav-back, .btn-pay,
-  .paywall-overlay, .modal-overlay, .intro-modal-overlay, .book-bar, .book-nav, .btn-bundle, .hanji-scroll-overlay, .toast-msg, .btn-talisman-download, .feature-nav, .tab-bar, .report-reopen, .seal-card, .shop-shelf, #nyPrint, .wish-throw, #wishSave {
+  .paywall-overlay, .modal-overlay, .intro-modal-overlay, .hanji-scroll-overlay, .toast-msg, .btn-talisman-download, .feature-nav, .tab-bar, .report-reopen, .seal-card, .shop-shelf, #nyPrint, .wish-throw, #wishSave {
     display: none !important;
   }
   .character-card, .paywall-overlay { background: #fff !important; color: #000 !important; }
@@ -1584,5 +1505,81 @@ body.veil-on { overflow: hidden; }
     page-break-inside: avoid;
   }
   .view-step > .section-title { color: #000 !important; }
-  .report-book { min-height: 0; }
 }
+
+/* 👹 백구가 등 뒤에서 본 것 — 사람마다 다른 귀신 그림 5종 */
+.ghost-portrait-wrap { margin: 14px 0 16px; }
+.ghost-portrait { margin: 0 auto; max-width: 260px; text-align: center; }
+.ghost-portrait-frame { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: #050302; box-shadow: 0 0 0 1px rgba(168, 42, 32, 0.55), 0 0 0 5px #1a0e0a, 0 0 0 6px rgba(168, 42, 32, 0.35), 0 18px 40px -16px rgba(0, 0, 0, 0.9); }
+.ghost-portrait-frame svg { display: block; width: 100%; height: 100%; opacity: 0; transform: scale(1.08); filter: brightness(0.2) blur(2px); transition: opacity 0.9s ease, transform 2.4s cubic-bezier(.2,.7,.2,1), filter 1.6s ease; }
+.ghost-portrait-frame::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 45%, transparent 38%, rgba(0, 0, 0, 0.75) 100%); }
+.ghost-portrait.is-seen .ghost-portrait-frame svg { opacity: 1; transform: scale(1); filter: none; animation: ghostFlicker 5.5s 2.4s steps(1) infinite; }
+.ghost-portrait .gp-eyes { opacity: 0; }
+.ghost-portrait.is-seen .gp-eyes { animation: ghostEyes 3.6s 1.2s ease-in-out infinite both; }
+.ghost-portrait.is-seen .gp-ash { animation: ghostAsh 4s ease-in-out infinite alternate; }
+.ghost-portrait figcaption { margin-top: 10px; font-family: var(--font-display); color: var(--cinnabar-deep); letter-spacing: 0.04em; }
+.ghost-portrait-name { font-size: 20px; }
+.ghost-portrait-hanja { font-size: 15px; opacity: 0.75; margin-left: 4px; }
+.ghost-lore { font-size: 15.5px; line-height: 1.85; color: var(--ink); margin: 12px 0 0; }
+@keyframes ghostEyes { 0%, 100% { opacity: 0.55; } 45% { opacity: 1; } 47% { opacity: 0.05; } 50% { opacity: 1; } }
+@keyframes ghostFlicker { 0%, 86%, 100% { filter: none; } 87% { filter: brightness(1.8) contrast(1.4); } 88% { filter: brightness(0.3); } 90% { filter: none; } }
+@keyframes ghostAsh { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ghost-portrait-frame svg { transition: none; }
+  .ghost-portrait.is-seen .ghost-portrait-frame svg, .ghost-portrait.is-seen .gp-eyes, .ghost-portrait.is-seen .gp-ash { animation: none; }
+  .ghost-portrait.is-seen .gp-eyes { opacity: 1; }
+}
+@media print { .ghost-portrait-frame svg { opacity: 1; transform: none; filter: none; } .ghost-portrait .gp-eyes { opacity: 1; } }
+.ghost-portrait.is-seen .gp-drip { animation: ghostDrip 2.6s ease-in infinite; }
+.ghost-portrait.is-seen .gp-fog { animation: ghostFog 7s ease-in-out infinite alternate; }
+@keyframes ghostDrip { 0% { transform: translateY(0); opacity: 0.8; } 80% { opacity: 0.6; } 100% { transform: translateY(12px); opacity: 0; } }
+@keyframes ghostFog { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+@media (prefers-reduced-motion: reduce) { .ghost-portrait.is-seen .gp-drip, .ghost-portrait.is-seen .gp-fog { animation: none; } }
+.ghost-lore-wrap { margin-top: 6px; padding-top: 12px; border-top: 1px dashed rgba(168, 42, 32, 0.35); }
+/* 귀신 그림(이미지가 있으면 그림, 없으면 SVG) */
+.ghost-portrait { max-width: 300px; }
+.ghost-portrait-frame .ghost-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.1); filter: brightness(0.15) blur(3px); transition: opacity 1.1s ease, transform 3s cubic-bezier(.2,.7,.2,1), filter 2s ease; }
+.ghost-portrait-frame.has-img svg { visibility: hidden; }
+.ghost-portrait.is-seen .ghost-img { opacity: 1; transform: scale(1); filter: sepia(0.15) contrast(1.05); animation: ghostImgFlicker 6.5s 3s steps(1) infinite; }
+@keyframes ghostImgFlicker { 0%, 88%, 100% { filter: sepia(0.15) contrast(1.05); } 89% { filter: brightness(1.7) contrast(1.4); } 90% { filter: brightness(0.25); } 92% { filter: sepia(0.15) contrast(1.05); } }
+@media (prefers-reduced-motion: reduce) { .ghost-portrait-frame .ghost-img { transition: none; } .ghost-portrait.is-seen .ghost-img { animation: none; } }
+@media print { .ghost-portrait-frame .ghost-img { opacity: 1; transform: none; filter: none; } }
+.ghost-portrait-note { display: block; margin-top: 4px; font-size: 11.5px; letter-spacing: 0; color: var(--ink); opacity: 0.55; }
+/* 악연 경고 카드: 어두운 방 (귀신 그림과 어울리게) */
+#ghostWarningCard { background: radial-gradient(120% 90% at 50% 20%, #24130f 0%, #120a08 55%, #070403 100%); color: var(--moon); box-shadow: inset 0 0 0 1px rgba(168, 42, 32, 0.45), inset 0 0 60px rgba(0, 0, 0, 0.85), 0 14px 34px -18px rgba(0, 0, 0, 0.9); }
+#ghostWarningCard .ghost-header { color: #E0574A; }
+#ghostWarningCard .ghost-desc, #ghostWarningCard .ghost-lore { color: #D9D0C2; }
+#ghostWarningCard strong { color: #EFE6D6; }
+#ghostWarningCard .impact-red { color: #E35B4C; }
+#ghostWarningCard .impact-gold { color: var(--yellow); }
+#ghostWarningCard .ghost-portrait figcaption { color: #C9473A; }
+#ghostWarningCard .ghost-lore-wrap { border-top-color: rgba(227, 91, 76, 0.3); }
+.ghost-portrait-frame { box-shadow: 0 0 0 1px rgba(168, 42, 32, 0.5), 0 0 30px rgba(0, 0, 0, 0.9); }
+.ghost-warn { margin: 0 0 12px; padding: 9px 12px; font-size: 13px; line-height: 1.6; color: #E8C9A0; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(227, 179, 65, 0.28); border-radius: 4px; text-align: left; }
+.ghost-ai-note { margin: 6px 0 0; font-size: 11.5px; color: #8E857A; }
+.ghost-portrait-note { display: none; }
+.ghost-gate { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 0; cursor: pointer; background: radial-gradient(circle at 50% 50%, rgba(20, 10, 8, 0.55), rgba(5, 3, 2, 0.95)); color: #E8DCC6; font-family: var(--font-display); font-size: 18px; }
+.ghost-gate small { font-family: inherit; font-size: 12px; opacity: 0.6; }
+.ghost-gate:focus-visible { outline: 2px solid var(--yellow); outline-offset: -4px; }
+.ghost-portrait:not(.is-seen) figcaption { visibility: hidden; }
+/* 🪞 거울에 비친 귀신: 낡은 청동 손거울, 금 간 유리, 얼룩진 은박 */
+.ghost-mirror-title { margin: 4px 0 14px; font-family: var(--font-display); font-size: 14px; color: #A89A86; letter-spacing: 0.06em; }
+#ghostWarningCard .ghost-portrait { max-width: 270px; padding: 18px 16px 4px; }
+#ghostWarningCard .ghost-portrait-frame { aspect-ratio: 4 / 5; border-radius: 50%; background: #030202;
+  box-shadow: 0 0 0 2px #0d0905, 0 0 0 9px #4a3820, 0 0 0 10px #2a1e10, 0 0 0 13px #6e5532, 0 0 0 15px #1a1209, 0 0 34px 16px rgba(0, 0, 0, 0.85), 0 0 60px 10px rgba(168, 42, 32, 0.18); }
+#ghostWarningCard .ghost-portrait-frame::after { z-index: 1; border-radius: 50%;
+  background:
+    linear-gradient(128deg, rgba(220, 230, 235, 0.16) 0%, rgba(220, 230, 235, 0.05) 22%, transparent 38%, transparent 70%, rgba(220, 230, 235, 0.06) 86%, transparent 100%),
+    radial-gradient(14% 10% at 22% 78%, rgba(120, 100, 70, 0.35), transparent 70%),
+    radial-gradient(9% 7% at 80% 18%, rgba(120, 100, 70, 0.3), transparent 70%),
+    radial-gradient(6% 5% at 66% 88%, rgba(90, 80, 60, 0.35), transparent 70%),
+    radial-gradient(closest-side, transparent 62%, rgba(10, 14, 12, 0.55) 86%, rgba(0, 0, 0, 0.92) 100%);
+  box-shadow: inset 0 0 22px 6px rgba(0, 0, 0, 0.85); }
+#ghostWarningCard .ghost-img { filter: brightness(0.15) blur(4px); }
+#ghostWarningCard .ghost-portrait.is-seen .ghost-img { filter: blur(0.3px) contrast(1.05) saturate(0.85); animation: ghostImgFlicker 6.5s 3s steps(1) infinite, mirrorBreath 9s 1.5s ease-in-out infinite; }
+.ghost-mirror-crack { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+#ghostWarningCard .ghost-gate { border-radius: 50%; z-index: 3; }
+@keyframes mirrorBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03) translateY(-1%); } }
+#ghostWarningCard .ghost-portrait figcaption { margin-top: 22px; }
+.scare-notice { margin: 4px 0 12px; padding: 9px 12px; font-size: 13px; line-height: 1.6; color: #EBD3AE; background: #1a0f0b; border: 1px solid rgba(227, 179, 65, 0.25); border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { #ghostWarningCard .ghost-portrait.is-seen .ghost-img { animation: none; } }

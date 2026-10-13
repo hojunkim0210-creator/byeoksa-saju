@@ -165,9 +165,6 @@ test('결제하면 리포트 전용 화면이 열리고, 무료 풀이 요약이
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('viewResult')).display), 'none');
   const sum = await page.textContent('#reportSummary');
   assert.match(sum, /을사일주/); assert.match(sum, /심리 투시 \d+%/); assert.ok(!/undefined|NaN/.test(sum), sum);
-  // 리포트는 책처럼 한 장씩: 1장은 요약, 다음 장에 기밀 문서 표지
-  assert.ok(await page.isHidden('#unlockedReportContainer .classified-dossier-box'));
-  await page.click('#bookNext');
   assert.ok(await page.isVisible('#unlockedReportContainer .classified-dossier-box'));
   await page.evaluate(() => goToStep(3));
   assert.ok(await page.isVisible('#reportReopen'), '결과 화면에 리포트 다시 보기');
