@@ -292,12 +292,13 @@
         <a href="legal.html#privacy">개인정보처리방침</a>
         <a href="legal.html#refund">환불 안내</a>
         <a href="legal.html#business">사업자 정보</a>
+        <a href="#help" onclick="openFeature('help'); return false;">고객센터</a>
       </nav>
       <p class="footer-note">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠입니다.</p>
       <p class="footer-note">백구 사진과 귀신 그림은 AI로 생성한 이미지입니다.</p>
       <!-- 판매 전에 채울 것 (전자상거래법 10조, 첫 화면 표시 의무): 상호 · 대표자 · 사업자등록번호 · 통신판매업 신고번호 · 주소 · 전화 · 이메일
            예) <p class="footer-biz">상호 ○○ · 대표 ○○○ · 사업자등록번호 000-00-00000 · 통신판매업 제0000-서울○○-0000호 · 주소 … · 010-0000-0000 · mail@…</p> -->
-      <p class="footer-biz" id="footerBiz">Pathlogue · 대표 김호준 · ghwnstm02@naver.com · 사업자등록번호·통신판매업 신고 진행 중</p>
+      <p class="footer-biz" id="footerBiz">상호 패스로그 (Pathlogue) · 대표 김호준 · 사업자등록번호 104-14-22768 · 통신판매업 신고 진행 중 · 주소 제주특별자치도 제주시 원노형로 102, 101동 208호 · 010-2582-9143 · pathlogue.help@gmail.com</p>
     </footer>
   </div>
 
@@ -685,6 +686,91 @@
       <p class="feature-lead">"소원 하나만 말해 보거라. 대문 밖에서 그 소원에 맞는 부적을 물어다 주마."</p>
     </div>
     <div id="wishBody" class="feature-result"></div>
+  </div>
+
+  <!-- 📍 고객센터: 문의 내용은 이 사이트에 저장하지 않고, 손님 기기의 메일·문자 앱으로 바로 넘긴다 (extras.js renderHelp) -->
+  <div class="view-step" id="viewHelp" style="display: none;">
+    <nav class="feature-nav"><button class="btn-nav-back" onclick="goToStep(1)">← 대문으로</button></nav>
+    <div class="feature-head">
+      <span class="feature-seal" aria-hidden="true">答</span>
+      <h2 class="feature-title">고객센터</h2>
+      <p class="feature-lead">"결제가 막혔거나 불편한 게 있으면 여기 적어 두거라. 대문 주인이 직접 읽고 답을 보낸다."</p>
+    </div>
+
+    <section class="feature-card help-card" aria-labelledby="helpFaqTitle">
+      <h3 class="feature-card-title" id="helpFaqTitle">자주 묻는 질문</h3>
+      <details class="help-faq">
+        <summary>결제했는데 풀이가 열리지 않아요</summary>
+        <p>결제한 기기에서 같은 생년월일로 다시 들어와 보세요. 그래도 열리지 않으면 아래 문의에 <strong>주문번호(결제 번호)</strong>를 적어 보내 주세요. 결제를 확인한 뒤 열어 드리거나, 열리지 않은 결제는 전액 환불해 드립니다.</p>
+      </details>
+      <details class="help-faq">
+        <summary>다른 휴대폰이나 컴퓨터에서도 다시 볼 수 있나요?</summary>
+        <p>지금은 결제한 기기에서만 다시 열립니다. 풀이가 열리면 PDF·이미지로 저장해 두시길 권합니다. 기기를 바꿨다면 주문번호와 함께 문의해 주세요.</p>
+      </details>
+      <details class="help-faq">
+        <summary>환불은 어떻게 받나요?</summary>
+        <p>결제일로부터 7일 이내에 주문번호와 함께 문의해 주세요. 결제 오류로 열리지 않은 경우, 내용이 비어 있거나 깨진 경우, 만 19세 미만이 법정대리인 동의 없이 결제한 경우에는 전액 환불합니다. 풀이가 정상적으로 열린 뒤에는 디지털 콘텐츠 특성상 청약철회가 제한됩니다. <a href="legal.html#refund">환불 안내 자세히 보기</a></p>
+      </details>
+      <details class="help-faq">
+        <summary>생년월일을 잘못 넣고 결제했어요</summary>
+        <p>주문번호와 바른 생년월일을 적어 문의해 주세요. 결제 내역을 확인한 뒤 어떻게 할지 안내해 드립니다.</p>
+      </details>
+      <details class="help-faq">
+        <summary>다른 사주 앱과 결과가 달라요</summary>
+        <p>벽사신견은 입춘 절입 시각으로 띠(연주)를, 절기 절입 시각으로 달(월주)을 나눕니다. 오행 숫자는 여덟 글자의 <strong>개수</strong>라서, 가중치를 매기는 다른 앱의 "점수"와 다를 수 있습니다. 모든 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠입니다.</p>
+      </details>
+      <details class="help-faq">
+        <summary>제 정보는 어디에 저장되나요?</summary>
+        <p>생년월일은 이 기기 브라우저에만 저장되고 운영자 서버로 보내지 않습니다. 아래 문의 양식도 사이트에 저장되지 않고, 버튼을 누르면 손님 기기의 메일·문자 앱으로 내용이 옮겨질 뿐입니다.</p>
+      </details>
+    </section>
+
+    <section class="feature-card help-card" aria-labelledby="helpFormTitle">
+      <h3 class="feature-card-title" id="helpFormTitle">문의 보내기</h3>
+      <div class="form-group">
+        <label class="form-label" for="helpType">문의 종류</label>
+        <select id="helpType">
+          <option value="결제했는데 풀이가 열리지 않아요">결제했는데 풀이가 열리지 않아요</option>
+          <option value="환불 요청">환불 요청</option>
+          <option value="이용 방법 문의">이용 방법 문의</option>
+          <option value="불편한 점·제안">불편한 점·제안</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="helpOrder">주문번호 <span class="help-optional">(결제 관련이면 적어 주세요)</span></label>
+        <input type="text" id="helpOrder" maxlength="60" placeholder="결제 완료 화면·결제 문자에 있는 번호" autocomplete="off">
+      </div>
+      <fieldset class="form-group help-reply">
+        <legend class="form-label">답변 받을 방법</legend>
+        <div class="help-reply-row">
+          <label class="help-radio"><input type="radio" name="helpReply" value="sms" checked> 문자</label>
+          <label class="help-radio"><input type="radio" name="helpReply" value="email"> 이메일</label>
+        </div>
+        <input type="tel" id="helpContact" maxlength="80" placeholder="답변 받을 휴대폰 번호 (010-0000-0000)" aria-label="답변 받을 연락처" autocomplete="off">
+      </fieldset>
+      <div class="form-group">
+        <label class="form-label" for="helpBody">문의 내용</label>
+        <textarea id="helpBody" maxlength="1000" rows="5" placeholder="어떤 화면에서 무엇이 불편했는지 적어 주세요. 결제 관련이면 결제한 날짜와 상품도 함께 적어 주시면 빨리 확인할 수 있어요."></textarea>
+        <span class="help-count" id="helpCount">0 / 1000</span>
+      </div>
+      <label class="help-agree"><input type="checkbox" id="helpAgree"> <span>답변을 위해 연락처와 문의 내용을 받는 데 동의합니다. 문의 기록은 「전자상거래법」에 따라 3년간 보관 후 지웁니다. <a href="legal.html#privacy">개인정보처리방침</a></span></label>
+      <p class="form-error" id="helpErr" role="alert"></p>
+      <button class="btn-submit" id="helpMail">✉️ 메일로 보내기</button>
+      <button class="btn-close" id="helpSms">💬 문자로 보내기</button>
+      <button class="link-btn help-copy" id="helpCopy">내용만 복사하기</button>
+      <p class="feature-note">버튼을 누르면 휴대폰의 메일(또는 문자) 앱이 열리고 내용이 채워집니다. 그 앱에서 <strong>보내기</strong>를 눌러야 전달됩니다. 컴퓨터에서는 메일로 보내거나, 내용을 복사해 아래 메일 주소로 보내 주세요.</p>
+      <p class="feature-note">보통 평일 기준 2일 안에 고르신 방법(문자·이메일)으로 답을 드립니다.</p>
+    </section>
+
+    <section class="feature-card help-card" aria-labelledby="helpContactTitle">
+      <h3 class="feature-card-title" id="helpContactTitle">연락처</h3>
+      <dl class="help-dl">
+        <dt>이메일</dt><dd><a href="mailto:pathlogue.help@gmail.com">pathlogue.help@gmail.com</a></dd>
+        <dt>문자·전화</dt><dd><a href="tel:010-2582-9143">010-2582-9143</a></dd>
+        <dt>운영</dt><dd>패스로그 (Pathlogue) · 대표 김호준</dd>
+      </dl>
+    </section>
   </div>
   </div>
 

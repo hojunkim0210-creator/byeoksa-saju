@@ -1463,6 +1463,41 @@ body.veil-on { overflow: hidden; }
 .legal-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14.5px; line-height: 1.6; }
 .legal-dl dt { font-weight: 700; color: var(--ink-soft); }
 .legal-dl dd { color: var(--ink); }
+
+/* ── 고객센터 ─────────────────────────────────────────────────────────── */
+.help-card { gap: 12px; }
+.help-faq { border-top: 1px solid var(--paper-line); padding: 10px 0 2px; }
+.help-faq:first-of-type { border-top: none; padding-top: 2px; }
+.help-faq summary { cursor: pointer; font-weight: 700; font-size: 15.5px; line-height: 1.55; color: var(--ink); list-style: none; padding-right: 22px; position: relative; }
+.help-faq summary::-webkit-details-marker { display: none; }
+.help-faq summary::after { content: '+'; position: absolute; right: 2px; top: 0; font-size: 18px; color: var(--cinnabar); }
+.help-faq[open] summary::after { content: '−'; }
+.help-faq p { margin-top: 8px; font-size: 14.5px; line-height: 1.8; color: var(--text-sub); }
+.help-faq a, .help-agree a, .help-dl a { color: var(--cinnabar); text-decoration: underline; text-underline-offset: 3px; }
+.help-optional { font-weight: 400; color: var(--ink-soft); font-size: 13px; }
+.help-reply { border: none; padding: 0; margin: 0; min-width: 0; }
+.help-reply legend { padding: 0; margin-bottom: 6px; }
+.help-reply-row { display: flex; gap: 18px; margin-bottom: 4px; }
+.help-radio, .help-agree { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); cursor: pointer; }
+.help-radio { align-items: center; font-size: 15.5px; }
+.help-agree { font-size: 13.5px; line-height: 1.65; color: var(--ink-soft); }
+.help-radio input, .help-agree input {
+  -webkit-appearance: auto; appearance: auto; width: 20px; height: 20px; flex: 0 0 20px; padding: 0; margin: 0;
+  accent-color: var(--cinnabar); box-shadow: none;
+}
+.help-agree input { margin-top: 2px; }
+#helpBody {
+  width: 100%; min-width: 0; padding: 12px; resize: vertical; min-height: 120px;
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6; color: var(--ink);
+  background: rgba(255, 252, 244, 0.7); border: 1px solid var(--paper-line); border-radius: 8px;
+}
+#helpBody::placeholder { color: #9C8E7C; }
+#helpBody:focus { outline: none; border-color: var(--cinnabar); box-shadow: 0 0 0 3px rgba(168, 42, 32, 0.15); }
+.help-count { align-self: flex-end; font-size: 12.5px; color: var(--ink-soft); }
+.help-copy { align-self: center; color: var(--ink-soft); padding: 4px 8px; }
+.help-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14.5px; line-height: 1.6; }
+.help-dl dt { font-weight: 700; color: var(--ink-soft); }
+.help-dl dd { color: var(--ink); overflow-wrap: anywhere; }
 .legal-section:target { box-shadow: 0 0 0 2px var(--yellow); }
 
 /* 좁은 화면: 전공·취미 칸을 한 줄씩 (예시 문구가 잘리지 않게), 약관 표는 카드처럼 */

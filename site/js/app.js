@@ -41,7 +41,7 @@ const {
     orderName: '벽사신견 천명 리포트',
     verifyUrl: ''
   };
-  const CONTACT_EMAIL = 'ghwnstm02@naver.com';
+  const CONTACT_EMAIL = 'pathlogue.help@gmail.com';
 
   function renderSale() {
     const priceText = SALE.price.toLocaleString('ko-KR');
@@ -2056,7 +2056,8 @@ let currentSajuData = null;
   window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     if (resumePaymentFromRedirect(params)) return;
-    if (!params.get('y')) playOpening();
+    const toHelp = window.location.hash === '#help';   // 약관 페이지 등에서 고객센터로 바로 들어옴
+    if (!params.get('y') && !toHelp) playOpening();
     if (params.get('from') === 'share') {   // 친구가 공유한 링크로 들어옴 → 할인 1건
       try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* 무시 */ }
       if (grantCoupon('invite')) setTimeout(() => showToast(`🎁 친구가 보낸 문으로 들어왔구나. 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인을 걸어 두었다.`), 600);
@@ -2072,6 +2073,10 @@ let currentSajuData = null;
       if (params.get('hobby')) document.getElementById('userHobby').value = params.get('hobby');
       if (params.get('dream')) document.getElementById('userDream').value = params.get('dream');
       submitAndGoToResult();
+    }
+    if (toHelp && typeof openFeature === 'function') {
+      const intro = document.getElementById('introGateModal'); if (intro) intro.style.display = 'none';
+      openFeature('help');
     }
   });
 

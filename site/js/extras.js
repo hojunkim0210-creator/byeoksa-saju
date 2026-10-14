@@ -534,6 +534,86 @@
     showToast('📸 공유 카드를 저장했다. 스토리에 올려 보거라 🐾');
   }
 
+
+  // ─────────────────────────────────────────────────────────────────────
+  // 📮 고객센터: 문의 내용은 어디에도 저장하지 않고 손님 기기의 메일·문자 앱으로 넘긴다 (서버 없음)
+  // ─────────────────────────────────────────────────────────────────────
+  const HELP_EMAIL = 'pathlogue.help@gmail.com';
+  const HELP_PHONE = '01025829143';
+  const HELP_SUBJECT = '[벽사신견 문의]';
+
+  function helpForm() {
+    const reply = (document.querySelector('input[name="helpReply"]:checked') || {}).value || 'sms';
+    return {
+      type: $('helpType').value,
+      order: $('helpOrder').value.trim(),
+      reply,
+      contact: $('helpContact').value.trim(),
+      body: $('helpBody').value.trim(),
+      agree: $('helpAgree').checked
+    };
+  }
+
+  /** 입력 검사: 문제가 있으면 안내 문장, 없으면 '' */
+  function helpCheck(f) {
+    if (!f.contact) return f.reply === 'sms' ? '답변 받을 휴대폰 번호를 적어 주세요.' : '답변 받을 이메일 주소를 적어 주세요.';
+    if (f.reply === 'sms' && !/^01[016789]\d{7,8}$/.test(f.contact.replace(/[\s-]/g, ''))) return '휴대폰 번호를 다시 확인해 주세요. (예: 010-1234-5678)';
+    if (f.reply === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.contact)) return '이메일 주소를 다시 확인해 주세요. (예: name@gmail.com)';
+    if (f.body.length < 5) return '문의 내용을 조금 더 적어 주세요.';
+    if (!f.agree) return '연락처를 받는 데 동의해 주셔야 답을 드릴 수 있어요.';
+    return '';
+  }
+
+  /** 메일·문자에 들어갈 글 */
+  function helpMessage(f) {
+    return [
+      `문의 종류: ${f.type}`,
+      `주문번호: ${f.order || '없음'}`,
+      `답변 받을 방법: ${f.reply === 'sms' ? '문자' : '이메일'} (${f.contact})`,
+      '',
+      f.body
+    ].join('\n');
+  }
+
+  function helpMailUrl(f) {
+    return `mailto:${HELP_EMAIL}?subject=${encodeURIComponent(`${HELP_SUBJECT} ${f.type}`)}&body=${encodeURIComponent(helpMessage(f))}`;
+  }
+  function helpSmsUrl(f) {
+    // ?&body= : 아이폰과 안드로이드 모두 본문이 채워지는 형식
+    return `sms:${HELP_PHONE}?&body=${encodeURIComponent(`${HELP_SUBJECT}\n${helpMessage(f)}`)}`;
+  }
+
+  function renderHelp() {
+    const err = $('helpErr');
+    err.textContent = '';
+    if ($('viewHelp').dataset.bound) return;
+    $('viewHelp').dataset.bound = '1';
+    const contact = $('helpContact');
+    const syncReply = () => {
+      const sms = helpForm().reply === 'sms';
+      contact.type = sms ? 'tel' : 'email';
+      contact.inputMode = sms ? 'tel' : 'email';
+      contact.placeholder = sms ? '답변 받을 휴대폰 번호 (010-0000-0000)' : '답변 받을 이메일 주소 (name@gmail.com)';
+    };
+    document.querySelectorAll('input[name="helpReply"]').forEach(r => { r.onchange = () => { contact.value = ''; syncReply(); err.textContent = ''; }; });
+    $('helpBody').oninput = () => { $('helpCount').textContent = `${$('helpBody').value.length} / 1000`; };
+    const send = (makeUrl) => {
+      const f = helpForm(); const problem = helpCheck(f);
+      err.textContent = problem;
+      if (problem) return;
+      window.location.href = makeUrl(f);
+    };
+    $('helpMail').onclick = () => send(helpMailUrl);
+    $('helpSms').onclick = () => send(helpSmsUrl);
+    $('helpCopy').onclick = () => {
+      const f = helpForm(); const problem = helpCheck(f);
+      err.textContent = problem;
+      if (problem) return;
+      copyText(`${HELP_SUBJECT}\n${helpMessage(f)}`, `📋 문의 내용을 복사했다. ${HELP_EMAIL}로 보내 주거라.`);
+    };
+    syncReply();
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // 진입점
   // ─────────────────────────────────────────────────────────────────────
@@ -541,7 +621,8 @@
     compat: { view: 'viewCompat', render: renderCompat },
     daily: { view: 'viewDaily', render: renderDaily },
     tarot: { view: 'viewTarot', render: renderTarot },
-    chat: { view: 'viewChat', render: renderChat }
+    chat: { view: 'viewChat', render: renderChat },
+    help: { view: 'viewHelp', render: renderHelp }
   };
 
   function openFeature(name) {
@@ -554,6 +635,7 @@
   window.openFeature = openFeature;
   window.downloadShareCard = downloadShareCard;
   // 테스트용 내보내기 (화면 동작에는 쓰지 않음)
+  window.BYEOKSA_HELP = { helpCheck, helpMessage, helpMailUrl, helpSmsUrl };
   window.BYEOKSA_EXTRAS = { DECK, DAILY_TEXT, TOPICS, answer, readSaju, COMPAT_BANDS,
     // 유료 상품(shop.js)이 함께 쓰는 도우미
     withProfile, profileLine, bindProfileLinks, showCompatResult, subj, copula, HOUR_NAMES,
