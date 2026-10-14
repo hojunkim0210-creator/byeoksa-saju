@@ -270,6 +270,11 @@
           <span class="shop-text"><span class="shop-name">소원 부적</span><span class="shop-hook">금테 두른 부적 한 장, 백구가 물어다 던져 준다</span></span>
           <span class="shop-price" data-shop-price="wish">1,900원</span>
         </button>
+        <button class="shop-item shop-item-bundle" onclick="openBundleFromShelf()">
+          <span class="shop-seal" aria-hidden="true">全</span>
+          <span class="shop-text"><span class="shop-name">전부 묶음 보따리</span><span class="shop-hook">위 넷에 소원 부적 다섯 장까지, 한 번에 다 풀어 주마</span></span>
+          <span class="shop-price"><s class="shop-list-price" id="shopBundleList">23,200원</s> <span data-shop-price="bundle">10,900원</span></span>
+        </button>
       </div>
       <p class="coupon-line shop-coupon" data-coupon-line="report" hidden></p>
     </section>
@@ -539,18 +544,40 @@
           </div>
         </div>
 
+        <!-- 액막이 헌화비: 처음부터 전부 묶음을 앞에 두고, 따로 사는 풀이 넷도 작게 모두 보여 준다 -->
         <div class="price-box">
           <div class="price-tag">
-            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비 ₩<span class="sale-price">4,900</span></strong>
+            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비</strong>
+          </div>
+          <p class="plan-lead">보따리째 열어도 되고, 필요한 것만 하나씩 골라도 된다.</p>
+          <div class="plan-list">
+            <div class="plan-card plan-bundle">
+              <span class="plan-ribbon">가장 알찬 보따리</span>
+              <h4 class="plan-name">📦 전부 묶음 보따리</h4>
+              <p class="plan-price"><s id="planBundleList">23,200원</s> <strong>₩<span id="planBundlePrice">10,900</span></strong></p>
+              <ul class="plan-items">
+                <li>천명 리포트 6개 장 + 맞춤 개운부</li>
+                <li><span class="plan-ny-year">2027</span>년 신년운세 (열두 달)</li>
+                <li>금테 소원 부적 5종 전부 (재물·연애·합격·건강·액막이)</li>
+                <li>궁합 상세 리포트 (나와 누구든)</li>
+              </ul>
+              <button class="btn-pay btn-pay-bundle" onclick="openBundleForReport()">보따리째 전부 열기 🐾</button>
+            </div>
+            <div class="plan-card plan-singles">
+              <h4 class="plan-name plan-name-sm">하나씩 따로</h4>
+              <ul class="plan-rows">
+                <li><button class="plan-row" id="planRowReport" onclick="openPaymentModal()"><span class="plan-row-name">📜 천명 리포트 <small>6개 장 + 맞춤 개운부</small></span><span class="plan-row-price"><span class="sale-price">4,900</span>원 ›</span></button></li>
+                <li><button class="plan-row" onclick="openFeature('newyear')"><span class="plan-row-name">🗓️ <span class="plan-ny-year">2027</span>년 신년운세 <small>열두 달 풀이</small></span><span class="plan-row-price" data-plan-price="newyear">4,900원 ›</span></button></li>
+                <li><button class="plan-row" onclick="openFeature('compat')"><span class="plan-row-name">💞 궁합 상세 리포트 <small>두 사람 기준</small></span><span class="plan-row-price" data-plan-price="compat">3,900원 ›</span></button></li>
+                <li><button class="plan-row" onclick="openFeature('wish')"><span class="plan-row-name">🧧 금테 소원 부적 <small>한 장씩</small></span><span class="plan-row-price" data-plan-price="wish">1,900원 ›</span></button></li>
+              </ul>
+              <p class="plan-rows-note">리포트는 바로 결제창이 열리고, 나머지는 그 풀이 화면에서 무료 맛보기를 본 뒤 고를 수 있다.</p>
+            </div>
           </div>
           <p class="coupon-line" data-coupon-line="report" hidden></p>
           <div class="price-sub" id="saleSub">결제 후 열리는 리포트는 PDF로 저장해 소장할 수 있습니다</div>
-          <div class="price-disclaimer">벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않습니다.</div>
+          <div class="price-disclaimer">1회 결제, 자동 결제 없음 · 묶음은 이 생년월일 한 사람 기준입니다. 벽사신견의 풀이는 전통 명리 해석을 바탕으로 한 오락 콘텐츠이며, 특정 결과를 보장하지 않습니다.</div>
         </div>
-
-        <button class="btn-pay" onclick="openPaymentModal()">
-          내 인생을 바꿀 6단계 기밀 포트폴리오 열람하기 🐾
-        </button>
       </div>
 
       <!-- 결제 후에는 리포트가 별도 화면(viewReport)에서 열린다 -->
@@ -575,10 +602,22 @@
       <button class="btn-action" onclick="printReport()">🖨️ PDF/인쇄 저장</button>
       <button class="btn-action" onclick="shareSite()">💬 사이트 공유하기</button>
     </div>
-    <section class="report-summary" id="reportSummary" aria-label="무료 풀이 요약"></section>
-    <div class="unlocked-report-container" id="unlockedReportContainer">
-      <!-- 동적 렌더링 -->
+    <!-- 📖 리포트 책: 한 번에 한 장씩 넘겨 본다 (app.js setupReportBook) -->
+    <div class="book-bar" id="bookBar" hidden>
+      <div class="book-bar-top"><span class="book-count" id="bookCount">1 / 8</span><span class="book-name" id="bookName"></span></div>
+      <div class="book-dots" id="bookDots" role="tablist" aria-label="리포트 장 고르기"></div>
     </div>
+    <div class="report-book" id="reportBook">
+      <section class="report-summary" id="reportSummary" aria-label="무료 풀이 요약"></section>
+      <div class="unlocked-report-container" id="unlockedReportContainer">
+        <!-- 동적 렌더링 -->
+      </div>
+    </div>
+    <nav class="book-nav" id="bookNav" hidden aria-label="리포트 넘기기">
+      <button class="book-btn book-prev" id="bookPrev" onclick="bookTurn(-1)">‹ 앞 장</button>
+      <span class="book-hint" id="bookHint">옆으로 밀어도 넘어간다</span>
+      <button class="book-btn book-next" id="bookNext" onclick="bookTurn(1)">다음 장 ›</button>
+    </nav>
   </div>
 
   <!-- 📍 인연 궁합 -->
@@ -675,6 +714,8 @@
     <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
     <div id="reportPromo"></div>
     <button class="btn-submit" id="payButton" onclick="startPayment()">테스트로 봉인 해제해보기 🐾</button>
+    <!-- 전부 묶음 권유: 리포트 대신 묶음으로 한꺼번에 (shop.js openBundle) -->
+    <button class="btn-bundle" id="reportBundleBtn" onclick="openBundleForReport()">📦 <span>신년운세·소원 부적 5종·궁합 상세까지 <strong>전부 10,900원</strong></span></button>
     <button class="btn-close" onclick="closePaymentModal()">닫기</button>
   </div>
 </div>
