@@ -1236,7 +1236,8 @@ option:disabled { color: #9C8E7C; }
 .rs-el { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 6px; border: 1px solid var(--paper-line); font-size: 12.5px; color: var(--ink-soft); }
 .rs-el strong { font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 1.1; color: var(--ink); }
 .rs-el.is-weak { border-color: var(--cinnabar); background: rgba(168, 42, 32, 0.07); }
-.rs-el.is-weak span::after { content: ' · 결핍'; color: var(--cinnabar); }
+.rs-el.is-weak { color: var(--cinnabar); }
+.rs-el.is-weak::after { content: '모자람'; margin-top: 1px; padding: 0 6px; border-radius: 8px; font-size: 10.5px; line-height: 1.6; color: #fff8ec; background: var(--cinnabar); }
 .rs-list { display: grid; grid-template-columns: 5.6em 1fr; gap: 8px 12px; font-size: 14.5px; line-height: 1.7; }
 .rs-list dt { font-weight: 700; color: var(--cinnabar); }
 .rs-list dd { color: var(--ink); }
@@ -1698,3 +1699,10 @@ body.veil-on { overflow: hidden; }
 #ghostWarningCard .ghost-portrait figcaption { margin-top: 22px; }
 .scare-notice { margin: 4px 0 12px; padding: 9px 12px; font-size: 13px; line-height: 1.6; color: #EBD3AE; background: #1a0f0b; border: 1px solid rgba(227, 179, 65, 0.25); border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { #ghostWarningCard .ghost-portrait.is-seen .ghost-img { animation: none; } }
+
+/* 아이폰 사파리: 넘김 연출(3D) 층이 위·아래 고정 띠 위로 비쳐 보이는 문제 → 띠를 불투명하게 하고 별도 층으로 올림 */
+.report-book { position: relative; z-index: 0; }
+.book-bar, .book-nav { -webkit-transform: translateZ(0); transform: translateZ(0); }
+.book-bar { background: #FAF5E8; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.book-nav { background: #FAF5E8; }
+#viewReport .report-book > * { scroll-margin-top: 90px; }

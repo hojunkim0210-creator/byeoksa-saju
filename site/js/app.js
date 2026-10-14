@@ -1806,8 +1806,13 @@ let currentSajuData = null;
   function snapBookTop() {
     // 쪽 표시줄은 화면 위에 붙어 있으므로(sticky) 책 본문 위치에서 표시줄 높이만큼 뺀다
     const bar = document.getElementById('bookBar'), book = document.getElementById('reportBook');
-    const y = book.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 14;
-    window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
+    const go = () => {
+      const y = book.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 14;
+      try { window.scrollTo({ top: Math.max(0, y), behavior: 'auto' }); } catch (e) { window.scrollTo(0, Math.max(0, y)); }
+    };
+    go();
+    // 아이폰: 글꼴·주소창 높이가 늦게 바뀌면 위치가 밀리므로 한 번 더 맞춘다
+    requestAnimationFrame(() => requestAnimationFrame(go));
   }
 
   function bookGo(i) {
@@ -1889,7 +1894,7 @@ let currentSajuData = null;
     const ps = getPersona(sd.dStemIdx, sd.dBranchIdx, sd.ohengResult);
     const dn = lastDaeun && lastDaeun.item;
     const daeunLine = dn
-      ? `${dn.ageStart}세부터 ${dn.stemObj.char}${dn.branchObj.char} 대운 (만 ${lastDaeun.age}세) · ${dn.sipsin} · ${dn.unsung}`
+      ? `${dn.ageStart}세부터 ${dn.stemObj.char}${dn.branchObj.char} 대운 · ${dn.sipsin}의 기운 · 12운성 '${dn.unsung}' (지금 만 ${lastDaeun.age}세)`
       : txt('daeunBadge');
     box.innerHTML = `
       <div class="feature-card rs-card">
