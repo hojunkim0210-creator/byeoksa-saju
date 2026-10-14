@@ -83,12 +83,13 @@ const SALE = { price: 4900, eventName: '오픈 기념 이벤트', eventEndsOn: n
 1. **결제대행사 계약 + 포트원 가입** (https://admin.portone.io): 계약한 결제대행사를 포트원에 연결하면 아래 3가지가 나옵니다.
    - 상점 아이디(`store-…`), 채널 키(`channel-key-…`) → 공개해도 되는 값
    - API Secret → **비밀**. 코드·깃에 절대 넣지 않습니다
-2. **Cloudflare Pages로 옮기기** (GitHub Pages는 결제가 주목적인 사이트에 쓸 수 없음)
+2. **Cloudflare Pages로 옮기기** ✅ 2026-10-14 완료 — 프로젝트 `byeoksa`, 주소 https://byeoksa.com (www 포함), 임시 주소 byeoksa.pages.dev
    - Cloudflare 대시보드 → Workers & Pages → 만들기 → Pages → 이 GitHub 저장소 연결
    - 빌드 명령: 비움 / 빌드 출력 디렉터리: `site`
    - 설정 → 환경 변수(암호화): `PORTONE_API_SECRET`, 실판매 시작 후 `REQUIRE_LIVE=1`
    - `functions/api/payment/complete.js`가 자동으로 `/api/payment/complete` 주소가 됩니다 (포트원에 결제 상태·금액·상품명을 직접 확인)
-   - 사용자 지정 도메인 연결 후, `site/index.html` 머리의 og:url·og:image·canonical 주소 3곳을 새 도메인으로 바꿉니다
+   - ✅ `site/index.html` 머리의 og:url·og:image·canonical 3곳을 https://byeoksa.com/ 으로 바꿈 (업데이트 17)
+   - 아직 남은 것: 환경 변수 `PORTONE_API_SECRET` (결제대행사 계약 후)
 3. **`site/js/app.js`의 `PAYMENT`만 채우기**
    ```js
    const PAYMENT = { mode: 'portone', storeId: 'store-…', channelKey: 'channel-key-…', payMethod: 'CARD',
