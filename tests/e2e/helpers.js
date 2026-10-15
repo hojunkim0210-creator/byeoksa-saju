@@ -11,7 +11,14 @@ async function openPage(browser, { width = 390, height = 844, url = 'file://' + 
   page._errors = []; page._alerts = [];
   page.on('pageerror', e => page._errors.push(e.message));
   page.on('dialog', async d => { page._alerts.push(d.message()); await d.accept(); });
-  await page.addInitScript(() => { window.__BYEOKSA_TEST__ = true; });   // 첫 진입·풀이 의식 연출 건너뛰기
+  await page.addInitScript(() => {
+    window.__BYEOKSA_TEST__ = true;
+    // 파일로 연 사이트에는 결제 확인 서버가 없으므로, 기본 주소('/api/payment/complete')만 '결제 완료'로 답하는 가짜 서버를 둔다
+    const realFetch = window.fetch;
+    window.fetch = (u, o) => u === '/api/payment/complete'
+      ? Promise.resolve(new Response(JSON.stringify({ status: 'PAID' }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      : realFetch(u, o);
+  });   // 첫 진입·풀이 의식 연출 건너뛰기
   if (now) await page.clock.setFixedTime(now);
   await page.route('**/*', r => {
     const u = r.request().url();
@@ -19,6 +26,8 @@ async function openPage(browser, { width = 390, height = 844, url = 'file://' + 
   });
   await page.goto(url);
   await page.waitForTimeout(300);
+  // 사이트는 실결제(포트원) 모드로 배포된다. 자동 테스트는 기본을 '테스트 결제'로 돌려 놓고, 실결제 흐름은 각 테스트가 가짜 결제창으로 따로 검사한다.
+  await page.evaluate(() => { if (typeof PAYMENT !== 'undefined') { PAYMENT.mode = 'test'; PAYMENT.verifyUrl = ''; if (typeof renderPaymentMode === 'function') renderPaymentMode(); } }).catch(() => {});
   return { ctx, page };
 }
 

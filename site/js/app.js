@@ -34,12 +34,12 @@ const {
   //              비워 두면 결제창의 성공 응답만 보고 연다 (서버가 생기기 전 임시)
   // ─────────────────────────────────────────────────────────────────────────
   const PAYMENT = {
-    mode: 'test',
-    storeId: '',        // 예: 'store-00000000-0000-0000-0000-000000000000'
-    channelKey: '',     // 예: 'channel-key-00000000-0000-0000-0000-000000000000'
-    payMethod: 'CARD',            // 결제대행사: NHN KCP (사이트코드 IPD5B) — 포트원 콘솔의 KCP '실연동' 채널 키를 위에 넣는다
+    mode: 'portone',
+    storeId: 'store-67ebf046-cd7c-4e32-972a-458803ee77e0',
+    channelKey: 'channel-key-5ab4bb46-ee2f-4c04-852e-c7f3688834df',   // NHN KCP 실연동 채널 (사이트코드 IPD5B, V2)
+    payMethod: 'CARD',
     orderName: '벽사신견 천명 리포트',
-    verifyUrl: ''                 // 실결제 켤 때 '/api/payment/complete' (Cloudflare에 포트원 비밀 값 등록 후)
+    verifyUrl: '/api/payment/complete'   // Cloudflare Pages 결제 확인 서버 (포트원 비밀 값은 Cloudflare 환경 변수에만)
   };
   const CONTACT_EMAIL = 'pathlogue.help@gmail.com';
 

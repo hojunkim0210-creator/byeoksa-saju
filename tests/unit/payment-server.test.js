@@ -76,3 +76,13 @@ test('결제 확인 서버: 전부 묶음 보따리 10,900원 (공유 할인 9,9
   assert.equal(checkPayment({ ...B, amount: { total: 9900 } }).ok, true);
   assert.equal(checkPayment({ ...B, amount: { total: 4900 } }).ok, false, '묶음을 리포트 값으로 결제 불가');
 });
+
+test('배포 설정: 실결제(포트원) 모드, KCP 채널 키·상점 아이디가 있고, 결제 확인 서버를 거친다', () => {
+  const fs = require('fs');
+  const app = fs.readFileSync(path.resolve(__dirname, '../../site/js/app.js'), 'utf8');
+  const cfg = app.match(/const PAYMENT = \{[\s\S]*?\n  \};/)[0];
+  assert.match(cfg, /mode: 'portone'/);
+  assert.match(cfg, /storeId: 'store-[0-9a-f-]{36}'/);
+  assert.match(cfg, /channelKey: 'channel-key-[0-9a-f-]{36}'/);
+  assert.match(cfg, /verifyUrl: '\/api\/payment\/complete'/);
+});
