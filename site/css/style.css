@@ -1706,3 +1706,12 @@ body.veil-on { overflow: hidden; }
 .book-bar { background: #FAF5E8; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .book-nav { background: #FAF5E8; }
 #viewReport .report-book > * { scroll-margin-top: 90px; }
+
+/* 결제 동의 체크 (카드사 심사 조건: 결제 전 구매 조건 확인·동의) */
+.pay-agree { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 4px; padding: 10px 12px; border: 1px solid var(--paper-line); border-radius: 6px; background: rgba(255, 250, 240, 0.7); font-size: 13.5px; line-height: 1.55; color: var(--ink); text-align: left; cursor: pointer; }
+.pay-agree input, .pay-agree-box { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--cinnabar); }
+.pay-agree strong { color: var(--cinnabar); }
+.pay-agree.is-missing { border-color: var(--cinnabar); animation: agreeShake 0.4s; }
+@keyframes agreeShake { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.footer-biz a { color: inherit; text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) { .pay-agree.is-missing { animation: none; } }

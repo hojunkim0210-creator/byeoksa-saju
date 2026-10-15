@@ -89,6 +89,7 @@
       <p class="payment-notice">결제 후 내용이 열리면 디지털 콘텐츠의 특성상 청약철회(환불)가 제한됩니다. 내용이 열리지 않았거나 정상적으로 보이지 않으면 환불해 드립니다. <a href="legal.html#refund" target="_blank" rel="noopener">환불 안내 보기</a></p>
       <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
       ${promoRowHtml()}
+      <label class="pay-agree"><input type="checkbox" class="pay-agree-box" id="productPayAgree"> <span>위 상품 내용·가격·환불 규정을 확인했으며, 결제에 동의합니다. <strong>(필수)</strong></span></label>
       <button class="btn-submit" id="productPayBtn">${live ? `💳 ${won(pr.final)}원 결제하기` : '테스트로 봉인 해제해보기 🐾'}</button>
       <button class="btn-close" onclick="closePaymentModal()">닫기</button>`;
     $('productPayBtn').onclick = () => purchase(productId, subjectKey, data, $('productPayBtn'));

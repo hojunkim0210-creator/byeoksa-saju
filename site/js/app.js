@@ -37,9 +37,9 @@ const {
     mode: 'test',
     storeId: '',        // 예: 'store-00000000-0000-0000-0000-000000000000'
     channelKey: '',     // 예: 'channel-key-00000000-0000-0000-0000-000000000000'
-    payMethod: 'CARD',
+    payMethod: 'CARD',            // 결제대행사: NHN KCP (사이트코드 IPD5B) — 포트원 콘솔의 KCP '실연동' 채널 키를 위에 넣는다
     orderName: '벽사신견 천명 리포트',
-    verifyUrl: ''
+    verifyUrl: ''                 // 실결제 켤 때 '/api/payment/complete' (Cloudflare에 포트원 비밀 값 등록 후)
   };
   const CONTACT_EMAIL = 'pathlogue.help@gmail.com';
 
@@ -1629,9 +1629,20 @@ let currentSajuData = null;
    * 결제 한 건. 성공하면 결제 기억 + 할인 사용 처리 후 hooks.onPaid(data) 실행.
    * data: 상품 화면을 다시 그리는 데 필요한 값 (휴대폰 결제 복귀 때 hooks.resume(data)로 다시 그린다)
    */
+  /** 카드사 심사 조건: 결제 전 '구매 조건 확인·결제 동의'에 직접 체크해야 결제창이 열린다 */
+  function payAgreed(btn) {
+    const box = btn && btn.closest('.modal-box') && btn.closest('.modal-box').querySelector('.pay-agree-box');
+    if (!box || box.checked || window.__BYEOKSA_TEST__) return true;   // 자동 테스트는 동의 검사만 따로 한다
+    const lab = box.closest('.pay-agree');
+    if (lab) { lab.classList.remove('is-missing'); void lab.offsetWidth; lab.classList.add('is-missing'); }
+    box.focus();
+    showToast('구매 조건 확인 및 결제 동의에 체크해 주세요.');
+    return false;
+  }
   async function purchase(productId, subjectKey, data, btn) {
     const hooks = PRODUCT_HOOKS[productId] || {};
     const pr = priceFor(productId);
+    if (!payAgreed(btn)) return false;
     if (PAYMENT.mode !== 'portone') {
       markPaidFor(productId, subjectKey, 'test');
       if (pr.coupon) consumeCoupon();

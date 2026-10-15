@@ -131,3 +131,31 @@ test('키 작은 휴대폰(375×667)에서도 결제창 제목과 결제 버튼�
   assert.equal(await viewOf(page), 'viewReport');
   await ctx.close();
 });
+
+test('결제 동의(필수 체크): 체크 안 하면 결제가 진행되지 않고, 체크하면 열린다 (리포트·상품 결제창 모두)', async () => {
+  const { ctx, page } = await openPage(browser);
+  await fillAndSubmit(page, ME);
+  await page.evaluate(() => { window.__BYEOKSA_TEST__ = false; openPaymentModal(); });
+  assert.equal(await page.isChecked('#payAgree'), false, '처음엔 체크 안 됨');
+  await page.click('#payButton'); await page.waitForTimeout(300);
+  assert.notEqual(await viewOf(page), 'viewReport', '동의 없이는 열리지 않음');
+  assert.ok(await page.evaluate(() => document.querySelector('#paymentModal .pay-agree').classList.contains('is-missing')));
+  await page.check('#payAgree'); await page.click('#payButton'); await page.waitForTimeout(300);
+  assert.equal(await viewOf(page), 'viewReport');
+  // 상품 결제창(신년운세)
+  await page.evaluate(() => { localStorage.setItem('byeoksa.profile.v1', JSON.stringify({ y: 2002, m: 10, d: 4, hour: -1, gender: 'M' })); openFeature('newyear'); });
+  await page.click('#nyBuy');
+  assert.equal(await page.isChecked('#productPayAgree'), false);
+  await page.click('#productPayBtn'); await page.waitForTimeout(200);
+  assert.ok(await page.isVisible('#productModal'), '동의 없이는 결제창이 그대로');
+  await page.check('#productPayAgree'); await page.click('#productPayBtn'); await page.waitForTimeout(300);
+  assert.ok(!(await page.isVisible('#productModal')), '동의 후 결제 완료');
+  await ctx.close();
+});
+
+test('바닥글: 대표자·사업자번호·주소·연락처·개인정보 보호책임자가 "항목: 값"으로 보인다', async () => {
+  const { ctx, page } = await openPage(browser);
+  const t = await page.textContent('#footerBiz');
+  for (const k of ['상호: 패스로그', '대표: 김호준', '사업자등록번호: 104-14-22768', '통신판매업 신고번호:', '주소: 제주특별자치도', '전화: 010-2582-9143', '이메일: pathlogue.help@gmail.com', '개인정보 보호책임자: 김호준']) assert.ok(t.includes(k), k);
+  await ctx.close();
+});
