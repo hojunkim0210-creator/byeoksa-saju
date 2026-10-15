@@ -583,7 +583,8 @@ let currentSajuData = null;
 
     // 🕯️ 연애/재물 한 줄 후각 감별 티저 갱신
     updateSniffTeaser(dStem, dBranch, dStemIdx, userDream, ohengResult);
-    updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, y, m, d);
+    const kpiNow = updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, y, m, d);
+    renderGlance(dStem, dBranch, dStemIdx, dBranchIdx, ohengResult, userDream, kpiNow);
 
     // 🔒 6단계 대외비 포트폴리오 사전 준비
     updatePaywallContent(dStem, dBranch, ohengResult, dStemIdx, dBranchIdx, userDream, userJob, y, m, d);
@@ -613,6 +614,23 @@ let currentSajuData = null;
       `네놈의 뼈대는 ${dStem.trait}과 ${dBranch.trait}으로 빚어졌다. 기운의 날이 시퍼렇지만, 그만큼 사방에서 쏘아대는 시기와 질투의 화살을 정면으로 맞는 고독한 팔자다.`;
   }
 
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 📌 핵심 한 줄 — 긴 글 앞에 '이 칸에서 볼 것'을 한 줄로 (가독성)
+  // ─────────────────────────────────────────────────────────────────────────
+  function keyLineHtml(text, tone) {
+    return `<p class="key-line${tone ? ' key-line--' + tone : ''}"><span class="key-line-mark">핵심</span><span class="key-line-text">${text}</span></p>`;
+  }
+  /** 카드 안 제목 요소 바로 뒤(없으면 맨 앞)에 핵심 한 줄을 넣는다. 다시 풀이하면 이전 줄은 지운다 */
+  function setKeyLine(cardId, text, afterSelector, tone) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.querySelectorAll(':scope > .key-line, :scope > .key-line-wrap').forEach(e => e.remove());
+    const wrap = document.createElement('div'); wrap.className = 'key-line-wrap'; wrap.innerHTML = keyLineHtml(text, tone);
+    const anchor = afterSelector ? card.querySelector(afterSelector) : null;
+    if (anchor && anchor.parentNode === card) anchor.insertAdjacentElement('afterend', wrap);
+    else card.insertAdjacentElement('afterbegin', wrap);
+  }
   function updateDreamFitCard(dStem, dBranch, oheng, job, major, hobby, dream) {
     // 예전엔 일주 글자 코드로만 정해져 88~96% 사이에서 거의 같은 값이 나왔다 → 원국·꿈에 따라 계산
     const fit = calculateDreamFit(dStem, dBranch, oheng, dream);
@@ -626,6 +644,8 @@ let currentSajuData = null;
     html += `• <strong>조화율을 맡은 근거</strong>: ${fit.reason}`;
 
     document.getElementById('fitContent').innerHTML = html;
+    const relName = ['네 일간과 같은 기운', '네 재주가 밖으로 뻗는 식상(食傷)', '손댄 만큼 돈으로 잡히는 재성(財星)', '버거운 만큼 이름이 서는 관성(官星)', '배울수록 힘이 붙는 인성(印星)'][fit.rel];
+    setKeyLine('dreamFitCard', `[${String(dream).replace(/[<>&]/g, '')}]${josa(dream, '은')} ${fit.rel >= 0 ? `<strong>${relName}</strong>의 일` : '오행의 냄새가 흐린 꿈'} · 조화율 <strong>${baseScore}%</strong> — 오행 ${fit.present}가지가 드러난 원국이다.`, '.fit-header');
   }
 
   /** 영적 조화율: 원국 오행이 고른 정도 + 꿈이 일간에게 어떤 자리의 일인지 (60~98) */
@@ -767,9 +787,30 @@ let currentSajuData = null;
       `<strong class="impact-red" style="font-size:16px;">'이러다 나 진짜 아무것도 못 해보고 비참하게 끝나는 거 아니야?'</strong> 하는 그 서늘한 침묵...<br>` +
       `<br>🐾 <strong style="color:#b45309;">[그 함정의 뿌리]</strong>: ${NIGHT_TRAP_BY_WEAK[ps.weakKey]}<br><br>` +
       `내 말이 틀렸느냐? 이 흉살의 사슬을 지금 끊어내지 못하면 ${Y_R0}~${Y_R1}년에 터질 인생 일대의 천금 대운마저 네 발로 걷어차게 된다.</p>`;
+    setKeyLine('mindScanCard', `네 속을 갉는 함정의 뿌리는 <strong>${EL_KO[ps.weakKey]} 기운 부족</strong>이다 — 아래 글은 그 부족이 밤에 어떻게 드러나는지를 짚는다.`, '.mind-scan-header');
   }
 
   
+
+  /** 📌 한눈에 보는 핵심 다섯 줄 — 긴 풀이에서 꼭 볼 것 */
+  function renderGlance(dStem, dBranch, dStemIdx, dBranchIdx, oheng, dream, kpi) {
+    const ul = document.getElementById('glanceList');
+    if (!ul) return;
+    const ps = getPersona(dStemIdx, BRANCHES.indexOf(dBranch), oheng);
+    const nobles = NOBLE_PEOPLE[dStemIdx] || ['소띠', '양띠'];
+    const ghost = ghostFor(ps.weakKey);
+    const dn = lastDaeun && lastDaeun.item;
+    const safe = String(dream || '').replace(/[<>&]/g, '');
+    const rows = [
+      ['타고난 결', `<strong>${dStem.char}${dBranch.char}일주 · ${EL_KO[ps.dmEl]} 일간</strong> — 가장 모자란 기운은 <strong>${EL_KO[ps.weakKey]}</strong>`],
+      ['지금 운', dn ? `<strong>${dn.ageStart}세 ${dn.stemObj.char}${dn.branchObj.char} 대운(${dn.sipsin})</strong> 한복판 · <strong>${Y_R1}년</strong>이 골든타임(${kpi.timScore}점)` : `<strong>${Y_R1}년</strong>이 골든타임(${kpi.timScore}점)`],
+      ['사람', `멀리할 자: <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 자 · 곁에 둘 귀인: <strong>${nobles[0]}</strong>`],
+      ['돈', `재물 방어력 <strong>${kpi.wScore}점</strong> · 재물 오행 <strong>${EL_KO[ps.wealthEl]}</strong>(${(ELEMENT_REMEDIES[ps.wealthEl] || {}).dir || ''})`],
+      ['등 뒤', `백구가 본 것은 <strong>${ghost.name}(${ghost.hanja})</strong> — ${EL_KO[ps.weakKey]} 기운이 모자란 틈으로 들어왔다`]
+    ];
+    if (safe) rows.splice(1, 0, ['네 꿈', `[<strong>${safe}</strong>] — 조화율 <strong>${(document.getElementById('fitScore') || {}).innerText || ''}</strong>`.replace('영적 조화율 ', '')]);
+    ul.innerHTML = rows.map(([k, v]) => `<li><span class="glance-key">${k}</span><span class="glance-val">${v}</span></li>`).join('');
+  }
   function updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, yVal, mVal, dVal) {
     const yNum = parseInt(yVal) || 2000;
     const mNum = parseInt(mVal) || 1;
@@ -1002,6 +1043,7 @@ let currentSajuData = null;
       `네가 피땀 흘려 쌓아 올린 아이디어와 노력을 은근슬쩍 가로채려 드는 <strong class="impact-red">[흡기귀(吸氣鬼) 같은 악연]</strong>이 네 등 뒤에 시커멓게 찰싹 달라붙어 있다!<br><br>` +
       `🩸 <strong class="impact-red">지박령의 서늘한 경고</strong>: 이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 천을귀인(<strong class="impact-gold">${nobles[0]}</strong>)을 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!` +
       `<br><br>🐾 <strong>네 ${EL_KO[ps.dmEl]} 일간에 붙는 흡기귀의 얼굴</strong>: ${ENEMY_TYPES[ps.dmEl][0]}`;
+    setKeyLine('ghostWarningCard', `등 뒤에 붙은 것은 <strong>${ghost.name}(${ghost.hanja})</strong> · 곁에 둘 귀인은 <strong>${nobles[0]}</strong>, 멀리할 자는 아래 '흡기귀의 얼굴'.`, '.ghost-header', 'dark');
   }
 
   function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream, oheng) {
@@ -1019,6 +1061,7 @@ let currentSajuData = null;
 
     document.getElementById('sniffCareerText').innerHTML = 
       `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."` + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${CAREER_SIPSIN_HINT[careerSipsin]}</span>`;
+    setKeyLine('sniffTeaserCard', `연애는 <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 자를 피하고 · 돈은 <strong>누재살</strong> 구멍을 막고 · 일은 <strong>${Y_R0}~${Y_R1}년</strong>이 골든타임이다.`, '.section-title');
   }
 
   function renderTileHtml(item) {
@@ -1112,6 +1155,8 @@ let currentSajuData = null;
     document.getElementById('daeunComment').innerHTML = 
       `🕯️ <strong>"지금 네놈의 명줄(만 ${currentAge}세)은 [${activeItem.ageStart}세 ${activeItem.stemObj.char}${activeItem.branchObj.char} 대운]의 격랑 한복판에 서 있다."</strong><br>` +
       `이 시기는 <strong>${activeItem.stemObj.name}(${activeItem.sipsin})</strong>과 <strong>${activeItem.branchObj.name}(${activeItem.unsung})</strong>의 기운이 엇갈리며 인생의 판을 통째로 엎어버리는 때다. 머뭇거리다간 기회를 통째로 뜯어먹히니, 이를 악물고 네 칼을 쥐어라.`;
+    const nextItem = daeunItems[(curActiveIndex >= 0 ? curActiveIndex : 2) + 1];
+    setKeyLine('daeunCard', `지금은 <strong>${activeItem.ageStart}세 ${activeItem.stemObj.char}${activeItem.branchObj.char} 대운(${activeItem.sipsin})</strong>, 만 ${currentAge}세${nextItem ? ` · <strong>${nextItem.ageStart}세</strong>에 ${nextItem.stemObj.char}${nextItem.branchObj.char}(${nextItem.sipsin}) 대운으로 바뀐다` : ''}.`, '.section-title');
   }
 
   function renderOheng(p) {
@@ -1255,6 +1300,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">CHAPTER 01 · 대외비 1급</span>
         <div class="portfolio-section-title">🗡️ 기(氣) 빨아먹는 악연 색출 및 즉각 처단 매뉴얼</div>
+        ${keyLineHtml(`지금 손절할 <strong>${EL_KO[ps.dmEl]} 일간용 악연 3유형</strong>이 아래 1·2·3번이다 — 연락 빈도를 줄이는 처단 비방까지 읽어라.`)}
         <div class="portfolio-text">
           네가 지금까지 [<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 달리면서 유독 피로하고 지쳤던 이유는 능력이 부족해서가 아니다.<br><br>
           너를 둘러싼 인간관계 중에 네 에너지와 통장을 갉아먹는 <strong class="impact-red">[기생형 흡기귀]</strong>가 붙어 있었기 때문이다.<br>
@@ -1274,6 +1320,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">CHAPTER 02 · 후각 투시록</span>
         <div class="portfolio-section-title">🕯️ 인연과 사랑의 체취 감별 (벽사신견 후각 투시록)</div>
+        ${keyLineHtml(`피할 연인은 <strong>${ruin.title}</strong>, 만날 사람은 <strong>${soulmate.title}</strong>을 풍기는 <strong>${nobles[0]}</strong> — 시기는 ${Y_R0}년 하반기~${Y_R1}년 상반기.`)}
         <div class="portfolio-text">
           벽사신견의 코는 거짓말을 하지 않는다. 사람이 입으로는 온갖 달콤한 사랑을 맹세해도, 그 영혼에서 뿜어져 나오는 냄새는 숨길 수 없는 법이다.<br><br>
           ${isYoung() ? `네 앞에 다가올 인연들의 냄새를 미리 맡아 두어라. <strong>처음엔 눈이 멀 것처럼 설레지만 결국 네 가슴에 생채기를 남기고 떠날 자들...</strong> 그 냄새를 알아 두면 비켜 갈 수 있다.` : `너를 스쳐 지나간 인연들을 돌아보아라. <strong>처음엔 눈이 멀 것처럼 설레었지만 결국 네 가슴에 지독한 생채기를 남기고 떠난 자들...</strong> 그들의 냄새를 복기해보아라.`}
@@ -1298,6 +1345,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">CHAPTER 03 · 재물 결속 비기</span>
         <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 누재살(漏財煞) 봉인법</div>
+        ${keyLineHtml(`네 돈이 새는 길은 <strong>${GROUP_KO[leakKey]}</strong> 쪽 · 재물 오행은 <strong>${EL_KO[ps.wealthEl]}</strong>(${wealthRemedy.dir}) — 아래 3대 비방이 그 구멍을 막는다.`)}
         <div class="portfolio-text">
           네 명식에는 돈을 버는 재능은 있으나, 담아두는 그릇의 밑바닥에 실금이 가 있어 물이 줄줄 새어나가는 <strong class="impact-red">누재살(漏財煞)</strong>의 기운이 감돌고 있다.<br><br>
           "돈이 좀 모였다 싶으면 꼭 엉뚱한 곳에서 목돈이 깨지는 상황", 기억나지 않느냐? 병원비, 가족이나 친구의 부탁, 충동적인 지출 등으로 공든 탑이 무너지는 패턴이다.<br><br>
@@ -1316,6 +1364,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">CHAPTER 04 · 시기 포획</span>
         <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 대운 3개년 로드맵</div>
+        ${keyLineHtml(`<strong>${Y_R1}년이 골든타임</strong> — 그해 천간이 네게 <strong>${getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)}</strong>으로 들어온다${((((Y_R1 - 4) % 12 + 12) % 12) - ps.dayBranchIdx + 12) % 12 === 6 ? ' (단, 일지와 <strong>충</strong>이라 큰 변동을 각오할 것)' : ''}. ${Y_R0}년은 준비, ${Y_R1}년은 승부, ${Y_R2}년은 지키기.`)}
         <div class="portfolio-text">
           인생의 모든 성공은 실력 30%와 타이밍 70%로 결정된다. 네 사주에서 ${Y_R0}년부터 ${Y_R2}년까지는 10년에 한 번 올까 말까 한 격변의 파도가 밀려오는 시기다.
         </div>
@@ -1345,6 +1394,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">CHAPTER 05 · 실전 결행</span>
         <div class="portfolio-section-title">⚡ 내일부터 당장 결행할 [천명 100일 작전]</div>
+        ${keyLineHtml(`내일부터 할 일은 딱 셋 — <strong>아침 의식 · 몰입 결계 · 정화 수칙</strong>, 그리고 <strong>${EL_KO[weakKey]}</strong> 기운을 채우는 소품 하나.`)}
         <div class="portfolio-text">
           운명은 가만히 앉아 있는 자에게 찾아오지 않는다. 지박령의 기운을 받아 내일부터 당장 실천할 3가지 행동 수칙이다:
         </div>

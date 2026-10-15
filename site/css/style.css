@@ -1709,9 +1709,42 @@ body.veil-on { overflow: hidden; }
 
 /* 결제 동의 체크 (카드사 심사 조건: 결제 전 구매 조건 확인·동의) */
 .pay-agree { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 4px; padding: 10px 12px; border: 1px solid var(--paper-line); border-radius: 6px; background: rgba(255, 250, 240, 0.7); font-size: 13.5px; line-height: 1.55; color: var(--ink); text-align: left; cursor: pointer; }
-.pay-agree input, .pay-agree-box { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--cinnabar); }
+/* 전역 input 스타일(appearance: none)이 체크 표시를 지워 '안 눌리는 것처럼' 보였음 → 직접 그린 체크칸 */
+.pay-agree input.pay-agree-box { -webkit-appearance: none; appearance: none; flex: none; width: 22px; height: 22px; min-width: 22px; margin: 0; padding: 0;
+  border: 2px solid var(--cinnabar); border-radius: 5px; background: #fffaf0 no-repeat center / 14px 14px; box-shadow: none; cursor: pointer; transition: background-color 0.15s; }
+.pay-agree input.pay-agree-box:checked { background-color: var(--cinnabar);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'><path d='M2 7.5l3.2 3.2L12 3.8' fill='none' stroke='%23fff8ec' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>"); }
+.pay-agree input.pay-agree-box:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
+.pay-agree:has(.pay-agree-box:checked) { border-color: var(--cinnabar); background: rgba(168, 42, 32, 0.06); }
+.modal-box:has(.pay-agree-box:not(:checked)) .pay-agree ~ .btn-submit { opacity: 0.55; }
 .pay-agree strong { color: var(--cinnabar); }
 .pay-agree.is-missing { border-color: var(--cinnabar); animation: agreeShake 0.4s; }
 @keyframes agreeShake { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .footer-biz a { color: inherit; text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) { .pay-agree.is-missing { animation: none; } }
+
+/* 📌 핵심 한 줄 + 본문 강조(형광펜) — 긴 글에서 어디를 봐야 하는지 */
+.key-line { display: flex; align-items: flex-start; gap: 9px; margin: 10px 0 14px; padding: 10px 12px; border-radius: 6px;
+  background: rgba(227, 179, 65, 0.16); border-left: 4px solid #B98A26; font-size: 14.5px; line-height: 1.7; color: var(--ink); }
+.key-line-mark { flex: none; margin-top: 2px; padding: 1px 7px; border-radius: 3px; background: #7A5414; color: #fff8ec; font-size: 11.5px; font-weight: 800; letter-spacing: 0.08em; }
+.key-line-text strong { color: var(--cinnabar-deep); font-weight: 800; }
+.key-line--dark { background: rgba(227, 179, 65, 0.12); border-left-color: var(--yellow); color: #EDE3D1; }
+.key-line--dark .key-line-mark { background: #F4C65C; color: #1a0e0a; }
+.key-line--dark .key-line-text strong { color: #F4C65C; }
+.key-line-wrap { margin: 0; }
+/* 본문 속 plain <strong>은 형광펜처럼 — 색이 지정된 impact-* 는 그대로 */
+.portfolio-text strong:not([class]), .portfolio-highlight strong:not([class]), .timeline-desc strong:not([class]), .mind-item p > strong:not([class]),
+.fit-content strong:not([class]), .daeun-comment strong:not([class]), .oheng-card p strong:not([class]), .sniff-item p strong:not([class]), .sniff-personal strong:not([class]) {
+  font-weight: 800; color: #3a1d0e; background: linear-gradient(to top, rgba(227, 179, 65, 0.42) 0 38%, transparent 38%); padding: 0 1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+#ghostWarningCard .ghost-desc strong:not([class]), #ghostWarningCard .ghost-lore strong:not([class]) { color: #F4E4C8; background: linear-gradient(to top, rgba(227, 91, 76, 0.35) 0 38%, transparent 38%); }
+.impact-red { font-weight: 800; }
+.impact-gold { font-weight: 800; }
+@media print { .key-line { background: #fff3cc; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+/* 📌 한눈에 보는 핵심 */
+.glance-card { margin: 14px 0 18px; padding: 16px 16px 12px; border-radius: 10px; background: #FBF4E4; border: 1px solid rgba(185, 138, 38, 0.55); box-shadow: inset 0 0 0 3px rgba(227, 179, 65, 0.18), 0 10px 24px -16px rgba(0, 0, 0, 0.7); }
+.glance-title { font-family: var(--font-display); font-size: 19px; color: var(--cinnabar-deep); margin-bottom: 10px; }
+.glance-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.glance-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; line-height: 1.65; color: var(--ink); }
+.glance-key { flex: none; min-width: 52px; padding: 2px 8px; border-radius: 4px; background: var(--cinnabar); color: #fff8ec; font-size: 12.5px; font-weight: 800; text-align: center; margin-top: 2px; }
+.glance-val strong { color: var(--cinnabar-deep); font-weight: 800; background: linear-gradient(to top, rgba(227, 179, 65, 0.42) 0 38%, transparent 38%); }
+.glance-note { margin: 12px 0 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
