@@ -298,7 +298,7 @@
       <p class="footer-note">백구 사진과 귀신 그림은 AI로 생성한 이미지입니다.</p>
       <!-- 판매 전에 채울 것 (전자상거래법 10조, 첫 화면 표시 의무): 상호 · 대표자 · 사업자등록번호 · 통신판매업 신고번호 · 주소 · 전화 · 이메일
            예) <p class="footer-biz">상호 ○○ · 대표 ○○○ · 사업자등록번호 000-00-00000 · 통신판매업 제0000-서울○○-0000호 · 주소 … · 010-0000-0000 · mail@…</p> -->
-      <p class="footer-biz" id="footerBiz">상호: 패스로그 (Pathlogue) · 대표: 김호준 · 사업자등록번호: 104-14-22768 <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=1041422768" target="_blank" rel="noopener">[사업자정보확인]</a> · 통신판매업 신고번호: 신고 예정 · 주소: 제주특별자치도 제주시 원노형로 102, 101동 208호 · 전화: 010-2582-9143 · 이메일: pathlogue.help@gmail.com · 개인정보 보호책임자: 김호준 · 호스팅: Cloudflare, Inc.</p>
+      <p class="footer-biz" id="footerBiz">상호: 패스로그 (Pathlogue) · 대표: 김호준 · 사업자등록번호: 104-14-22768 <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=1041422768" target="_blank" rel="noopener">[사업자정보확인]</a> · 통신판매업 신고번호: 신고 예정 · 주소: 제주특별자치도 제주시 원노형로 102, 101동 208호 · 전화: 010-2582-9143 · 이메일: <!--email_off-->pathlogue.help@gmail.com<!--/email_off--> · 개인정보 보호책임자: 김호준 · 호스팅: Cloudflare, Inc.</p>
     </footer>
   </div>
 
@@ -773,7 +773,7 @@
     <section class="feature-card help-card" aria-labelledby="helpContactTitle">
       <h3 class="feature-card-title" id="helpContactTitle">연락처</h3>
       <dl class="help-dl">
-        <dt>이메일</dt><dd><a href="mailto:pathlogue.help@gmail.com">pathlogue.help@gmail.com</a></dd>
+        <dt>이메일</dt><dd><!--email_off--><a href="mailto:pathlogue.help@gmail.com">pathlogue.help@gmail.com</a><!--/email_off--></dd>
         <dt>문자·전화</dt><dd><a href="tel:010-2582-9143">010-2582-9143</a></dd>
         <dt>운영</dt><dd>패스로그 (Pathlogue) · 대표 김호준</dd>
       </dl>
@@ -795,7 +795,7 @@
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box">
     <h3>🕯️ 벽사신견 지박령 액막이 복채 안내</h3>
-    <p><span id="paymentTestNote">실제 상용 서비스에서는 토스페이먼츠, 카카오페이 등 결제창이 호출됩니다.<br><br></span>액막이 복채(<span class="sale-price">4,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <p><span id="paymentTestNote" hidden>결제 설정이 테스트 모드일 때만 보이는 안내입니다. 실제 결제는 NHN KCP 결제창에서 진행됩니다.<br><br></span>액막이 복채(<span class="sale-price">4,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
     <!-- 상품 안내: 결제대행사 심사에서 보는 항목 (상품명·가격·제공 방식·이용 기간) -->
     <dl class="product-info">
       <dt>상품</dt><dd>벽사신견 천명 리포트 (6개 장) + 맞춤 개운부 이미지</dd>
@@ -807,7 +807,7 @@
     <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
     <div id="reportPromo"></div>
     <label class="pay-agree"><input type="checkbox" class="pay-agree-box" id="payAgree"> <span>위 상품 내용·가격·환불 규정을 확인했으며, 결제에 동의합니다. <strong>(필수)</strong></span></label>
-    <button class="btn-submit" id="payButton" onclick="startPayment()">테스트로 봉인 해제해보기 🐾</button>
+    <button class="btn-submit" id="payButton" onclick="startPayment()">💳 4,900원 결제하고 봉인 풀기</button>
     <!-- 전부 묶음 권유: 리포트 대신 묶음으로 한꺼번에 (shop.js openBundle) -->
     <button class="btn-bundle" id="reportBundleBtn" onclick="openBundleForReport()">📦 <span>신년운세·소원 부적 5종·궁합 상세까지 <strong>전부 10,900원</strong></span></button>
     <button class="btn-close" onclick="closePaymentModal()">닫기</button>
