@@ -12,7 +12,7 @@ const BAD_JOSA = /\[(비견|정재|편재|겁재)\]으로|\]가다|나가 주고
 
 async function home(page) { await page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; goToStep(1); }); }
 
-test('홈 부적 메뉴 4개가 각 화면을 연다', async () => {
+test('홈 쪽지 메뉴 4개가 각 화면을 연다', async () => {
   const { ctx, page } = await openPage(browser);
   for (const [label, view] of [['인연 궁합', 'viewCompat'], ['오늘의 운세', 'viewDaily'], ['벽사 패 뽑기', 'viewTarot'], ['백구에게 묻기', 'viewChat']]) {
     await home(page);

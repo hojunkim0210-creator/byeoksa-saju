@@ -1,5 +1,5 @@
 /**
- * 벽사신견 유료 상품: 신년운세 · 궁합 상세 리포트 · 소원 부적 (+ 대문 '백구의 비방 보따리' 진열)
+ * 벽사신견 유료 상품: 신년운세 · 궁합 상세 리포트 (+ 대문 '백구의 비방 보따리' 진열). 소원 부적은 2026-10-19 카드사 심사(부적 상품 불가)로 판매 중단
  * - 계산은 SajuCore, 공용 도우미(josa·getPersona·EL_KO 등)와 결제(purchase·priceFor 등)는 app.js 것을 쓴다.
  * - 문장은 반말 백구 말투, 개 소리 추임새 없음. 효과를 장담하지 않는다(오락 콘텐츠).
  */
@@ -52,7 +52,7 @@
   // ─────────────────────────────────────────────────────────────────────
   function sealCard({ productId, title, hook, items, buttonLabel, btnId, bundleFrom }) {
     const pr = priceFor(productId);
-    const bundleLine = bundleFrom ? `<button class="btn-bundle" data-bundle-from="${bundleFrom}">📦 <span>이것까지 리포트·신년운세·소원 부적 5종·궁합 상세 <strong>전부 ${won(PRODUCTS.bundle.price)}원</strong></span></button>` : '';
+    const bundleLine = bundleFrom ? `<button class="btn-bundle" data-bundle-from="${bundleFrom}">📦 <span>이것까지 리포트·신년운세·궁합 상세 <strong>전부 ${won(PRODUCTS.bundle.price)}원</strong></span></button>` : '';
     return `
       <div class="feature-card seal-card">
         <div class="seal-card-head">
@@ -396,285 +396,7 @@
   }
 
   // ═════════════════════════════════════════════════════════════════════
-  // ③ 소원 부적 (금테)
-  // ═════════════════════════════════════════════════════════════════════
-  const WISHES = {
-    money: { ko: '재물', seal: '財', chars: '招財', desc: '들어온 돈이 머물고 새는 구멍이 막히길' },
-    love: { ko: '연애', seal: '緣', chars: '和合', desc: '좋은 인연이 닿고 맺힌 마음이 풀리길' },
-    pass: { ko: '합격', seal: '及', chars: '登科', desc: '시험·면접·승진, 이름이 오르길' },
-    health: { ko: '건강', seal: '康', chars: '安康', desc: '몸과 마음이 편안하고 기운이 고르길' },
-    guard: { ko: '액막이', seal: '厄', chars: '除厄', desc: '등 뒤의 액운과 나쁜 인연이 물러나길' }
-  };
-
-  /** 소원별로 사주에서 보는 자리와 그 세기 */
-  function wishReading(sj, wishId) {
-    const g = sipsinGroupCounts(sj.ps.dmEl, sj.oheng.counts);
-    const missing = EL_KEYS.filter(k => !sj.oheng.counts[k]).length;
-    const dB = sj.pillars.dBranchIdx;
-    const chungCount = [sj.pillars.yBranchIdx, sj.pillars.mBranchIdx, sj.pillars.hBranchIdx].filter(b => b !== null && b !== undefined && (b - dB + 12) % 12 === 6).length;
-    const T = {
-      money: { n: g.jae, label: `재물을 뜻하는 재성(財星) ${g.jae}글자`, tiers: [
-        '네 원국에는 재성이 드러나 있지 않다. 돈이 제 발로 찾아오는 팔자가 아니라 네 손으로 그릇을 빚는 팔자다. 이 부적은 "들어온 돈이 머무는 자리"를 만들어 주는 부적이다. 월급날마다 일정 금액을 따로 떼어 두는 습관과 함께 써야 힘을 쓴다.',
-        '네 원국에서 재성은 한 글자뿐이다. 물줄기는 있으나 가늘어, 한 번 새면 금세 마른다. 이 부적은 그 가는 물줄기를 지키는 둑이다. 이번 달 안에 안 쓰는 구독과 자동결제부터 끊어 내거라.',
-        '네 원국에는 재성이 넉넉하다. 돈이 오가는 길은 넓은데 그만큼 새는 길도 넓다. 이 부적은 들어오는 문보다 나가는 문을 지키는 부적이다. 큰 지출은 사흘 묵혀 두고 결정하거라.'] },
-      love: { n: g.jae + g.gwan, label: `인연을 뜻하는 재성·관성 ${g.jae + g.gwan}글자`, tiers: [
-        '네 원국에는 인연을 뜻하는 글자가 드러나 있지 않다. 인연이 없다는 뜻이 아니라, 기다려서는 오지 않는다는 뜻이다. 이 부적은 네가 먼저 내미는 손에 힘을 실어 주는 부적이다. 이번 달 새 모임 하나에 나가 보거라.',
-        '네 원국에는 인연의 글자가 알맞게 있다. 오는 인연은 있으나 맺고 끊는 데 망설임이 많다. 이 부적은 닿은 인연을 매듭짓게 돕는 부적이다. 마음에 둔 사람이 있다면 이번 달 안에 한 번은 먼저 연락하거라.',
-        '네 원국에는 인연의 글자가 많다. 사람이 끊이지 않지만 그만큼 엉키기도 쉽다. 이 부적은 좋은 인연만 남기고 엉킨 실을 끊어 주는 부적이다. 나를 지치게 하는 관계 하나를 정리하는 데서 시작하거라.'] },
-      pass: { n: g.in + g.gwan, label: `배움·자리를 뜻하는 인성·관성 ${g.in + g.gwan}글자`, tiers: [
-        '네 원국에는 배움과 자리를 뜻하는 글자가 드러나 있지 않다. 남이 깔아 준 길보다 스스로 만든 길에서 빛나는 팔자다. 이 부적은 혼자 버티는 공부에 힘을 보태는 부적이다. 계획을 날짜까지 적어 책상 앞에 붙여 두거라.',
-        '네 원국에는 배움과 자리의 글자가 알맞게 있다. 실력은 쌓여 있으니 마지막 한 걸음의 긴장을 이기는 게 관건이다. 이 부적은 시험장과 면접장의 떨림을 누르는 부적이다. 시험 전날은 새것을 보지 말고 아는 것을 다지거라.',
-        '네 원국에는 배움과 자리의 글자가 넉넉하다. 자격과 인정이 따라오는 팔자인데, 욕심이 많아 한꺼번에 여러 개를 붙들기 쉽다. 이 부적은 하나에 집중하게 돕는 부적이다. 이번에 붙을 목표 하나만 정하거라.'] },
-      health: { n: missing, label: `원국에 빠진 오행 ${missing}가지`, tiers: [
-        '네 원국에는 오행 다섯 가지가 모두 들어 있다. 기운이 고른 편이라 몸도 크게 한쪽으로 치우치지 않는다. 이 부적은 지금의 균형을 지키는 부적이다. 잠과 끼니의 시간을 일정하게 지키거라.',
-        `네 원국에는 ${EL_KO[sj.ps.weakKey]} 기운이 비어 있다. 그 기운이 맡은 쪽이 먼저 지치기 쉽다. 이 부적은 그 빈자리를 채우는 부적이다. ${REMEDY(sj.ps.weakKey).food}${josa(REMEDY(sj.ps.weakKey).food, '을')} 가까이하거라.`,
-        `네 원국에는 빠진 기운이 여럿이고, 그중 ${EL_KO[sj.ps.weakKey]} 기운이 가장 아쉽다. 무리하면 한꺼번에 무너지기 쉬운 팔자다. 이 부적은 기운이 새지 않게 막는 부적이다. 바쁠수록 쉬는 날을 먼저 달력에 박아 두거라.`] },
-      guard: { n: chungCount + (g.gwan >= 2 ? 1 : 0), label: `일지와 부딪치는 기둥 ${chungCount}개 · 관성 ${g.gwan}글자`, tiers: [
-        '네 원국은 크게 부딪치는 기둥이 없다. 액운이 들이닥치는 팔자는 아니나, 남의 시비에 휘말리기 쉬운 때가 있다. 이 부적은 바깥의 나쁜 기운을 대문 밖에서 돌려보내는 부적이다. 불편한 자리에는 처음부터 발을 들이지 마라.',
-        '네 원국에는 생활의 자리를 흔드는 기운이 하나 있다. 이사·이직·이별 같은 변화가 갑자기 몰려오기 쉽다. 이 부적은 그 흔들림 속에서 중심을 잡게 돕는 부적이다. 큰 결정은 한 번 더 자고 내리거라.',
-        '네 원국에는 부딪치고 누르는 기운이 여럿이다. 남의 짐까지 떠안기 쉬운 팔자다. 이 부적은 네 것이 아닌 짐을 내려놓게 돕는 부적이다. 거절할 일은 오늘 거절하거라.'] }
-    }[wishId];
-    const tier = T.n === 0 ? 0 : (wishId === 'love' || wishId === 'pass') ? (T.n <= 2 ? 1 : 2) : (T.n === 1 ? 1 : 2);
-    // 앞으로 12달 중 이 소원에 기운이 붙는 달
-    const months = next12(sj);
-    const want = { money: ['정재', '편재'], love: null, pass: ['정인', '편인', '정관'], health: null, guard: null }[wishId];
-    let goodMonths;
-    if (wishId === 'love') goodMonths = months.filter(m => m.rel.yukhap || m.rel.samhap);
-    else if (wishId === 'health') goodMonths = months.filter(m => m.fill);
-    else if (wishId === 'guard') goodMonths = months.filter(m => !m.rel.chung && m.sipsin !== '편관' && m.sipsin !== '겁재');
-    else goodMonths = months.filter(m => want.includes(m.sipsin));
-    goodMonths = goodMonths.sort((a, b) => b.score - a.score).slice(0, 3);
-    if (!goodMonths.length) goodMonths = [...months].sort((a, b) => b.score - a.score).slice(0, 3);
-    const watch = months.filter(m => m.rel.chung).slice(0, 2);
-    return { label: T.label, text: T.tiers[tier], tier, goodMonths: goodMonths.sort((a, b) => (a.y * 12 + a.m) - (b.y * 12 + b.m)), watch };
-  }
-
-  const WISH_SAY = {
-    money: '돈은 쫓으면 달아나고, 그릇을 만들면 고인다. 부적은 그릇이고, 그릇을 채우는 건 네 손이다.',
-    love: '인연은 기다리는 자보다 대문을 열어 둔 자에게 먼저 닿는다. 문은 내가 지켜 줄 테니 너는 열어 두기만 하거라.',
-    pass: '네가 쌓은 만큼만 나온다. 부적은 그 쌓은 것을 떨지 않고 꺼내게 해 줄 뿐이다.',
-    health: '몸이 먼저다. 오래 아프면 부적보다 병원이 먼저라는 것도 잊지 마라.',
-    guard: '나쁜 기운은 대문 밖에서 내가 짖어 쫓으마. 너는 안에서 마음만 단단히 걸어 잠그거라.'
-  };
-
-  // ── 금테 부적 그리기 (900×1500) ──
-  const WISH_FONT = '"Song Myung", "Noto Serif KR", "Noto Serif CJK KR", serif';
-  async function drawWishTalisman(canvas, sj, wishId) {
-    const W = WISHES[wishId], ctx = canvas.getContext('2d');
-    try { await document.fonts.load(`200px "Song Myung"`); } catch (e) { /* 기본 글꼴 */ }
-    const w = 900, h = 1500; canvas.width = w; canvas.height = h;
-    let seed = hash(`${sj.ilju}|${wishId}`);
-    const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-    const ink = '#A3221A', inkDeep = '#7E140E';
-
-    // 1) 괴황지 바탕: 결·얼룩·그을린 가장자리
-    const bg = ctx.createLinearGradient(0, 0, w, h);
-    bg.addColorStop(0, '#EFD47C'); bg.addColorStop(0.5, '#E5BC52'); bg.addColorStop(1, '#D6A33A');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < 3200; i++) { ctx.fillStyle = `rgba(120,80,20,${rnd() * 0.06})`; ctx.fillRect(rnd() * w, rnd() * h, 1 + rnd() * 2.5, 2 + rnd() * 16); }
-    for (let i = 0; i < 7; i++) {   // 물 얼룩
-      const x = rnd() * w, y = rnd() * h, r = 40 + rnd() * 110;
-      const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
-      g.addColorStop(0, 'rgba(150,100,30,0)'); g.addColorStop(0.85, 'rgba(150,100,30,0.10)'); g.addColorStop(1, 'rgba(150,100,30,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    }
-    const vg = ctx.createRadialGradient(w / 2, h / 2, h * 0.22, w / 2, h / 2, h * 0.78);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(0.8, 'rgba(90,45,10,0.22)'); vg.addColorStop(1, 'rgba(50,20,5,0.55)');
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
-
-    // 2) 금테 두 겹 + 안쪽 붉은 실선 + 귀퉁이 금박 구름무늬
-    const gold = ctx.createLinearGradient(0, 0, w, h);
-    gold.addColorStop(0, '#8A6414'); gold.addColorStop(0.22, '#F6E39A'); gold.addColorStop(0.45, '#B98A26'); gold.addColorStop(0.7, '#F8E7A8'); gold.addColorStop(1, '#7E5A10');
-    ctx.strokeStyle = gold; ctx.lineWidth = 22; ctx.strokeRect(30, 30, w - 60, h - 60);
-    ctx.lineWidth = 5; ctx.strokeRect(62, 62, w - 124, h - 124);
-    ctx.strokeStyle = 'rgba(163,34,26,0.75)'; ctx.lineWidth = 2; ctx.strokeRect(80, 80, w - 160, h - 160);
-    const cloud = (x, y, sx, sy) => {   // 귀퉁이 구름무늬(운문)
-      ctx.save(); ctx.translate(x, y); ctx.scale(sx, sy);
-      ctx.strokeStyle = gold; ctx.lineWidth = 6; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(34, 34, 22, Math.PI, Math.PI * 2.6); ctx.stroke();
-      ctx.beginPath(); ctx.arc(34, 34, 10, Math.PI * 0.2, Math.PI * 1.8); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(56, 34); ctx.quadraticCurveTo(90, 30, 110, 12); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(34, 56); ctx.quadraticCurveTo(30, 90, 12, 110); ctx.stroke();
-      ctx.restore();
-    };
-    cloud(66, 66, 1, 1); cloud(w - 66, 66, -1, 1); cloud(66, h - 66, 1, -1); cloud(w - 66, h - 66, -1, -1);
-
-    ctx.fillStyle = ink; ctx.strokeStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    // 3) 부두(符頭): 북두칠성 + 삼청 획
-    const stars = [[300, 150], [360, 128], [420, 138], [470, 168], [520, 200], [590, 196], [632, 150]];
-    ctx.lineWidth = 3; ctx.beginPath(); stars.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
-    stars.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill(); });
-    ctx.lineWidth = 8; ctx.lineCap = 'round';
-    [[w / 2 - 60, 235], [w / 2, 228], [w / 2 + 60, 235]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x - 18, y); ctx.lineTo(x + 18, y - 4); ctx.stroke(); });
-    ctx.font = `86px ${WISH_FONT}`; ctx.fillText('敕令', w / 2, 310);
-
-    // 4) 소원 글자 (세로 두 자) — 붓 번짐 + 갈필
-    const brushChar = (c, x, y, size) => {
-      ctx.save(); ctx.font = `${size}px ${WISH_FONT}`;
-      ctx.shadowColor = 'rgba(120,10,0,0.4)'; ctx.shadowBlur = 8; ctx.fillStyle = ink; ctx.fillText(c, x, y);
-      ctx.shadowBlur = 0; ctx.globalAlpha = 0.35; ctx.fillStyle = inkDeep; ctx.fillText(c, x + 3, y + 2);
-      ctx.restore();
-    };
-    brushChar(W.chars[0], w / 2, 590, 290);
-    brushChar(W.chars[1], w / 2, 900, 290);
-    // 먹 튐
-    for (let i = 0; i < 26; i++) {
-      const ang = rnd() * Math.PI * 2, dist = 150 + rnd() * 120, cx = w / 2 + Math.cos(ang) * dist, cy = 740 + Math.sin(ang) * dist * 1.4;
-      ctx.globalAlpha = 0.25 + rnd() * 0.5; ctx.beginPath(); ctx.arc(cx, cy, 1.5 + rnd() * 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    // 5) 양옆 세로 글씨: 왼쪽 辟邪神犬 急急如律令 / 오른쪽 일주 + 보충 오행
-    ctx.font = `44px ${WISH_FONT}`;
-    const col = (txt, x, y0, gap) => [...txt].forEach((c, i) => ctx.fillText(c, x, y0 + i * gap));
-    col('辟邪神犬', 150, 420, 56);
-    ctx.font = `34px ${WISH_FONT}`; col('急急如律令', 150, 690, 46);
-    ctx.font = `44px ${WISH_FONT}`; col(`${sj.iljuHanja}補${EL_HANJA[sj.ps.weakKey]}`, w - 150, 420, 56);
-    ctx.font = `34px ${WISH_FONT}`; col('萬邪不侵', w - 150, 720, 46);
-    // 세로 붉은 보조선
-    ctx.lineWidth = 2; ctx.globalAlpha = 0.6;
-    [[110, 400, 960], [w - 110, 400, 960]].forEach(([x, y0, y1]) => { ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); });
-    ctx.globalAlpha = 1;
-
-    // 6) 아래 갈고리 획 + 소용돌이(나선)
-    ctx.lineWidth = 10; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(w / 2, 1050); ctx.lineTo(w / 2, 1150); ctx.quadraticCurveTo(w / 2, 1180, w / 2 - 28, 1172); ctx.stroke();
-    ctx.lineWidth = 4; ctx.beginPath();
-    for (let t = 0; t < Math.PI * 5; t += 0.08) { const r = 4 + t * 4.2, x = w / 2 + 120 + Math.cos(t) * r, y = 1110 + Math.sin(t) * r; t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
-    ctx.stroke();
-    ctx.beginPath();
-    for (let t = 0; t < Math.PI * 5; t += 0.08) { const r = 4 + t * 4.2, x = w / 2 - 120 - Math.cos(t) * r, y = 1110 + Math.sin(t) * r; t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
-    ctx.stroke();
-
-    // 7) 날짜 + 낡은 도장
-    const now = new Date();
-    ctx.font = `40px ${WISH_FONT}`; const HN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
-    ctx.fillText(`${yearGanji(now.getFullYear(), true)}年 ${HN[now.getMonth() + 1]}月 吉日`, w / 2, 1255);
-    ctx.save(); ctx.translate(w / 2, 1360); ctx.rotate(-0.05);
-    ctx.fillStyle = '#B3271D'; ctx.fillRect(-72, -72, 144, 144);
-    ctx.strokeStyle = '#F6DFA4'; ctx.lineWidth = 4; ctx.strokeRect(-62, -62, 124, 124);
-    ctx.fillStyle = '#F6DFA4'; ctx.font = `50px ${WISH_FONT}`;
-    ctx.fillText('辟', -27, -25); ctx.fillText('邪', 27, -25); ctx.fillText('神', -27, 30); ctx.fillText('犬', 27, 30);
-    ctx.globalCompositeOperation = 'destination-out';   // 인주가 덜 묻은 자국
-    for (let i = 0; i < 60; i++) { ctx.globalAlpha = 0.25 + rnd() * 0.4; ctx.beginPath(); ctx.arc(-72 + rnd() * 144, -72 + rnd() * 144, 1 + rnd() * 4, 0, Math.PI * 2); ctx.fill(); }
-    ctx.restore();
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-
-    // 8) 금박 반짝임 띠
-    const sheen = ctx.createLinearGradient(0, 0, w, h);
-    sheen.addColorStop(0.42, 'rgba(255,255,255,0)'); sheen.addColorStop(0.5, 'rgba(255,248,210,0.18)'); sheen.addColorStop(0.58, 'rgba(255,255,255,0)');
-    ctx.fillStyle = sheen; ctx.fillRect(0, 0, w, h);
-  }
-
-  async function saveWishWallpaper(sj, wishId) {
-    const src = document.createElement('canvas');
-    await drawWishTalisman(src, sj, wishId);
-    const c = document.createElement('canvas'); c.width = 1080; c.height = 1920;
-    const ctx = c.getContext('2d');
-    const bg = ctx.createLinearGradient(0, 0, 0, 1920); bg.addColorStop(0, '#1A1C2E'); bg.addColorStop(1, '#0F1020');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, 1080, 1920);
-    ctx.save(); ctx.shadowColor = 'rgba(227,179,65,0.45)'; ctx.shadowBlur = 60;
-    ctx.drawImage(src, 1080 / 2 - 405, 230, 810, 1350); ctx.restore();
-    ctx.fillStyle = '#E3B341'; ctx.textAlign = 'center'; ctx.font = `44px ${WISH_FONT}`;
-    ctx.fillText(`${WISHES[wishId].ko} 소원 부적 · ${sj.ilju}일주`, 540, 1690);
-    ctx.fillStyle = 'rgba(244,238,226,0.6)'; ctx.font = `30px ${WISH_FONT}`; ctx.fillText('벽사신견이 물어다 준 부적', 540, 1750);
-    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-    const fileName = `벽사신견_소원부적_${WISHES[wishId].ko}.png`;
-    if (navigator.canShare && blob) {
-      const file = new File([blob], fileName, { type: 'image/png' });
-      if (navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: '벽사신견 소원 부적' }); return; } catch (e) { /* 취소 시 내려받기 */ } }
-    }
-    const a = document.createElement('a'); a.download = fileName; a.href = URL.createObjectURL(blob); a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    showToast('🧧 소원 부적을 저장했다. 휴대폰 배경화면으로 걸어 두거라.');
-  }
-
-  let wishPicked = null;
-  function renderWish() {
-    const body = $('wishBody');
-    X.withProfile(body, '소원 부적을 쓰려면 생년월일이 필요하다', p => drawWishPicker(p));
-  }
-
-  function drawWishPicker(p) {
-    const body = $('wishBody');
-    const sj = X.readSaju(p);
-    const cards = Object.entries(WISHES).map(([id, W]) => `
-      <button class="wish-card ${wishPicked === id ? 'is-on' : ''}" data-wish="${id}" aria-pressed="${wishPicked === id}">
-        <span class="wish-seal" aria-hidden="true">${W.seal}</span>
-        <span class="wish-name">${W.ko}</span>
-        <span class="wish-desc">${W.desc}</span>
-        ${isPaidFor('wish', personKeyOf(p) + '.' + id) ? '<span class="wish-owned">받음</span>' : ''}
-      </button>`).join('');
-    body.innerHTML = `
-      ${X.profileLine(p, sj)}
-      <div class="feature-card">
-        <h3 class="feature-card-title">어떤 소원을 물어다 줄까</h3>
-        <div class="wish-grid">${cards}</div>
-      </div>
-      <div id="wishStage"></div>`;
-    body.querySelectorAll('.wish-card').forEach(b => { b.onclick = () => { wishPicked = b.dataset.wish; drawWishPicker(p); drawWishStage(p, wishPicked, true); }; });
-    X.bindProfileLinks(body, renderWish);
-    if (wishPicked) drawWishStage(p, wishPicked, false);
-  }
-
-  async function drawWishStage(p, wishId, scroll) {
-    const stage = $('wishStage'); if (!stage) return;
-    const sj = X.readSaju(p), W = WISHES[wishId], R = wishReading(sj, wishId);
-    const key = personKeyOf(p) + '.' + wishId;
-    const paid = isPaidFor('wish', key);
-    stage.innerHTML = `
-      <div class="feature-card wish-stage ${paid ? 'is-open' : 'is-sealed'}">
-        <div class="wish-throw" aria-hidden="true"><img src="mung.jpg" alt=""></div>
-        <div class="wish-talisman-wrap">
-          <canvas class="wish-talisman" id="wishCanvas" width="900" height="1500" aria-label="${W.ko} 소원 부적"></canvas>
-          ${paid ? '' : '<span class="wish-seal-band">封</span>'}
-        </div>
-        <p class="wish-caption">${paid ? `백구가 물어 온 <strong>${W.ko}</strong> 소원 부적` : `금테를 두른 건 소원 부적뿐이다. 백구가 <strong>${W.ko}</strong> 부적을 물고 대문 앞에 앉아 있다.`}</p>
-      </div>
-      <div id="wishText"></div>`;
-    await drawWishTalisman($('wishCanvas'), sj, wishId);
-    if (!paid) {
-      $('wishText').innerHTML = sealCard({
-        productId: 'wish', btnId: 'wishBuy',
-        title: `${W.ko} 소원 부적 받기`,
-        hook: `네 사주에서 ${W.ko}의 자리는 <strong>${R.label}</strong>로 드러난다. 이 숫자가 네 ${W.ko}에 무슨 뜻인지, 앞으로 열두 달 중 이 부적이 가장 힘을 쓰는 달이 언제인지는 봉인 안에 적어 두었다.`,
-        items: ['금테 두른 <strong>소원 부적 원본</strong> + 휴대폰 <strong>배경화면</strong>(1080×1920) 저장', `네 사주로 본 <strong>${W.ko}의 자리</strong> 풀이`, `앞으로 12달 중 <strong>부적이 힘을 쓰는 달</strong> 3개`, '부적 쓰는 법 (방위 · 색 · 숫자)과 백구 한마디'],
-        buttonLabel: `🧧 ${W.ko} 부적 받기`, bundleFrom: 'wish'
-      });
-      bindBundle($('wishText'), p, 'wish', { wishId });
-      $('wishBuy').onclick = () => openProductModal('wish', {
-        title: `🧧 ${W.ko} 소원 부적`,
-        desc: `${esc(sj.ilju)}일주에 맞춘 금테 ${W.ko} 부적과 풀이가 열린다.`,
-        provide: '결제 즉시 이 화면에서 열람 · 부적 이미지·배경화면 저장',
-        again: '같은 기기·같은 생년월일·같은 소원이면 다시 열림',
-        subjectKey: key, data: { p, wishId }
-      });
-      renderCouponLines();
-    } else {
-      const r = REMEDY(sj.ps.weakKey);
-      $('wishText').innerHTML = `
-        <div class="feature-card">
-          <h3 class="feature-card-title">${W.ko}의 자리 · ${esc(R.label)}</h3>
-          <p class="feature-text">${R.text}</p>
-          <h4 class="cd-h">부적이 힘을 쓰는 달</h4>
-          <p class="feature-text"><strong>${R.goodMonths.map(m => `${m.y !== new Date().getFullYear() ? m.y + '년 ' : '올해 '}${m.m}월`).join(' · ')}</strong> — 이 달에 ${W.ko}에 관한 일을 시작하거나 결정하거라.${R.watch.length ? ` ${R.watch.map(m => `${m.y !== new Date().getFullYear() ? m.y + '년 ' : '올해 '}${m.m}월`).join(' · ')}에는 생활의 자리가 흔들리니 서두르지 마라.` : ''}</p>
-          <h4 class="cd-h">부적 쓰는 법</h4>
-          <ul class="ny-fields">
-            <li>휴대폰 배경화면으로 걸어 두고, 아침에 한 번 눈을 맞추거라.</li>
-            <li>중요한 일을 할 때는 <strong>${r.dir}</strong>을 바라보거라. 네게 모자란 ${EL_KO[sj.ps.weakKey]} 기운의 방위다.</li>
-            <li><strong>${r.color}</strong> 계열을 몸에 지니면 좋다. 행운의 숫자는 <strong>${r.num}</strong>이다.</li>
-          </ul>
-          <p class="ny-say">"${WISH_SAY[wishId]}"</p>
-          <button class="btn-talisman-download" id="wishSave">🧧 부적 배경화면 저장하기</button>
-          <p class="feature-note">부적은 마음을 다잡는 전통 소품이며, 소원의 성취를 보장하지 않는다.</p>
-        </div>`;
-      $('wishSave').onclick = () => saveWishWallpaper(sj, wishId);
-    }
-    if (scroll) stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  // ═════════════════════════════════════════════════════════════════════
-  // ④ 전부 묶음 보따리 (10,900원): 한 사람 기준 리포트·신년운세·소원 부적 5종·궁합 상세
+  // ④ 전부 묶음 보따리 (10,900원): 한 사람 기준 리포트·신년운세·궁합 상세
   // ═════════════════════════════════════════════════════════════════════
   function bindBundle(root, p, from, extra) {
     if (!root) return;
@@ -695,7 +417,7 @@
         <ul class="bundle-list">${rows}</ul>
         <p class="bundle-sum">따로 사면 <s>${won(BUNDLE_LIST_TOTAL)}원</s> → 묶음 <strong>${won(PRODUCTS.bundle.price)}원</strong></p>
         <p class="feature-note">이미 따로 산 풀이가 있어도 묶음 가격은 같다. 다른 생년월일에는 열리지 않는다.</p>`,
-      provide: '결제 즉시 리포트·신년운세·소원 부적 5종·궁합 상세가 이 화면에서 열림 · PDF·이미지 저장 가능',
+      provide: '결제 즉시 리포트·신년운세·궁합 상세가 이 화면에서 열림 · PDF 저장 가능',
       again: '같은 기기·같은 생년월일로 들어오면 모두 다시 열림',
       subjectKey: personKeyOf(p), data: { p, from, extra }
     });
@@ -712,10 +434,9 @@
   function afterBundle(d) {
     saveProfile(d.p);
     const vis = id => { const v = $(id); return !!v && v.style.display !== 'none'; };
-    const msg = '📦 보따리가 풀렸다! 리포트·신년운세·소원 부적 5종·궁합 상세가 모두 열렸다.';
+    const msg = '📦 보따리가 풀렸다! 리포트·신년운세·궁합 상세가 모두 열렸다.';
     if (d.from === 'report' && typeof currentSajuData !== 'undefined' && currentSajuData) { unlockContent(); showToast(msg); return; }
     if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }
-    else if (d.from === 'wish') { if (d.extra) wishPicked = d.extra.wishId; openFeature('wish'); }
     else if (d.from === 'newyear' || vis('viewNewYear')) openFeature('newyear');
     else renderShopShelf();
     showToast(msg);
@@ -731,7 +452,6 @@
       set('userJob', sj.userJob); set('userMajor', sj.userMajor); set('userHobby', sj.userHobby); set('userDream', sj.userDream);
       submitAndGoToResult();
     } else if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }
-    else if (d.from === 'wish') { if (d.extra) wishPicked = d.extra.wishId; openFeature('wish'); }
     else if (d.from === 'newyear') openFeature('newyear');
   }
   registerProduct('bundle', { onPaid: afterBundle, resume: resumeBundle });
@@ -747,13 +467,8 @@
     onPaid: d => { openFeature('compat'); X.showCompatResult(d.a, d.b, d.nameA, d.nameB); showToast('💞 두 사람의 상세 궁합이 열렸다.'); },
     resume: d => { openFeature('compat'); X.showCompatResult(d.a, d.b, d.nameA, d.nameB); }
   });
-  registerProduct('wish', {
-    onPaid: d => { saveProfile(d.p); wishPicked = d.wishId; openFeature('wish'); showToast('🧧 백구가 부적을 물어다 던졌다!'); },
-    resume: d => { saveProfile(d.p); wishPicked = d.wishId; openFeature('wish'); }
-  });
 
   X.registerFeature('newyear', 'viewNewYear', renderNewYear);
-  X.registerFeature('wish', 'viewWish', () => { renderWish(); });
 
   /** 대문 '백구의 비방 보따리' 가격 표시 */
   function renderShopShelf() {
@@ -769,5 +484,5 @@
   document.addEventListener('DOMContentLoaded', renderShopShelf);
 
   window.openBundleFromShelf = openBundleFromShelf;
-  window.BYEOKSA_SHOP = { openBundle, openBundleFromShelf, afterCompat, renderShopShelf, newYearData, compatDetailData, wishReading, WISHES, NY, drawWishTalisman, targetYear };
+  window.BYEOKSA_SHOP = { openBundle, openBundleFromShelf, afterCompat, renderShopShelf, newYearData, compatDetailData, NY, targetYear };
 })();

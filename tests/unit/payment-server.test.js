@@ -16,8 +16,9 @@ test('checkPayment: 완료·금액(정가/공유 할인가)·통화·상품명·
   assert.equal(checkPayment({ ...PAID, amount: { total: 100 } }).ok, false, '금액 바꿔치기');
   assert.equal(checkPayment({ ...PAID, currency: 'USD' }).ok, false);
   assert.equal(checkPayment({ ...PAID, orderName: '다른 상품' }).ok, false);
-  assert.equal(checkPayment({ ...PAID, orderName: '벽사신견 소원 부적', amount: { total: 1900 } }).ok, true);
-  assert.equal(checkPayment({ ...PAID, orderName: '벽사신견 소원 부적', amount: { total: 4900 } }).ok, false, '상품과 금액 불일치');
+  assert.equal(checkPayment({ ...PAID, orderName: '벽사신견 궁합 상세 리포트', amount: { total: 3900 } }).ok, true);
+  assert.equal(checkPayment({ ...PAID, orderName: '벽사신견 궁합 상세 리포트', amount: { total: 4900 } }).ok, false, '상품과 금액 불일치');
+  assert.equal(checkPayment({ ...PAID, orderName: '벽사신견 소원 부적', amount: { total: 1900 } }).ok, false, '부적 상품은 2026-10-19 판매 중단 (카드사 심사)');
   assert.equal(checkPayment({ ...PAID, channel: { type: 'TEST' } }, { requireLive: true }).ok, false);
   assert.equal(checkPayment({ ...PAID, channel: { type: 'TEST' } }).ok, true);
 });

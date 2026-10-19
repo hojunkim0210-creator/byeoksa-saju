@@ -398,7 +398,7 @@
       case 'today': {
         const t = today();
         const f = SajuCore.calculateDailyFortune(P, t.y, t.m, t.d);
-        return `오늘은 <strong>${f.dayStem.char}${f.dayBranch.char}일</strong>, 네게 <strong>${f.sipsin}</strong>의 날이다. ${DAILY_TEXT[f.sipsin].head}<br><br>오늘 점수는 <strong>${f.score}점</strong>이다. 자세한 건 대문 앞 '오늘의 운세' 부적을 떼어 보거라.`;
+        return `오늘은 <strong>${f.dayStem.char}${f.dayBranch.char}일</strong>, 네게 <strong>${f.sipsin}</strong>의 날이다. ${DAILY_TEXT[f.sipsin].head}<br><br>오늘 점수는 <strong>${f.score}점</strong>이다. 자세한 건 대문 앞 '오늘의 운세' 쪽지를 떼어 보거라.`;
       }
       case 'me': {
         const reading = getDynamicColdReading(P.dStem, P.dBranch, '천명');

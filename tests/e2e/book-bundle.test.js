@@ -72,22 +72,23 @@ test('리포트 책: 옆으로 밀면 넘어가고, 인쇄할 때는 모든 장�
   await ctx.close();
 });
 
-test('묶음: 대문 진열에 10,900원(따로 사면 23,200원), 생년월일이 없으면 입력 화면으로', async () => {
+test('묶음: 대문 진열에 10,900원(따로 사면 13,700원), 생년월일이 없으면 입력 화면으로', async () => {
   const { ctx, page } = await openPage(browser);
   await page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; goToStep(1); });
   const t = (await page.textContent('.shop-item-bundle')).replace(/\s+/g, ' ');
-  assert.ok(t.includes('10,900원') && t.includes('23,200원'), t);
+  assert.ok(t.includes('10,900원') && t.includes('13,700원'), t);
   await page.click('.shop-item-bundle'); await page.waitForTimeout(200);
   assert.equal(await viewOf(page), 'viewInput');
   await ctx.close();
 });
 
-test('묶음 결제 한 번이면 리포트·신년운세·소원 부적 5종·궁합 상세가 모두 열리고, 다른 생년월일은 잠겨 있다', async () => {
+test('묶음 결제 한 번이면 리포트·신년운세·궁합 상세가 모두 열리고, 다른 생년월일은 잠겨 있다', async () => {
   const { ctx, page } = await openPage(browser);
   await page.evaluate(p => { document.getElementById('introGateModal').style.display = 'none'; localStorage.setItem('byeoksa.profile.v1', JSON.stringify(p)); goToStep(1); }, PROFILE);
   await page.click('.shop-item-bundle'); await page.waitForTimeout(200);
   const modal = (await page.textContent('#productModal')).replace(/\s+/g, ' ');
-  for (const w of ['천명 리포트', '신년운세', '소원 부적 5종', '궁합 상세', '23,200원', '10,900원', '만 19세 미만', '청약철회']) assert.ok(modal.includes(w), w);
+  for (const w of ['천명 리포트', '신년운세', '궁합 상세', '13,700원', '10,900원', '만 19세 미만', '청약철회']) assert.ok(modal.includes(w), w);
+  assert.ok(!modal.includes('부적'), '묶음 결제창에 부적 없음 (2026-10-19 카드사 심사)');
   await page.click('#productPayBtn'); await page.waitForTimeout(300);
   assert.match(await page.textContent('#toastMsg'), /보따리가 풀렸다/);
   assert.match(await page.textContent('[data-shop-price="bundle"]'), /다 풀었다/);
@@ -95,13 +96,6 @@ test('묶음 결제 한 번이면 리포트·신년운세·소원 부적 5종·�
   // 신년운세
   await page.evaluate(() => openFeature('newyear')); await page.waitForTimeout(200);
   assert.equal(await page.$('#nyBuy'), null, '신년운세 봉인 없음');
-  // 소원 부적 5종
-  for (const id of await page.evaluate(() => Object.keys(BYEOKSA_SHOP.WISHES))) {
-    await page.evaluate(id => { openFeature('wish'); document.querySelector(`.wish-card[data-wish="${id}"]`).click(); }, id);
-    await page.waitForTimeout(250);
-    assert.equal(await page.$('#wishBuy'), null, id + ' 봉인 없음');
-    assert.ok(await page.$('#wishSave'), id + ' 저장 버튼');
-  }
   // 궁합 상세 (나 = 묶음 산 사람, 상대는 누구든)
   await page.evaluate(() => openFeature('compat')); await page.waitForTimeout(150);
   await page.fill('#cbY', '1999'); await page.fill('#cbM', '3'); await page.fill('#cbD', '21');
@@ -132,8 +126,7 @@ test('묶음: 리포트 결제창·봉인 카드에서 권유하고, 리포트 �
   assert.equal(await viewOf(page), 'viewReport');
   assert.deepEqual(await shownPages(page), [0]);
   // 봉인 카드 권유는 묶음을 가진 사람에게는 안 보인다
-  await page.evaluate(() => openFeature('wish')); await page.waitForTimeout(150);
-  await page.click('.wish-card[data-wish]'); await page.waitForTimeout(250);
+  await page.evaluate(() => openFeature('newyear')); await page.waitForTimeout(250);
   assert.equal(await page.$('[data-bundle-from]'), null);
   await ctx.close();
 
@@ -163,19 +156,20 @@ test('묶음 실결제(포트원 흉내): 10,900원·묶음 상품명으로 요�
   await ctx.close();
 });
 
-test('결과 화면 헌화비 칸: 처음부터 묶음(10,900원·23,200원)을 앞에, 따로 사는 풀이 넷도 모두 보여 준다', async () => {
+test('결과 화면 헌화비 칸: 처음부터 묶음(10,900원·13,700원)을 앞에, 따로 사는 풀이 셋도 모두 보여 준다', async () => {
   const { ctx, page } = await openPage(browser);
   await fillAndSubmit(page, ME);
   const t = (await page.textContent('#paywallOverlay .price-box')).replace(/\s+/g, ' ');
-  for (const w of ['전부 묶음 보따리', '10,900', '23,200원', '소원 부적 5종', '하나씩 따로', '천명 리포트', '4,900원', '신년운세', '궁합 상세 리포트', '3,900원', '소원 부적', '1,900원']) assert.ok(t.includes(w), w);
+  for (const w of ['전부 묶음 보따리', '10,900', '13,700원', '하나씩 따로', '천명 리포트', '4,900원', '신년운세', '궁합 상세 리포트', '3,900원']) assert.ok(t.includes(w), w);
+  assert.ok(!t.includes('부적'), '헌화비 칸에 부적 없음 (2026-10-19 카드사 심사)');
   assert.ok(!/undefined|NaN/.test(t), t);
-  assert.equal(await page.locator('.plan-row').count(), 4);
-  // 리포트 줄 → 리포트 결제창, 소원 부적 줄 → 부적 화면
+  assert.equal(await page.locator('.plan-row').count(), 3);
+  // 리포트 줄 → 리포트 결제창, 신년운세 줄 → 신년운세 화면
   await page.click('#planRowReport'); await page.waitForTimeout(150);
   assert.ok(await page.isVisible('#paymentModal'));
   await page.evaluate(() => closePaymentModal());
-  await page.click('.plan-row:has-text("소원 부적")'); await page.waitForTimeout(250);
-  assert.equal(await viewOf(page), 'viewWish');
+  await page.click('.plan-row:has-text("신년운세")'); await page.waitForTimeout(250);
+  assert.equal(await viewOf(page), 'viewNewYear');
   // 묶음 버튼으로 바로 산다
   await page.evaluate(() => goToStep(3)); await page.waitForTimeout(150);
   await page.click('.btn-pay-bundle'); await page.waitForTimeout(200);

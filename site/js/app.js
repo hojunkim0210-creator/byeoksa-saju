@@ -1540,15 +1540,13 @@ let currentSajuData = null;
     report:  { name: '벽사신견 천명 리포트',     price: SALE.price, label: '천명 리포트' },
     newyear: { name: '벽사신견 신년운세',         price: 4900,       label: '신년운세' },
     compat:  { name: '벽사신견 궁합 상세 리포트', price: 3900,       label: '궁합 상세 리포트' },
-    wish:    { name: '벽사신견 소원 부적',         price: 1900,       label: '소원 부적' },
     bundle:  { name: '벽사신견 전부 묶음 보따리',  price: 10900,      label: '전부 묶음 보따리' }
   };
   // 전부 묶음: 한 사람(생년월일) 기준으로 아래가 모두 열린다. 따로 사면 합계(BUNDLE_LIST_TOTAL)를 그대로 보여 준다 (실제 가격 합)
-  const WISH_KINDS = 5;
+  // (소원 부적은 2026-10-19 카드사 심사 반송 — 부적 상품 불가 — 로 판매 목록·묶음에서 뺌)
   const BUNDLE_ITEMS = [
-    { id: 'report',  text: '천명 리포트 (6개 장 + 맞춤 개운부)', price: SALE.price },
+    { id: 'report',  text: '천명 리포트 (6개 장)',             price: SALE.price },
     { id: 'newyear', text: '신년운세 (열두 달 풀이)',            price: 4900 },
-    { id: 'wish',    text: `소원 부적 ${WISH_KINDS}종 전부 (재물·연애·합격·건강·액막이)`, price: 1900 * WISH_KINDS },
     { id: 'compat',  text: '궁합 상세 리포트 (내가 들어간 궁합이면 상대 제한 없음)', price: 3900 }
   ];
   const BUNDLE_LIST_TOTAL = BUNDLE_ITEMS.reduce((n, it) => n + it.price, 0);
@@ -1623,10 +1621,10 @@ let currentSajuData = null;
   function markPaidFor(productId, subjectKey, paymentId) { try { localStorage.setItem(paidKeyOf(productId, subjectKey), JSON.stringify({ paymentId, at: Date.now() })); } catch (e) { /* 저장 불가 환경 */ } }
   function rawPaid(productId, subjectKey) { try { return !!localStorage.getItem(paidKeyOf(productId, subjectKey)); } catch (e) { return false; } }
   /** 결제했는지: 그 상품을 직접 샀거나, 같은 사람(생년월일)의 전부 묶음을 샀으면 열린다
-   *  대상 키 모양 — 리포트: 사람키 / 신년운세: 사람키.해 / 소원 부적: 사람키.소원 / 묶음: 사람키 */
+   *  대상 키 모양 — 리포트: 사람키 / 신년운세: 사람키.해 / 묶음: 사람키 */
   function isPaidFor(productId, subjectKey) {
     if (rawPaid(productId, subjectKey)) return true;
-    if (productId === 'report' || productId === 'newyear' || productId === 'wish') return rawPaid('bundle', String(subjectKey).split('.')[0]);
+    if (productId === 'report' || productId === 'newyear') return rawPaid('bundle', String(subjectKey).split('.')[0]);
     return false;
   }
   /** 이 사람(생년월일 프로필 {y,m,d,hour,gender})이 전부 묶음을 샀는지 */
