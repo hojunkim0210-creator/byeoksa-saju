@@ -138,7 +138,7 @@ test('할인 코드: 맞는 코드는 1,000원 할인, 틀린 코드는 안내�
   await page.click('#productModal .promo-fold summary');   // 코드 칸은 접혀 있다
   await page.fill('#productModal .promo-input', 'nope'); await page.click('#productModal .promo-apply'); await page.waitForTimeout(100);
   assert.equal(await page.evaluate(() => activeCoupon()), null);
-  await page.fill('#productModal .promo-input', 'baekgu'); await page.click('#productModal .promo-apply'); await page.waitForTimeout(150);
+  await page.fill('#productModal .promo-input', 'byeoksa'); await page.click('#productModal .promo-apply'); await page.waitForTimeout(150);
   assert.match(await page.evaluate(() => document.querySelector('#productModal').innerText), /3,900원 \(정가 4,900원/);
   await page.evaluate(() => { closePaymentModal(); });
   await page.evaluate(() => { goToStep(1); });

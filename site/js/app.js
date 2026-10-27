@@ -636,7 +636,10 @@ let currentSajuData = null;
       if (done) return; done = true;
       veil.classList.add('is-leaving');
       document.body.classList.remove('veil-on');
-      setTimeout(() => { veil.hidden = true; veil.classList.remove('is-leaving'); }, 900);
+      setTimeout(() => {
+        veil.hidden = true; veil.classList.remove('is-leaving');
+        if (_toastAfterOpening) { const t = _toastAfterOpening; _toastAfterOpening = null; setTimeout(() => showToast(t), 300); }   // 序 뒤로 미뤄 둔 알림
+      }, 900);
     };
     veil.hidden = false;
     document.body.classList.add('veil-on');
@@ -1856,7 +1859,8 @@ let currentSajuData = null;
   const COUPON_KEY = 'byeoksa.coupon.v1';
   // 할인 코드: 인스타·카톡 홍보용. 코드를 넣으면 공유 할인과 같은 1,000원 할인 1건 (서버 확인도 같은 금액만 인정)
   //   새 코드는 여기 대문자로 추가한다. 예) 'OPEN2026': '오픈 기념 코드'
-  const PROMO_CODES = { 'BAEKGU': '벽사견 할인 코드' };
+  //   BYEOKSA = SNS 홍보용(2026-10-27 오픈). BAEKGU = 옛 설정(백구) 때 코드라 홍보하지 않지만, 이미 받은 사람을 위해 남겨 둔다.
+  const PROMO_CODES = { 'BYEOKSA': '벽사신견 할인 코드', 'BAEKGU': '벽사견 할인 코드' };
   function applyPromoCode(raw) {
     const code = String(raw || '').trim().toUpperCase();
     if (!code) return;
@@ -1992,8 +1996,15 @@ let currentSajuData = null;
     const report = document.getElementById('viewReport');
     if (report && report.style.display !== 'none' && !reportUnlocked) goToStep(3);   // 리포트를 보고 있었다면 잠긴 무료 풀이로
     if (window.BYEOKSA_SHOP && typeof BYEOKSA_SHOP.renderShopShelf === 'function') BYEOKSA_SHOP.renderShopShelf();
-    showToast('취소된 결제가 있어 그 풀이는 다시 잠갔다.');
+    showToastAfterOpening('취소된 결제가 있어 그 풀이는 다시 잠갔다.');
     return relocked;
+  }
+  // 첫 진입 연출(설화록 序, z-index 300)이 알림(200)을 덮어 재잠금 알림이 안 보였다 → 序가 끝난 뒤에 보여 준다 (2026-10-27 대표님 테스트)
+  let _toastAfterOpening = null;
+  function showToastAfterOpening(text) {
+    const veil = document.getElementById('openingVeil');
+    if (veil && !veil.hidden) { _toastAfterOpening = text; return; }
+    showToast(text);
   }
   document.addEventListener('DOMContentLoaded', () => { verifyStoredPayments(); });
   // 새로고침 없이 다른 탭(포트원 콘솔 등)에서 취소하고 돌아온 경우도 잡는다: 탭이 다시 보일 때, 뒤로 가기로 되살아날 때 (2026-10-27)
