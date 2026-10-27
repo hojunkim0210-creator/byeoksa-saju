@@ -1,4 +1,4 @@
-// 확장 기능 화면 테스트: 궁합 · 오늘의 운세 · 벽사 패 · 백구에게 묻기 · 공유 카드 버튼
+// 확장 기능 화면 테스트: 궁합 · 오늘의 운세 · 벽사 패 · 벽사견에게 묻기 · 공유 카드 버튼
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium, openPage, fillAndSubmit } = require('./helpers');
@@ -14,7 +14,7 @@ async function home(page) { await page.evaluate(() => { document.getElementById(
 
 test('홈 쪽지 메뉴 4개가 각 화면을 연다', async () => {
   const { ctx, page } = await openPage(browser);
-  for (const [label, view] of [['인연 궁합', 'viewCompat'], ['오늘의 운세', 'viewDaily'], ['벽사 패 뽑기', 'viewTarot'], ['백구에게 묻기', 'viewChat']]) {
+  for (const [label, view] of [['인연 궁합', 'viewCompat'], ['오늘의 운세', 'viewDaily'], ['벽사 패 뽑기', 'viewTarot'], ['벽사견에게 묻기', 'viewChat']]) {
     await home(page);
     await page.click(`.slip:has-text("${label}")`);
     assert.equal(await page.evaluate(v => getComputedStyle(document.getElementById(v)).display, view), 'flex', label);
@@ -70,7 +70,7 @@ test('벽사 패: 22장 오리지널 덱, 뒤집으면 풀이가 나오고 같�
   await ctx.close();
 });
 
-test('백구에게 묻기: 8개 질문 모두 여러 사주에서 깨진 값 없이 답한다', async () => {
+test('벽사견에게 묻기: 8개 질문 모두 여러 사주에서 깨진 값 없이 답한다', async () => {
   const { ctx, page } = await openPage(browser);
   const res = await page.evaluate(() => {
     const X = window.BYEOKSA_EXTRAS; const out = [];
@@ -88,7 +88,7 @@ test('백구에게 묻기: 8개 질문 모두 여러 사주에서 깨진 값 없
   assert.ok(res.filter(r => r.id === 'body').every(r => /병원/.test(r.text)), '건강 답변에는 병원 안내가 있어야 함');
   // 화면에서 실제로 대화가 오가는지
   await page.evaluate(() => localStorage.setItem('byeoksa.profile.v1', JSON.stringify({ y: 2002, m: 10, d: 4, hour: -1, gender: 'M' })));
-  await home(page); await page.click('.slip:has-text("백구에게 묻기")');
+  await home(page); await page.click('.slip:has-text("벽사견에게 묻기")');
   await page.click('.chat-chip[data-topic="money"]'); await page.waitForTimeout(900);
   assert.equal((await page.$$('.chat-msg.me')).length, 1);
   assert.equal((await page.$$('.chat-msg.dog')).length, 2);
@@ -98,6 +98,7 @@ test('백구에게 묻기: 8개 질문 모두 여러 사주에서 깨진 값 없
 test('결과 화면에 공유 카드 저장 버튼이 있고, 공유 링크에는 꿈·직업이 실리지 않는다', async () => {
   const { ctx, page } = await openPage(browser);
   await fillAndSubmit(page, { dream: '비밀스러운꿈', job: '비밀직업' });
+  await page.click('#viewResult .share-fold-summary');   // '저장 · 공유'를 펼쳐야 버튼이 보인다 (2026-10-18)
   assert.ok(await page.isVisible('text=공유 카드 저장'));
   const link = await page.evaluate(async () => { let got = null; window.prompt = (_, t) => { got = t; }; Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { got = t; return Promise.resolve(); } }, configurable: true }); copyShareUrl(); await new Promise(r => setTimeout(r, 50)); return got; });
   assert.match(link, /y=1990/); assert.doesNotMatch(decodeURIComponent(link), /비밀/);

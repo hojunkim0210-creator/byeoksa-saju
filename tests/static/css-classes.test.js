@@ -12,7 +12,7 @@ test('사용 중인 모든 클래스에 CSS 정의가 있다', () => {
   const css = read('css/style.css').replace(/\/\*[\s\S]*?\*\//g, '');
   const defined = new Set((css.replace(/\{[^}]*\}/g, '{}').match(/\.[a-zA-Z][\w-]*/g) || []).map(s => s.slice(1)));
   const used = new Set();
-  const sources = ['index.html', 'legal.html', 'js/app.js', 'js/extras.js', 'js/shop.js'].map(read);
+  const sources = ['index.html', 'legal.html', 'js/app.js', 'js/phrases.js', 'js/extras.js', 'js/shop.js'].map(read);
   for (const src of sources) {
     for (const m of src.matchAll(/class=\\?"([^"$`{\\]+)\\?"/g)) m[1].split(/\s+/).filter(Boolean).forEach(c => used.add(c));
     for (const m of src.matchAll(/classList\.(?:add|toggle|remove)\('([\w-]+)'/g)) used.add(m[1]);

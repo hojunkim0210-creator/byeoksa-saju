@@ -12,7 +12,8 @@ const AUDIT = () => {
   const vw = document.documentElement.clientWidth;
   const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
   const parse = s => { const m = s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(',').map(parseFloat); return { rgb: p.slice(0, 3), a: p.length > 3 ? p[3] : 1 }; };
-  const bgOf = el => { while (el) { const c = parse(getComputedStyle(el).backgroundColor); if (c && c.a > 0.5) return c.rgb; el = el.parentElement; } return [13, 9, 11]; };
+  // 바탕색을 거슬러 올라가며 찾는다. 먹 붓 띠(brush.webp)처럼 그림 바탕인 요소는 CSS만으로 대비를 셀 수 없어 그 요소는 건너뛴다(null)
+  const bgOf = el => { while (el) { const cs = getComputedStyle(el); if (/brush\.webp/.test(cs.backgroundImage)) return null; const c = parse(cs.backgroundColor); if (c && c.a > 0.5) return c.rgb; el = el.parentElement; } return [13, 9, 11]; };
   const overflow = [], low = [];
   document.querySelectorAll('.view-step:not([style*="none"]) *').forEach(el => {
     const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
@@ -20,7 +21,8 @@ const AUDIT = () => {
     if (r.right > vw + 1 && !el.closest('.daeun-scroll')) overflow.push(String(el.className || el.tagName));
     if (![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1)) return;
     const fg = parse(cs.color); if (!fg) return;
-    const L1 = lum(fg.rgb), L2 = lum(bgOf(el)); const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    const bg = bgOf(el); if (!bg) return;
+    const L1 = lum(fg.rgb), L2 = lum(bg); const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
     if (ratio < 3) low.push(`${el.className || el.tagName} ${ratio.toFixed(1)}:1 "${el.textContent.trim().slice(0, 12)}"`);
   });
   return { scrollW: document.documentElement.scrollWidth, vw, overflow: overflow.slice(0, 5), low: low.slice(0, 5) };
@@ -29,9 +31,11 @@ const AUDIT = () => {
 for (const [w, h] of [[320, 568], [360, 640], [390, 844]]) {
   test(`${w}px: 첫 화면·입력·결과·결제 해제까지 오류·넘침·저대비 없음`, async () => {
     const { ctx, page } = await openPage(browser, { width: w, height: h });
-    // 인트로 모달이 화면 안에 들어오거나 내부 스크롤로 닿을 수 있어야 함
-    const intro = await page.evaluate(() => { const b = document.querySelector('#introGateModal .intro-modal-box'); const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, vh: innerHeight }; });
-    assert.ok(intro.top >= 0 && intro.bottom <= intro.vh + 1, `인트로 모달이 화면 밖: ${JSON.stringify(intro)}`);
+    // 첫 안내창(솟을대문): 대문·'들어가겠습니다' 버튼이 화면 안에 보이거나 안내창 자체 스크롤로 닿을 수 있어야 함
+    const intro = await page.evaluate(() => { const o = document.getElementById('introGateModal'), b = document.getElementById('gateEnterBtn'); const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, vh: innerHeight, scrollable: o.scrollHeight > o.clientHeight, overflowY: getComputedStyle(o).overflowY }; });
+    assert.ok((intro.top >= 0 && intro.bottom <= intro.vh + 1) || (intro.scrollable && intro.overflowY === 'auto'), `들어가기 버튼이 화면 밖: ${JSON.stringify(intro)}`);
+    await page.click('#gateEnterBtn'); await page.waitForTimeout(500);   // 대문이 열리고(테스트는 바로) 접견실로
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('introGateModal')).display), 'none');
     for (const step of [1, 2]) {
       await page.evaluate(s => { document.getElementById('introGateModal').style.display = 'none'; goToStep(s); }, step);
       const a = await page.evaluate(AUDIT);
@@ -43,7 +47,7 @@ for (const [w, h] of [[320, 568], [360, 640], [390, 844]]) {
     const r = await page.evaluate(AUDIT);
     assert.equal(r.scrollW, r.vw, `결과 가로 넘침 ${JSON.stringify(r.overflow)}`);
     assert.deepEqual(r.low, [], '대비 3:1 미만 글자');
-    await page.evaluate(() => showToast('🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제 🐾'));
+    await page.evaluate(() => showToast('🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제'));
     const t = await page.evaluate(() => { const r = document.getElementById('toastMsg').getBoundingClientRect(); return [r.left, r.right, innerWidth]; });
     assert.ok(t[0] >= 0 && t[1] <= t[2], `토스트가 화면 밖 ${t}`);
     await page.evaluate(() => unlockContent()); await page.waitForTimeout(300);

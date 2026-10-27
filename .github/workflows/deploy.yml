@@ -31,10 +31,10 @@ jobs:
       - name: 캐시 무효화용 버전 표시 붙이기
         run: |
           V="${GITHUB_SHA::7}"
-          sed -i -E "s#(href|src)=\"(css/style\.css|js/saju-core\.js|js/app\.js|js/extras\.js|js/shop\.js|manifest\.json)\"#\1=\"\2?v=${V}\"#g" site/index.html
+          sed -i -E "s#(href|src)=\"(css/style\.css|js/saju-core\.js|js/phrases\.js|js/app\.js|js/extras\.js|js/shop\.js|manifest\.json)\"#\1=\"\2?v=${V}\"#g" site/index.html
           COUNT=$(grep -o "?v=${V}" site/index.html | wc -l)
           echo "버전 표시 ${COUNT}곳: v=${V}"
-          test "$COUNT" -eq 6
+          test "$COUNT" -eq 7
           sed -i -E "s#href=\"css/style\.css\"#href=\"css/style.css?v=${V}\"#" site/legal.html
           grep -q "style.css?v=${V}" site/legal.html
       - uses: actions/configure-pages@v5

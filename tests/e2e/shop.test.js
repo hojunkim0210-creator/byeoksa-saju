@@ -135,6 +135,7 @@ test('할인 코드: 맞는 코드는 1,000원 할인, 틀린 코드는 안내�
   await withMe(page);
   await page.evaluate(() => openFeature('newyear')); await page.waitForTimeout(300);
   await page.click('#nyBuy');
+  await page.click('#productModal .promo-fold summary');   // 코드 칸은 접혀 있다
   await page.fill('#productModal .promo-input', 'nope'); await page.click('#productModal .promo-apply'); await page.waitForTimeout(100);
   assert.equal(await page.evaluate(() => activeCoupon()), null);
   await page.fill('#productModal .promo-input', 'baekgu'); await page.click('#productModal .promo-apply'); await page.waitForTimeout(150);

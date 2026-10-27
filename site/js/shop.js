@@ -1,7 +1,7 @@
 /**
- * 벽사신견 유료 상품: 신년운세 · 궁합 상세 리포트 (+ 대문 '백구의 비방 보따리' 진열). 소원 부적은 2026-10-19 카드사 심사(부적 상품 불가)로 판매 중단
+ * 벽사신견 유료 상품: 신년운세 · 궁합 상세 리포트 (+ 대문 '벽사견의 비방 보따리' 진열). 소원 부적은 2026-10-19 카드사 심사(부적 상품 불가)로 판매 중단
  * - 계산은 SajuCore, 공용 도우미(josa·getPersona·EL_KO 등)와 결제(purchase·priceFor 등)는 app.js 것을 쓴다.
- * - 문장은 반말 백구 말투, 개 소리 추임새 없음. 효과를 장담하지 않는다(오락 콘텐츠).
+ * - 문장은 반말 벽사견 말투, 개 소리 추임새 없음. 효과를 장담하지 않는다(오락 콘텐츠).
  */
 (function () {
   'use strict';
@@ -88,14 +88,26 @@
       </dl>
       <p class="payment-notice">결제 후 내용이 열리면 디지털 콘텐츠의 특성상 청약철회(환불)가 제한됩니다. 내용이 열리지 않았거나 정상적으로 보이지 않으면 환불해 드립니다. <a href="legal.html#refund" target="_blank" rel="noopener">환불 안내 보기</a></p>
       <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
+      <p class="coupon-line" data-coupon-line="${productId}" hidden>${couponLineHtml(productId)}</p>
       ${promoRowHtml()}
+      <div class="pay-actions">
       <label class="pay-agree"><input type="checkbox" class="pay-agree-box" id="productPayAgree"> <span>위 상품 내용·가격·환불 규정을 확인했으며, 결제에 동의합니다. <strong>(필수)</strong></span></label>
-      <button class="btn-submit" id="productPayBtn">${live ? `💳 ${won(pr.final)}원 결제하기` : '테스트로 봉인 해제해보기 🐾'}</button>
+      <button class="btn-submit" id="productPayBtn">${live ? `💳 ${won(pr.final)}원 결제하기` : '테스트로 봉인 해제해보기'}</button>
+      </div>
       <button class="btn-close" onclick="closePaymentModal()">닫기</button>`;
     $('productPayBtn').onclick = () => purchase(productId, subjectKey, data, $('productPayBtn'));
+    if (typeof tidyTitles === 'function') tidyTitles($('productModalBody'));
+    const cl = $('productModalBody').querySelector('[data-coupon-line]'); if (cl) cl.hidden = !cl.innerHTML;
     const m = $('productModal');
     m._reopen = () => openProductModal(productId, { title, desc, provide, again, subjectKey, data });
-    if (!m.dataset.promoBound) { m.addEventListener('promo', () => { if (m._reopen) m._reopen(); }); m.dataset.promoBound = '1'; }
+    if (!m.dataset.promoBound) {
+      m.addEventListener('promo', () => {   // 코드 적용 뒤 다시 그릴 때, 펼쳐 둔 코드 칸은 그대로 펼쳐 둔다
+        const wasOpen = !!m.querySelector('.promo-fold[open]');
+        if (m._reopen) m._reopen();
+        const f = m.querySelector('.promo-fold'); if (f && wasOpen) f.open = true;
+      });
+      m.dataset.promoBound = '1';
+    }
     m.style.display = 'flex';
   }
 
@@ -218,7 +230,7 @@
         productId: 'newyear', btnId: 'nyBuy',
         title: `${D.TY}년 열두 달, 봉인된 이야기`,
         hook: `가장 몸을 사려야 할 달은 <strong>${mLabel(w)}</strong>이다. 그 달에 무엇이 네 발목을 잡는지, 그리고 <strong>${mLabel(b)}</strong>에 들어오는 볕을 붙잡으려면 언제부터 무엇을 준비해야 하는지는 이 봉인 안에 적어 두었다.`,
-        items: ['달마다 <strong>할 일</strong>과 <strong>피할 일</strong>, 백구 한마디 (12달)', '돈 · 일 · 공부 · 인연 · 건강, <strong>분야별로 기운이 몰리는 달</strong>', '네 사주에 모자란 기운을 채우는 <strong>한 해 비방</strong> (색 · 방위 · 숫자)', 'PDF로 저장해 한 해 동안 꺼내 보기'],
+        items: ['달마다 <strong>할 일</strong>과 <strong>피할 일</strong>, 벽사견 한마디 (12달)', '돈 · 일 · 공부 · 인연 · 건강, <strong>분야별로 기운이 몰리는 달</strong>', '네 사주에 모자란 기운을 채우는 <strong>한 해 비방</strong> (색 · 방위 · 숫자)', 'PDF로 저장해 한 해 동안 꺼내 보기'],
         buttonLabel: `📜 ${D.TY}년 봉인 풀기`, bundleFrom: 'newyear'
       });
       bindBundle(body, p, 'newyear');
@@ -412,7 +424,7 @@
     const sj = X.readSaju(p);
     const rows = BUNDLE_ITEMS.map(it => `<li><span>${it.text}</span><span class="bundle-each">${won(it.price)}원</span></li>`).join('');
     openProductModal('bundle', {
-      title: '📦 백구의 전부 묶음 보따리',
+      title: '📦 벽사견의 전부 묶음 보따리',
       desc: `<strong>${esc(sj.ilju)}일주</strong>(${p.y}년 ${p.m}월 ${p.d}일) 한 사람 몫의 유료 풀이가 한 번에 모두 열린다.
         <ul class="bundle-list">${rows}</ul>
         <p class="bundle-sum">따로 사면 <s>${won(BUNDLE_LIST_TOTAL)}원</s> → 묶음 <strong>${won(PRODUCTS.bundle.price)}원</strong></p>
@@ -470,7 +482,7 @@
 
   X.registerFeature('newyear', 'viewNewYear', renderNewYear);
 
-  /** 대문 '백구의 비방 보따리' 가격 표시 */
+  /** 대문 '벽사견의 비방 보따리' 가격 표시 */
   function renderShopShelf() {
     document.querySelectorAll('[data-shop-price]').forEach(el => {
       const pr = priceFor(el.dataset.shopPrice);

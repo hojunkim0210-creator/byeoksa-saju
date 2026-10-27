@@ -11,3 +11,9 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# 마케팅 문서(글·게시물 초안)는 저장소에 올리지 않는다 — 맥북에서 Claude Code가 쓰는 폴더
+marketing/
+
+# Claude Code 설정·메모(맥북 로컬)
+.claude/

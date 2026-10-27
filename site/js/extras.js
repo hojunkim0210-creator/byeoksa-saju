@@ -1,5 +1,5 @@
 /**
- * 벽사신견 확장 기능: 인연 궁합 · 오늘의 운세 · 벽사 패 뽑기 · 백구에게 묻기 · 결과 공유 카드
+ * 벽사신견 확장 기능: 인연 궁합 · 오늘의 운세 · 벽사 패 뽑기 · 벽사견에게 묻기 · 결과 공유 카드
  * - 계산은 SajuCore(saju-core.js), 공용 문장과 도우미(josa, getPersona, EL_KO 등)는 app.js 것을 쓴다.
  * - 생년월일은 이 기기 브라우저에만 저장된다(app.js saveProfile). 서버로 보내지 않는다.
  */
@@ -70,7 +70,7 @@
         <p class="feature-note">생년월일은 이 기기 브라우저에만 기억해 두고, 어디로도 보내지 않는다.</p>
         ${birthFieldsHtml('pf')}
         <p class="form-error" id="pfErr" role="alert"></p>
-        <button class="btn-submit" id="pfGo">백구에게 생년월일 알려주기 🐾</button>
+        <button class="btn-submit" id="pfGo">벽사견에게 생년월일 알려주기</button>
       </div>`;
     $('pfGo').onclick = () => {
       const b = readBirthFields('pf');
@@ -108,37 +108,64 @@
   // ① 인연 궁합
   // ─────────────────────────────────────────────────────────────────────
   const COMPAT_BANDS = [
-    { min: 88, name: '천생의 짝', text: '대문 앞에서 수많은 인연을 맡아 봤지만, 이렇게 서로의 냄새가 포개지는 짝은 드물다. 놓치면 두고두고 아쉬울 인연이다.' },
-    { min: 75, name: '서로를 살리는 인연', text: '한쪽이 지칠 때 다른 쪽이 기운을 불어넣는 사이다. 지금처럼 서로의 편이 되어 주면 해가 갈수록 단단해진다.' },
-    { min: 62, name: '맞춰 가며 단단해질 인연', text: '처음부터 꼭 맞는 사이는 아니다. 하지만 서로의 다른 점을 알아 가는 만큼 깊어지는, 공들일 가치가 있는 인연이다.' },
-    { min: 50, name: '냄새가 엇갈리는 인연', text: '끌리는 데는 이유가 있지만, 같은 일에도 서로 다른 냄새를 맡는다. 말하지 않으면 모르는 사이이니 속마음을 꺼내 놓거라.' },
-    { min: 0, name: '부딪히며 배우는 인연', text: '불꽃이 잘 튀는 사이다. 서로를 바꾸려 들면 상처가 남고, 다름을 인정하면 서로에게 가장 큰 공부가 된다.' }
+    { min: 88, name: '천생의 짝', text: '대문 앞에서 수많은 인연을 맡아 봤지만, 이렇게 서로의 냄새가 포개지는 짝은 드물다. 놓치면 두고두고 아쉬울 인연이다.',
+      alt: ['두 냄새가 하나처럼 섞인다. 서로 애쓰지 않아도 결이 맞는 사이라, 이런 짝은 대문 앞에서도 한 해에 몇 번 못 본다.', '한쪽이 숨을 들이쉬면 다른 쪽이 내쉬는 사이다. 말보다 먼저 통하는 인연이니, 흔한 다툼으로 흘려보내지 마라.'] },
+    { min: 75, name: '서로를 살리는 인연', text: '한쪽이 지칠 때 다른 쪽이 기운을 불어넣는 사이다. 지금처럼 서로의 편이 되어 주면 해가 갈수록 단단해진다.',
+      alt: ['서로의 빈자리를 채워 주는 냄새다. 한 사람이 넘어질 때 다른 사람이 손을 내미는 사이라, 오래 갈수록 값이 오르는 인연이다.', '같이 있으면 둘 다 기운이 오르는 사이다. 따로 있을 때보다 함께 있을 때 더 나은 사람이 되는 인연이니, 그 느낌을 믿어라.'] },
+    { min: 62, name: '맞춰 가며 단단해질 인연', text: '처음부터 꼭 맞는 사이는 아니다. 하지만 서로의 다른 점을 알아 가는 만큼 깊어지는, 공들일 가치가 있는 인연이다.',
+      alt: ['결이 조금 다르다. 다만 그 다름이 서로를 넓혀 주는 쪽이라, 한 해 두 해 지날수록 맞물리는 인연이다.', '맞춘 만큼 맞는 사이다. 저절로 되는 인연이 아니라 손이 가는 인연이지만, 손을 들인 만큼 돌려받는다.'] },
+    { min: 50, name: '냄새가 엇갈리는 인연', text: '끌리는 데는 이유가 있지만, 같은 일에도 서로 다른 냄새를 맡는다. 말하지 않으면 모르는 사이이니 속마음을 꺼내 놓거라.',
+      alt: ['같은 자리에 서서 다른 쪽을 보는 사이다. 틀린 게 아니라 다른 것이니, 상대가 무엇을 보고 있는지 먼저 물어라.', '끌림과 어긋남이 같이 나는 냄새다. 가까워질수록 다른 점이 보이는 사이이니, 서운함은 그날 안에 말로 풀어라.'] },
+    { min: 0, name: '부딪히며 배우는 인연', text: '불꽃이 잘 튀는 사이다. 서로를 바꾸려 들면 상처가 남고, 다름을 인정하면 서로에게 가장 큰 공부가 된다.',
+      alt: ['서로 반대편에서 온 냄새다. 부딪히는 만큼 배우는 사이이니, 이기려 들지 말고 들어 보아라.', '한쪽이 당기면 다른 쪽이 미는 사이다. 그 힘이 다툼이 되기도 하고 균형이 되기도 하니, 어느 쪽이 될지는 말투에 달렸다.'] }
   ];
+  // 두 사람 일간의 결 — 다섯 오행끼리 25가지 (A가 B에게 어떤 기운인지)
+  const STEM_IMAGE = { '갑': '큰 나무', '을': '담쟁이', '병': '태양', '정': '촛불', '무': '큰 산', '기': '기름진 땅', '경': '무쇠', '신': '보석', '임': '큰물', '계': '안개비' };
+  const PAIR_LINE = {
+    wood: { wood: '같은 숲에서 자란 두 나무다. 나란히 서면 바람을 함께 막지만, 햇빛을 두고 다투면 둘 다 가늘어진다.', fire: '나무가 불을 키운다. 한쪽이 내어 주고 한쪽이 타오르는 사이라, 내어 주는 쪽이 지치지 않게 살펴라.', earth: '나무가 땅에 뿌리를 내린다. 뿌리 내리는 쪽은 편하고 땅은 무거우니, 무게를 나누어 지어라.', metal: '쇠가 나무를 다듬는다. 깎이는 쪽은 아프지만 그래서 기둥이 된다. 깎는 손이 너무 세지 않게.', water: '물이 나무를 키운다. 받는 쪽은 자라고 주는 쪽은 줄어드니, 고마움을 말로 돌려주어라.' },
+    fire: { wood: '불이 나무를 태워 빛을 낸다. 타오르는 쪽은 환하지만 땔감이 되는 쪽을 아껴야 오래 탄다.', fire: '두 개의 불이다. 같이 있으면 눈부시게 밝고, 같이 있으면 쉽게 타 버린다. 식히는 시간을 따로 두어라.', earth: '불이 땅을 데운다. 데워진 땅은 무엇이든 키우니, 둘이 함께 벌이는 일이 잘 자란다.', metal: '불이 쇠를 녹여 모양을 만든다. 녹는 쪽은 아프고 달구는 쪽은 급하니, 식힐 때를 알아야 한다.', water: '물이 불을 끈다. 서로를 식히기도 하고 꺼뜨리기도 하는 사이라, 뜨거울 때 물을 붓지 마라.' },
+    earth: { wood: '땅이 나무를 받친다. 받치는 쪽은 묵묵하고 자라는 쪽은 눈에 띄니, 받치는 수고를 알아주어라.', fire: '땅이 불을 품는다. 불은 땅을 데우고 땅은 불을 가두니, 서로 적당히 식히고 데우는 사이다.', earth: '두 개의 산이다. 둘 다 잘 움직이지 않아 다툼은 적지만, 먼저 다가가는 법도 둘 다 모른다.', metal: '땅이 쇠를 낳는다. 품은 쪽은 내어 주고 나온 쪽은 빛나니, 빛나는 쪽이 고개를 돌려 보아라.', water: '땅이 물길을 막기도 하고 내기도 한다. 막으면 다투고 내면 함께 흐르니, 길을 터 주는 쪽이 이긴다.' },
+    metal: { wood: '쇠가 나무를 벤다. 자르는 쪽은 시원하고 잘리는 쪽은 아프니, 잘라 낼 것과 둘 것을 먼저 합의하라.', fire: '불이 쇠를 단련한다. 달궈지는 쪽은 괴롭지만 그래서 칼이 된다. 둘이 겪는 뜨거움이 헛되지 않다.', earth: '땅이 쇠를 품어 낳는다. 받는 쪽은 자라고 품는 쪽은 비우니, 비운 자리를 채워 주어라.', metal: '두 자루의 칼이다. 날이 맞으면 든든하고 날이 어긋나면 서로 베니, 말을 벼리되 겨누지 마라.', water: '쇠가 물을 낳는다. 맑은 물은 쇠에서 나오니, 내어 주는 쪽은 말이 적고 받는 쪽은 깊어진다.' },
+    water: { wood: '물이 나무를 키운다. 키우는 쪽은 줄고 자라는 쪽은 크니, 자란 만큼 그늘을 돌려주어라.', fire: '물이 불을 누른다. 식혀 주면 고맙고 꺼 버리면 원망이니, 끼얹지 말고 적셔라.', earth: '땅이 물을 가둔다. 가두면 고이고 터 주면 흐르니, 둘 사이에 물길 하나는 늘 열어 두어라.', metal: '쇠가 물을 낳는다. 받는 쪽은 맑아지고 주는 쪽은 닳으니, 닳는 줄 모르는 쪽을 살펴라.', water: '두 줄기 물이다. 만나면 한 강이 되지만 어디로 흐를지는 둘 다 모르니, 방향은 함께 정하라.' }
+  };
 
-  function compatPartText(part, A, B) {
+  function compatPartText(part, A, B, seed) {
     const nm = who => (who === 'A' ? A : B);
     const el = k => EL_KO[k];
+    const alt = ((seed >>> 0) + part.key.length) % 2 === 1;   // 짝마다 두 갈래를 번갈아 (같은 합·충이라도 문장이 다르게, 2026-10-25)
     switch (part.key) {
-      case 'stemHap': return `두 사람의 일간이 <strong>천간합(天干合)</strong>이다. 처음 만난 날부터 서로를 끌어당기는 냄새가 났을 게다.`;
-      case 'stemSame': return `두 사람의 일간이 같은 <strong>${el(part.detail.el)}</strong> 기운이다. 말하지 않아도 통하지만, 고집이 부딪히면 둘 다 물러서지 않는다.`;
+      case 'stemHap': return alt ? `두 사람의 일간이 <strong>천간합(天干合)</strong>으로 묶여 있다. 이유 없이 자꾸 눈이 가고 마음이 쓰였다면 그게 이 합의 냄새다.`
+        : `두 사람의 일간이 <strong>천간합(天干合)</strong>이다. 처음 만난 날부터 서로를 끌어당기는 냄새가 났을 게다.`;
+      case 'stemSame': return alt ? `두 사람 다 <strong>${el(part.detail.el)}</strong> 일간이다. 같은 결이라 편한데, 같은 결이라 양보도 잘 안 된다. 먼저 물러서는 쪽이 이긴다.`
+        : `두 사람의 일간이 같은 <strong>${el(part.detail.el)}</strong> 기운이다. 말하지 않아도 통하지만, 고집이 부딪히면 둘 다 물러서지 않는다.`;
       case 'stemGenerate': {
         const g = part.detail.giver === 'A' ? A : B, r = part.detail.giver === 'A' ? B : A;
-        return `<strong>${esc(subj(g))}</strong> 주고 <strong>${esc(subj(r))}</strong> 받는 <strong>상생(相生)</strong>의 흐름이다. 받는 쪽이 고마움을 말로 꺼내야 오래 간다.`;
+        return alt ? `<strong>${esc(subj(g))}</strong> 기운을 보태고 <strong>${esc(subj(r))}</strong> 그 기운으로 자라는 <strong>상생(相生)</strong>이다. 주는 쪽이 비는 줄 모르고 주니, 받는 쪽이 채워 주어라.`
+          : `<strong>${esc(subj(g))}</strong> 주고 <strong>${esc(subj(r))}</strong> 받는 <strong>상생(相生)</strong>의 흐름이다. 받는 쪽이 고마움을 말로 꺼내야 오래 간다.`;
       }
       case 'stemControl': {
         const c = nm(part.detail.controller);
-        return `<strong>${esc(c)}</strong>의 기운이 상대를 누르는 <strong>상극(相剋)</strong>이다. 끌림은 강하지만, 한쪽이 숨 막혀 하지 않는지 살펴야 한다.`;
+        return alt ? `<strong>${esc(c)}</strong> 쪽이 판을 쥐는 <strong>상극(相剋)</strong>의 사이다. 끌림이 세서 시작은 빠르지만, 눌리는 쪽이 말을 잃기 시작하면 멈춰 서서 들어라.`
+          : `<strong>${esc(c)}</strong>의 기운이 상대를 누르는 <strong>상극(相剋)</strong>이다. 끌림은 강하지만, 한쪽이 숨 막혀 하지 않는지 살펴야 한다.`;
       }
-      case 'dayYukhap': return `배우자 자리인 일지(日支)끼리 <strong>육합(六合)</strong>이다. 한 지붕 아래 살면 더 편안해지는 궁합이다.`;
-      case 'daySamhap': return `일지가 <strong>삼합(三合)</strong>으로 이어진다. 같은 목표를 함께 좇을 때 힘이 몇 배가 된다.`;
-      case 'dayChung': return `일지가 <strong>충(沖)</strong>으로 부딪힌다. 생활 습관과 말투에서 불꽃이 튀니, 다툼은 그날을 넘기지 마라.`;
-      case 'yearYukhap': return `띠끼리 <strong>육합</strong>이다. 서로의 집안과 주변 사람들도 이 인연을 반긴다.`;
-      case 'yearSamhap': return `띠끼리 <strong>삼합</strong>이다. 함께 어울리는 무리가 자연스럽게 겹친다.`;
-      case 'yearChung': return `띠가 <strong>충</strong>으로 맞선다. 서로의 가족·친구와는 거리를 적당히 두는 게 좋다.`;
-      case 'fillA': return `<strong>${esc(A)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 상대가 넉넉히 품고 있다. 곁에 있기만 해도 기운이 채워진다.`;
+      case 'dayYukhap': return alt ? `일지(日支)가 <strong>육합(六合)</strong>으로 맞물린다. 같이 사는 자리, 같이 먹는 밥상에서 편해지는 사이다.`
+        : `배우자 자리인 일지(日支)끼리 <strong>육합(六合)</strong>이다. 한 지붕 아래 살면 더 편안해지는 궁합이다.`;
+      case 'daySamhap': return alt ? `일지가 <strong>삼합(三合)</strong>의 한 패다. 같은 일을 꾸밀 때 손발이 맞고, 셋째 사람이 끼면 더 커지는 사이다.`
+        : `일지가 <strong>삼합(三合)</strong>으로 이어진다. 같은 목표를 함께 좇을 때 힘이 몇 배가 된다.`;
+      case 'dayChung': return alt ? `일지가 <strong>충(沖)</strong>이다. 사소한 버릇이 유난히 거슬리는 사이라, 거슬리는 것을 고치려 말고 피할 자리를 만들어라.`
+        : `일지가 <strong>충(沖)</strong>으로 부딪힌다. 생활 습관과 말투에서 불꽃이 튀니, 다툼은 그날을 넘기지 마라.`;
+      case 'yearYukhap': return alt ? `띠가 <strong>육합</strong>이다. 양쪽 집안 어른들이 먼저 알아보고 반기는 인연이다.`
+        : `띠끼리 <strong>육합</strong>이다. 서로의 집안과 주변 사람들도 이 인연을 반긴다.`;
+      case 'yearSamhap': return alt ? `띠가 <strong>삼합</strong>의 한 패다. 서로의 친구가 친구가 되는 사이라, 모임 자리가 편하다.`
+        : `띠끼리 <strong>삼합</strong>이다. 함께 어울리는 무리가 자연스럽게 겹친다.`;
+      case 'yearChung': return alt ? `띠가 <strong>충</strong>이다. 둘 사이는 괜찮아도 집안·친구 일로 틀어지기 쉬우니, 바깥일은 바깥에 두어라.`
+        : `띠가 <strong>충</strong>으로 맞선다. 서로의 가족·친구와는 거리를 적당히 두는 게 좋다.`;
+      case 'fillA': return alt ? `<strong>${esc(A)}</strong>에게 비어 있는 <strong>${part.detail.els.map(el).join('·')}</strong> 기운이 상대에겐 넉넉하다. 이 사람 곁에서 유난히 마음이 놓였다면 그 때문이다.`
+        : `<strong>${esc(A)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 상대가 넉넉히 품고 있다. 곁에 있기만 해도 기운이 채워진다.`;
       case 'fillB': {
         const who = A === '나' ? '네가' : `<strong>${esc(subj(A))}</strong>`;   // 이름을 적었으면 이름으로
-        return `<strong>${esc(B)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 ${who} 넉넉히 품고 있다. ${who} 상대의 빈자리를 메워 주는 사람이다.`;
+        return alt ? `<strong>${esc(B)}</strong>에게 비어 있는 <strong>${part.detail.els.map(el).join('·')}</strong> 기운이 ${who} 넉넉히 가진 것이다. 상대가 네 곁에서 편해지는 이유가 여기 있다.`
+          : `<strong>${esc(B)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 ${who} 넉넉히 품고 있다. ${who} 상대의 빈자리를 메워 주는 사람이다.`;
       }
       default: return '';
     }
@@ -155,7 +182,7 @@
       <input type="text" id="cbName" maxlength="10" placeholder="부를 이름 (선택, 저장하지 않음)" aria-label="상대를 부를 이름">
       ${birthFieldsHtml('cb', {})}
       <p class="form-error" id="compatErr" role="alert"></p>
-      <button class="btn-submit" id="compatGo">두 사람의 궁합 냄새 맡기 🐾</button>
+      <button class="btn-submit" id="compatGo">두 사람의 궁합 냄새 맡기</button>
       <p class="feature-note">상대의 생년월일은 저장하지 않는다. 재미로 보는 전통 풀이다.</p>`;
     $('compatResult').innerHTML = '';
     $('compatGo').onclick = () => {
@@ -174,6 +201,9 @@
     const A = readSaju(a), B = readSaju(b);
     const r = SajuCore.calculateCompatibility(A.pillars, B.pillars, A.oheng, B.oheng);
     const band = COMPAT_BANDS.find(x => r.score >= x.min);
+    const seed = SajuCore.hashSeed(`${a.y}-${a.m}-${a.d}-${a.hour}|${b.y}-${b.m}-${b.d}-${b.hour}`) >>> 0;
+    const bandText = seed % 3 === 0 ? band.text : band.alt[(seed >>> 2) % band.alt.length];
+    const pairLine = `${esc(subj(nameA))} ${STEM_IMAGE[A.pillars.dStem.char]}(${A.pillars.dStem.hanja}), ${esc(subj(nameB))} ${STEM_IMAGE[B.pillars.dStem.char]}(${B.pillars.dStem.hanja}). ${PAIR_LINE[A.ps.dmEl][B.ps.dmEl]}`;
     const tile = (sj, nm) => `
       <div class="compat-person">
         <span class="compat-name">${esc(nm)}</span>
@@ -188,12 +218,13 @@
           <span class="score-num">${r.score}</span><span class="score-unit">점</span>
           <span class="score-band">${band.name}</span>
         </div>
-        <p class="feature-text">"${band.text}"</p>
-        <h3 class="feature-card-title">백구가 맡은 냄새</h3>
+        <p class="feature-text">"${bandText}"</p>
+        <h3 class="feature-card-title">벽사견이 맡은 냄새</h3>
         <ul class="reason-list">
+          <li class="reason neutral">${pairLine}</li>
           ${parts.map(p => p.key === 'none'
-            ? `<li class="reason neutral">두 사람의 기운이 크게 끌어당기지도 밀어내지도 않는다. 함께 보낸 시간이 곧 궁합이 되는 사이다.</li>`
-            : `<li class="reason ${p.points >= 0 ? 'plus' : 'minus'}">${compatPartText(p, nameA, nameB)}</li>`).join('')}
+            ? `<li class="reason neutral">${seed % 2 ? '두 사람의 기운이 서로를 당기지도 밀지도 않는다. 정해진 것이 없는 사이라, 같이 쌓은 시간이 그대로 궁합이 된다.' : '두 사람의 기운이 크게 끌어당기지도 밀어내지도 않는다. 함께 보낸 시간이 곧 궁합이 되는 사이다.'}</li>`
+            : `<li class="reason ${p.points >= 0 ? 'plus' : 'minus'}">${compatPartText(p, nameA, nameB, seed)}</li>`).join('')}
         </ul>
         <p class="feature-note">궁합 점수는 전통 명리의 합·충·생극을 바탕으로 한 재미 풀이이며, 두 사람의 관계를 정해 주지 않는다.</p>
       </div>`;
@@ -264,7 +295,7 @@
   // ─────────────────────────────────────────────────────────────────────
   const DECK = [
     { name: '대문', hanja: '門', key: '새 시작 · 문턱', up: '닫혀 있던 문이 열린다. 망설이던 첫걸음을 내디딜 때다. 문턱만 넘으면 길은 생각보다 넓다.', rev: '문 앞에서 너무 오래 서 있었다. 준비가 덜 됐다는 핑계로 기회를 흘려보내고 있지는 않은지 돌아보거라.' },
-    { name: '백구', hanja: '犬', key: '충직 · 지킴', up: '네 곁을 묵묵히 지키는 존재가 있다. 그 믿음에 기대도 좋고, 너 또한 누군가의 백구가 되어 주거라.', rev: '지켜야 할 것과 놓아야 할 것을 헷갈리고 있다. 의리라는 이름으로 너를 갉아먹는 관계는 없는지 맡아 보거라.' },
+    { name: '벽사견', hanja: '犬', key: '충직 · 지킴', up: '네 곁을 묵묵히 지키는 존재가 있다. 그 믿음에 기대도 좋고, 너 또한 누군가의 벽사견이 되어 주거라.', rev: '지켜야 할 것과 놓아야 할 것을 헷갈리고 있다. 의리라는 이름으로 너를 갉아먹는 관계는 없는지 맡아 보거라.' },
     { name: '부적', hanja: '符', key: '보호 · 액막이', up: '삿된 기운이 너를 비껴간다. 지금 지키고 있는 원칙이 곧 너의 부적이다.', rev: '방심한 틈으로 액이 스민다. 작은 경고를 무시하지 말고 몸과 돈의 빗장을 다시 걸어라.' },
     { name: '등불', hanja: '燈', key: '희망 · 길잡이', up: '어둠 속에서 길을 비춰 줄 불빛이 켜진다. 먼저 손 내미는 사람의 말에 귀 기울이거라.', rev: '등불이 흔들린다. 남의 빛만 좇다 네 길을 잃지 않도록, 스스로 불씨를 지켜라.' },
     { name: '달', hanja: '月', key: '직감 · 불안', up: '말로 설명 못 할 촉이 정확하다. 마음이 가리키는 쪽을 믿어 보거라.', rev: '밤마다 커지는 불안은 실체보다 그림자가 크다. 걱정을 종이에 적으면 절반은 사라진다.' },
@@ -332,7 +363,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // ④ 백구에게 묻기 (버튼식 대화 — 서버·AI 없이 사주로 답한다)
+  // ④ 벽사견에게 묻기 (버튼식 대화 — 서버·AI 없이 사주로 답한다)
   // ─────────────────────────────────────────────────────────────────────
   const CAREER_BY_EL = {
     wood: '너는 뻗어 나가며 키워 내는 기운이다. 교육·기획·콘텐츠처럼 무언가를 길러 내는 일에서 빛난다.',
@@ -410,13 +441,13 @@
 
   function renderChat() {
     const body = $('chatBody');
-    withProfile(body, '백구가 답하려면 네 생년월일 냄새가 필요하다', p => {
+    withProfile(body, '벽사견이 답하려면 네 생년월일 냄새가 필요하다', p => {
       const sj = readSaju(p);
       body.innerHTML = `
         ${profileLine(p, sj)}
         <div class="chat-log" id="chatLog" aria-live="polite"></div>
         <div class="chat-chips" id="chatChips"></div>
-        <p class="feature-note">백구의 답은 네 사주로 지어낸 오락 풀이다. 건강·돈·법처럼 중요한 결정은 전문가와 상의하거라.</p>`;
+        <p class="feature-note">벽사견의 답은 네 사주로 지어낸 오락 풀이다. 건강·돈·법처럼 중요한 결정은 전문가와 상의하거라.</p>`;
       bindProfileLinks(body, renderChat);
       const log = $('chatLog'), chips = $('chatChips');
       const say = (who, html) => {
@@ -531,7 +562,7 @@
     }
     const a = document.createElement('a'); a.download = fileName; a.href = URL.createObjectURL(blob); a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    showToast('📸 공유 카드를 저장했다. 스토리에 올려 보거라 🐾');
+    showToast('📸 공유 카드를 저장했다. 스토리에 올려 보거라');
   }
 
 

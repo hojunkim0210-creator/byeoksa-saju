@@ -1,7 +1,7 @@
 """카카오톡·SNS 링크 미리보기 이미지(1200×630) 만들기 → site/img/og-image.jpg
 
 사용: python tools/make_og_image.py
-- 왼쪽: 밤 바탕 위 제목과 소개 / 오른쪽: 백구 사진(mung.jpg)을 아치 모양으로
+- 왼쪽: 밤 바탕 위 제목과 소개 / 오른쪽: 벽사견 사진(mung.jpg)을 아치 모양으로
 - 글꼴: Noto Serif CJK (SIL Open Font License 1.1)
 """
 from pathlib import Path
@@ -33,7 +33,7 @@ def main():
     glow = glow.filter(ImageFilter.GaussianBlur(120))
     img = Image.composite(Image.new('RGB', (W, H), (70, 62, 52)), img, glow)
 
-    # 오른쪽: 아치형 백구 사진
+    # 오른쪽: 아치형 벽사견 사진
     dog = Image.open(SITE / 'mung.jpg').convert('RGB')
     aw, ah = 400, 520
     dog = dog.resize((aw, aw)).crop((0, 0, aw, aw))
@@ -57,11 +57,11 @@ def main():
     d.text((x + 38, 92), '辟', font=seal, fill=(247, 227, 176), anchor='mm')
     d.text((x + 38, 124), '邪', font=seal, fill=(247, 227, 176), anchor='mm')
 
-    d.text((x, 178), '강원도 영월 산자락 외딴 흙집 지박령', font=font(FONT_REG, 28), fill=YELLOW)
+    d.text((x, 178), '귀신을 보고 짖는 개, 대문 앞 벽사견', font=font(FONT_REG, 28), fill=YELLOW)
     d.text((x, 222), '벽사신견', font=font(FONT_BLACK, 104), fill=MOON)
     d.text((x, 350), '사주', font=font(FONT_BLACK, 104), fill=YELLOW)
     body = font(FONT_REG, 30)
-    d.text((x, 492), '대문 앞 백구가 냄새로 읽어 주는 사주', font=body, fill=MOON_SOFT)
+    d.text((x, 492), '대문을 지키는 개가 냄새로 읽어 주는 사주', font=body, fill=MOON_SOFT)
     d.text((x, 538), '오늘의 운세 · 궁합 · 벽사 패 무료', font=body, fill=MOON_SOFT)
 
     out = SITE / 'img' / 'og-image.jpg'
