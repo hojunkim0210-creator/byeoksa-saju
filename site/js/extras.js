@@ -258,7 +258,19 @@
       const f = SajuCore.calculateDailyFortune(sj.pillars, t.y, t.m, t.d);
       const txt = DAILY_TEXT[f.sipsin];
       const band = DAILY_BANDS.find(b => f.score >= b[0])[1];
-      const remedy = ELEMENT_REMEDIES[sj.ps.weakKey];
+      // 행운의 색·숫자·방위 (2026-10-27 대표님: "날마다 안 바뀌는 느낌"): 예전엔 원국의 모자란 오행으로만 골라 사람마다 늘 같은 값이었다.
+      //   이제는 오늘 일진의 천간이 내 일간에 닿는 십신에 따라, 그 기운이 흘러갈 다음 자리(상생 순서)의 오행으로 고른다.
+      //   비겁 날→식상(설기) · 식상 날→재성(식상생재) · 재성 날→관성(재생관) · 관성 날→인성(관인상생) · 인성 날→비겁(인생비겁)
+      //   숫자는 그 오행의 두 수 중 오늘 천간의 음양(양→홀수, 음→짝수)으로, 색은 오늘 지지에 따라 돌아가며 고른다.
+      const GEN = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' };      // 내가 생하는 오행(식상)
+      const CTRL = { wood: 'earth', fire: 'metal', earth: 'water', metal: 'wood', water: 'fire' };     // 내가 극하는 오행(재성)
+      const flip = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [v, k]));
+      const GEN_BY = flip(GEN), CTRL_BY = flip(CTRL);                                                  // 나를 생하는(인성)·극하는(관성) 오행
+      const me = sj.ps.dmEl;
+      const luckyEl = ({ '비견': GEN[me], '겁재': GEN[me], '식신': CTRL[me], '상관': CTRL[me], '편재': CTRL_BY[me], '정재': CTRL_BY[me], '편관': GEN_BY[me], '정관': GEN_BY[me], '편인': me, '정인': me })[f.sipsin] || sj.ps.weakKey;
+      const remedy = ELEMENT_REMEDIES[luckyEl];
+      const nums = remedy.num.split(',').map(s => s.trim()), colors = remedy.color.split(',').map(s => s.trim());
+      const luckyNum = nums[f.stemIdx % 2] || nums[0], luckyColor = colors[f.branchIdx % colors.length] || colors[0];
       const myBranch = BRANCHES[sj.pillars.dBranchIdx].char, todayBranch = f.dayBranch.char;
       let relation = '';
       if (f.relation.yukhap) relation = `오늘 일진의 지지(${todayBranch})가 네 일지(${myBranch})와 <strong>육합</strong>이다. 사람 사이의 일이 부드럽게 풀린다.`;
@@ -280,11 +292,11 @@
             <div class="todo avoid"><h4>이건 피하거라</h4><ul>${txt.avoid.map(x => `<li>${x}</li>`).join('')}</ul></div>
           </div>
           <div class="lucky-row">
-            <div><span>행운의 색</span><strong>${remedy.color.split(',')[0]}</strong></div>
-            <div><span>행운의 숫자</span><strong>${remedy.num}</strong></div>
+            <div><span>행운의 색</span><strong>${luckyColor}</strong></div>
+            <div><span>행운의 숫자</span><strong>${luckyNum}</strong></div>
             <div><span>좋은 방위</span><strong>${remedy.dir}</strong></div>
           </div>
-          <p class="feature-note">행운의 색·숫자·방위는 네 원국에 가장 모자란 <strong>${EL_KO[sj.ps.weakKey]}</strong> 기운을 채우는 쪽으로 골랐다. 내일은 또 다른 일진이 온다.</p>
+          <p class="feature-note">행운의 색·숫자·방위는 오늘 일진의 <strong>${f.sipsin}</strong> 기운이 막히지 않고 흘러가도록 <strong>${EL_KO[luckyEl]}</strong> 기운 쪽으로 골랐다. 내일은 일진이 바뀌니 색도 숫자도 바뀐다. 네 원국에 늘 모자란 <strong>${EL_KO[sj.ps.weakKey]}</strong> 기운은 리포트의 비방으로 채우거라.</p>
         </div>`;
       bindProfileLinks(body, renderDaily);
     });

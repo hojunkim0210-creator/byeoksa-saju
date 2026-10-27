@@ -1996,6 +1996,11 @@ let currentSajuData = null;
     return relocked;
   }
   document.addEventListener('DOMContentLoaded', () => { verifyStoredPayments(); });
+  // 새로고침 없이 다른 탭(포트원 콘솔 등)에서 취소하고 돌아온 경우도 잡는다: 탭이 다시 보일 때, 뒤로 가기로 되살아날 때 (2026-10-27)
+  let _lastVerify = 0;
+  function verifyStoredPaymentsThrottled() { const now = Date.now(); if (now - _lastVerify < 5000) return; _lastVerify = now; verifyStoredPayments(); }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') verifyStoredPaymentsThrottled(); });
+  window.addEventListener('pageshow', e => { if (e.persisted) verifyStoredPaymentsThrottled(); });
 
   let _portOneLoading = null;
   function loadPortOne() {
@@ -2137,6 +2142,7 @@ let currentSajuData = null;
     showView('viewReport');
     setupReportBook();
     tidyTitles(document.getElementById('viewReport'));
+    verifyStoredPaymentsThrottled();   // 리포트를 열 때마다 취소된 결제인지 한 번 더 확인 (취소면 잠긴 무료 풀이로 돌아간다)
   }
 
   // ─────────────────────────────────────────────────────────────────────────
