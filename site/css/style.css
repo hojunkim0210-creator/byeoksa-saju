@@ -47,7 +47,7 @@
   /* 위계별 모서리 */
   --r-paper: 4px;
   --r-btn: 10px;
-  --r-chip: 999px;
+  --r-chip: 3px;   /* 2026-10-27: 알약(999px) → 각진 도장. 앱 칩처럼 보여 'AI가 만든 화면' 인상을 주던 것 */
 
   /* 한지 결 (섬유 노이즈) */
   --paper-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .42  0 0 0 0 .33  0 0 0 0 .2  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
@@ -586,7 +586,9 @@ option:disabled { color: #9C8E7C; }
 .animal-tag {
   padding: 4px 12px;
   border-radius: var(--r-chip);
+  font-family: var(--font-display);
   font-size: 13.5px;
+  letter-spacing: 0.04em;
   color: var(--yellow);
   border: 1px solid var(--night-line);
 }
@@ -599,11 +601,13 @@ option:disabled { color: #9C8E7C; }
   flex-shrink: 0;
   padding: 3px 10px;
   border-radius: var(--r-chip);
+  font-family: var(--font-display);   /* 2026-10-27: 알약 칩 → 목판 도장 (각진 모서리·명조·가는 주사 테) */
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 400;
+  letter-spacing: 0.03em;
   color: var(--cinnabar-deep);
-  background: var(--cinnabar-tint);
-  border: 1px solid rgba(168, 42, 32, 0.3);
+  background: transparent;
+  border: 1px solid rgba(168, 42, 32, 0.55);
 }
 .fit-content { font-size: 16px; line-height: 1.85; color: var(--ink); }
 .fit-content strong { color: var(--ink); }
@@ -776,11 +780,11 @@ option:disabled { color: #9C8E7C; }
 .sniff-lock-badge {
   align-self: flex-start;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 2px;   /* 2026-10-27: 노란 알약 → 점선 봉인 쪽지 */
   font-size: 13px;
   line-height: 1.55;
-  color: #5A420E;
-  background: #F2DFA9;
+  color: var(--cinnabar-deep);
+  border: 1px dashed rgba(168, 42, 32, 0.5);
 }
 .sniff-personal { display: block; margin-top: 8px; font-size: 14.5px; line-height: 1.75; color: var(--text-sub); }
 
@@ -850,6 +854,7 @@ option:disabled { color: #9C8E7C; }
 .dossier-val { font-size: 14.5px; font-weight: 700; color: var(--ink); }
 
 .kpi-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.kpi-heading { font-family: var(--font-display); font-weight: 400; font-size: 17px; line-height: 1.4; color: var(--cinnabar); }   /* 2026-10-27: 영문 'KPI Analysis' 꼬리 없이 명조 제목 */
 .kpi-grid { display: flex; flex-direction: column; gap: 14px; }
 .kpi-row { display: flex; flex-direction: column; gap: 6px; }
 .kpi-label-bar { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -1254,7 +1259,7 @@ option:disabled { color: #9C8E7C; }
 .rs-el strong { font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 1.1; color: var(--ink); }
 .rs-el.is-weak { border-color: var(--cinnabar); background: rgba(168, 42, 32, 0.07); }
 .rs-el.is-weak { color: var(--cinnabar); }
-.rs-el.is-weak::after { content: '모자람'; margin-top: 1px; padding: 0 6px; border-radius: 8px; font-size: 10.5px; line-height: 1.6; color: #fff8ec; background: var(--cinnabar); }
+.rs-el.is-weak::after { content: '모자람'; margin-top: 1px; padding: 0 6px; border-radius: 2px; font-size: 10.5px; line-height: 1.6; color: #fff8ec; background: var(--cinnabar); }
 .rs-list { display: grid; grid-template-columns: 5.6em 1fr; gap: 8px 12px; font-size: 14.5px; line-height: 1.7; }
 .rs-list dt { font-weight: 700; color: var(--cinnabar); }
 .rs-list dd { color: var(--ink); }
@@ -1308,7 +1313,7 @@ option:disabled { color: #9C8E7C; }
 .seal-hook { font-size: 15.5px; line-height: 1.85; color: var(--ink); }
 .seal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 6px; background: rgba(255, 252, 244, 0.6); border: 1px dashed rgba(168, 42, 32, 0.35); }
 .seal-list li { position: relative; padding-left: 20px; font-size: 14.5px; line-height: 1.65; color: var(--ink); }
-.seal-list li::before { content: '🔒'; position: absolute; left: 0; top: 0; font-size: 12px; }
+.seal-list li::before { content: '封'; position: absolute; left: 0; top: 1px; font-family: var(--font-display); font-size: 12px; color: var(--cinnabar); }   /* 2026-10-27: 자물쇠 이모지 → 봉(封) 글자 */
 .seal-fog { display: flex; flex-direction: column; gap: 7px; padding: 4px 2px; filter: blur(3px); opacity: 0.55; }
 .seal-fog span { height: 10px; border-radius: 5px; background: var(--ink-soft); }
 .seal-fog span:nth-child(1) { width: 92%; } .seal-fog span:nth-child(2) { width: 78%; } .seal-fog span:nth-child(3) { width: 60%; }
@@ -1330,7 +1335,7 @@ option:disabled { color: #9C8E7C; }
 .ny-bar-k { grid-area: k; font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); }
 .ny-bar.is-chung .ny-bar-fill { background: linear-gradient(90deg, #7C6A5A, #4D4038); }
 .ny-picks { display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
-.ny-pick-tag { display: inline-block; padding: 1px 8px; margin-right: 4px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+.ny-pick-tag { display: inline-block; padding: 1px 8px; margin-right: 4px; border-radius: 2px; font-size: 12.5px; font-weight: 700; }
 .ny-pick-tag.good { background: rgba(201, 162, 58, 0.25); color: #6B4A08; }
 .ny-pick-tag.bad { background: rgba(77, 64, 56, 0.15); color: var(--ink); }
 .ny-months { display: flex; flex-direction: column; gap: 12px; }
@@ -1409,13 +1414,8 @@ option:disabled { color: #9C8E7C; }
   60% { opacity: 0.5; }
   100% { transform: translate(-30px, -105vh); opacity: 0; }
 }
-.vignette { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, transparent 48%, rgba(3, 3, 9, 0.88) 100%); animation: vignetteBreath 11s ease-in-out infinite; }
-@keyframes vignetteBreath { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
-/* 필름 입자: 아주 옅은 잡티가 계속 바뀐다 (영화 질감) */
-.grain { position: absolute; inset: -10%; opacity: 0.075; mix-blend-mode: overlay; pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
-  animation: grainShift 0.9s steps(6) infinite; }
-@keyframes grainShift { 0% { transform: translate(0, 0); } 20% { transform: translate(-3%, 2%); } 40% { transform: translate(2%, -3%); } 60% { transform: translate(-2%, -1%); } 80% { transform: translate(3%, 3%); } 100% { transform: translate(0, 0); } }
+.vignette { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, transparent 48%, rgba(3, 3, 9, 0.88) 100%); opacity: 0.95; }   /* 2026-10-27: 숨 쉬듯 밝아졌다 어두워지는 반복 효과 제거 */
+/* (필름 입자 .grain 은 2026-10-27 제거 — 큰 화면에서 계속 깜빡이는 잡티가 지저분하고 'AI 효과'처럼 보였다. 다시 넣지 않는다) */
 
 /* 대문 초상화: 등불이 흔들리는 빛 */
 .spirit-portrait-box { position: relative; }
@@ -1456,7 +1456,7 @@ body.veil-on { overflow: hidden; }
 .opening-eyes, .ritual-eyes { display: flex; gap: 34px; }
 .opening-eyes span, .ritual-eyes span { width: 16px; height: 7px; border-radius: 50%; background: #F5C04A; box-shadow: 0 0 12px 4px rgba(245, 192, 74, 0.7), 0 0 34px 10px rgba(245, 160, 40, 0.25); animation: eyesOpen 7.5s ease forwards; transform: scaleY(0); }
 @keyframes eyesOpen { 0%, 88% { transform: scaleY(0); opacity: 0; } 92% { transform: scaleY(1); opacity: 1; } 95% { transform: scaleY(0.1); } 100% { transform: scaleY(1); opacity: 1; } }
-.opening-skip { position: absolute; z-index: 1; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(244, 238, 226, 0.25); color: var(--moon-soft); font-size: 14px; background: rgba(244, 238, 226, 0.04); }
+.opening-skip { position: absolute; z-index: 1; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: var(--r-chip); border: 1px solid rgba(244, 238, 226, 0.25); color: var(--moon-soft); font-size: 14px; background: rgba(244, 238, 226, 0.04); }
 
 /* ── 풀이 의식 ──────────────────────────────────────────────────── */
 .ritual-veil { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px; background: #06060C; transition: opacity 0.6s ease; }   /* 완전 불투명: 뒤의 결과가 비치지 않게 */
@@ -1467,14 +1467,11 @@ body.veil-on { overflow: hidden; }
 .ritual-line { font-family: var(--font-display); font-size: 18px; color: var(--moon); text-align: center; padding: 0 24px; }
 .ritual-line.flick { animation: lineIn 0.5s ease; }
 
-/* ── 음산한 실내: 제목과 도장에 등불빛, 한지 카드에 그을음 ───────────── */
-.feature-title, .spirit-main-title, .slip-heading { text-shadow: 0 0 18px rgba(224, 87, 74, 0.25); }
-.feature-seal { animation: sealGlow 4s ease-in-out infinite; }
-@keyframes sealGlow { 0%, 100% { box-shadow: inset 0 0 0 2.5px rgba(247, 227, 176, 0.6), 0 0 0 rgba(224, 87, 74, 0); } 50% { box-shadow: inset 0 0 0 2.5px rgba(247, 227, 176, 0.6), 0 0 22px rgba(224, 87, 74, 0.45); } }
+/* ── 음산한 실내: 한지 카드에 그을음 ───────────────────────────────────
+   (2026-10-27: 제목 빛 번짐·도장 빛 맥동·경고 테두리 맥동은 뺐다 — 계속 반복되는 효과가 'AI 효과'처럼 보이고 큰 화면에서 지저분하다. docs/DESIGN.md 움직임) */
 .feature-card, .dream-fit-card, .daeun-card, .oheng-card, .mind-scan-card, .ghost-warning-card, .sniff-teaser-card, .portfolio-section-card, .kpi-dashboard { box-shadow: inset 0 0 64px rgba(70, 35, 10, 0.22), 0 18px 40px -18px rgba(0, 0, 0, 0.9); }   /* 그을음을 조금 더 */
 .ghost-warning-card { position: relative; }
-.ghost-warning-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(168, 42, 32, 0.5); animation: dangerPulse 2.8s ease-in-out infinite; }
-@keyframes dangerPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+.ghost-warning-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(168, 42, 32, 0.5); opacity: 0.8; }
 
 /* ── 결제 안내 · 약관 페이지 ─────────────────────────────────────────── */
 .payment-notice { text-align: left; font-size: 13.5px !important; line-height: 1.7 !important; color: var(--ink-soft) !important; padding: 10px 12px; border-radius: 6px; background: rgba(168, 42, 32, 0.06); border: 1px solid rgba(168, 42, 32, 0.18); }
@@ -1484,7 +1481,7 @@ body.veil-on { overflow: hidden; }
 .legal-page a.btn-nav-back { display: inline-flex; text-decoration: none; }
 .legal-head { display: flex; flex-direction: column; gap: 14px; padding: 8px 0 4px; color: var(--moon); }
 .legal-toc { display: flex; flex-wrap: wrap; gap: 6px 8px; }
-.legal-toc a { padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(244, 238, 226, 0.22); color: var(--moon); font-size: 13.5px; text-decoration: none; }
+.legal-toc a { padding: 5px 11px; border-radius: var(--r-chip); border: 1px solid rgba(244, 238, 226, 0.22); color: var(--moon); font-size: 13.5px; text-decoration: none; }
 .legal-toc a:hover { background: rgba(244, 238, 226, 0.08); }
 .legal-section { scroll-margin-top: 16px; gap: 10px; }
 .legal-section h3 { margin-top: 8px; font-size: 15.5px; font-weight: 700; line-height: 1.5; color: var(--ink); }

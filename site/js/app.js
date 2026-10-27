@@ -452,6 +452,37 @@ let currentSajuData = null;
   /** 화면 하나만 보이게 한다 (홈·입력·결과·궁합·오늘의 운세·벽사 패·묻기) */
   // 제목 맨 앞의 이모지는 화면에서만 감춘다(글자는 남겨 문구 보존) — 책 제목처럼 명조 글씨만 보이게
   const TITLE_ICO_RE = /^(?:\s*(?:\p{Extended_Pictographic}|[\u2600-\u27BF\u2B00-\u2BFF])\uFE0F?\s*)+/u;
+  // 2026-10-27 (대표님: "AI가 만든 것처럼 보인다"): 제목뿐 아니라 글 어디에 있든 그림 이모지(🕯️ 📜 ⚠️ 🔒 …)와 장식 화살표(➔)를 화면에서 감춘다.
+  //   글자는 지우지 않고(문구 보존·복사·공유에는 그대로 남음) 보이지 않는 span(.title-ico)으로만 감싼다.
+  //   ↔·→·★·☯ 같은 기호는 글의 뜻이라 두고, 그림 이모지와 ➔만 고른다. (option·textarea·script 안은 건드리지 않는다)
+  const EMOJI_RE = /(?:(?![©®™←-⇿])\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}️?|[\u{1F3FB}-\u{1F3FF}])*|➔)/gu;
+  const EMOJI_SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION', 'NOSCRIPT']);
+  function hideEmoji(root) {
+    const base = root || document.body;
+    if (!base || !document.createTreeWalker) return;
+    const walker = document.createTreeWalker(base, NodeFilter.SHOW_TEXT, { acceptNode: n => {
+      const p = n.parentNode;
+      if (!p || EMOJI_SKIP.has(p.nodeName) || (p.classList && p.classList.contains('title-ico'))) return NodeFilter.FILTER_REJECT;
+      EMOJI_RE.lastIndex = 0;
+      return EMOJI_RE.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    } });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+      const text = n.nodeValue, frag = document.createDocumentFragment();
+      let last = 0, m;
+      EMOJI_RE.lastIndex = 0;
+      while ((m = EMOJI_RE.exec(text)) !== null) {
+        if (!m[0]) { EMOJI_RE.lastIndex++; continue; }
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const ico = document.createElement('span'); ico.className = 'title-ico'; ico.setAttribute('aria-hidden', 'true'); ico.textContent = m[0];
+        frag.appendChild(ico);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
   function tidyTitles(root) {
     (root || document).querySelectorAll('h1, h2, h3, h4, .section-title, .feature-card-title, .portfolio-section-title, .glance-title, .kpi-title strong, .timeline-title, .paywall-hook-title, .plan-row-name, .talisman-info-item > strong, .talisman-mine > strong, .mind-item > strong, button:not(.tab-item)').forEach(el => {
       const first = el.firstChild;
@@ -462,7 +493,9 @@ let currentSajuData = null;
       first.nodeValue = first.nodeValue.slice(m[0].length);
       el.insertBefore(ico, first);
     });
+    hideEmoji(root && root.nodeType === 1 ? root : document.body);
   }
+  document.addEventListener('DOMContentLoaded', () => tidyTitles(document.body));
   // 나중에 그려지는 화면(기능·결제창·리포트)도 같은 규칙 — 화면이 바뀔 때마다 한 번 훑는다
   if (window.MutationObserver && document.body) {
     let _tidyTimer = null;
@@ -920,27 +953,27 @@ let currentSajuData = null;
     document.getElementById('mindItem1').innerHTML = 
       `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">` +
       `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">👀 속마음 투시 (골수까지 도려내는 소름 돋는 팩폭)</strong>` +
-      `  <span style="font-size:12px; color:#991b1b; background:#fef2f2; border:1px solid #b91c1c; padding:2px 8px; border-radius:4px; font-weight:700;">${data.iljuName}日柱 맞춤</span>` +
+      `  <span style="font-size:12px; font-family:var(--font-display); color:var(--cinnabar-deep); border:1px solid rgba(168,42,32,0.5); padding:2px 8px; border-radius:2px;">${data.iljuName}日柱 맞춤</span>` +
       `</div>` +
-      `<p style="margin:8px 0; font-size:15.5px; line-height:2.0; color:#111827; font-weight:500;">` +
+      `<p style="margin:8px 0; font-size:15.5px; line-height:2.0;">` +
       `${mindOpen}<br><br>` +
       `<strong class="impact-red" style="font-size:15.5px; font-weight:800;">${data.badge}</strong><br>` +
       `${data.hook}<br>` +
       `${data.details}<br><br>` +
-      `💡 <strong style="color:#b45309; font-weight:800;">[벽사견의 일주 본성 꿰뚫음]</strong>: ${data.branchDesc}<br>` +
+      `💡 <strong style="color:var(--gold); font-weight:800;">[벽사견의 일주 본성 꿰뚫음]</strong>: ${data.branchDesc}<br>` +
       `${data.innerSoul}${c ? ph(PH.SOUL_TAIL, c.strength, c, 29) : ''}</p>`;
 
     document.getElementById('mindItem2').innerHTML = 
       `<div style="margin-bottom:8px;">` +
       `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">⚠️ 밤마다 네 숨통을 조이는 지독한 함정</strong>` +
       `</div>` +
-      `<p style="margin:8px 0; font-size:15.5px; line-height:2.0; color:#111827; font-weight:500;">` +
+      `<p style="margin:8px 0; font-size:15.5px; line-height:2.0;">` +
       `${nightOpen}<br>` +
       `${nightMask}<br><br>` +
       `그리고 네가 적어낸 천명... <strong class="impact-gold" style="font-size:16px;">[${dream}]</strong>.<br>` +
       `${nightFear}<br>` +
       `<strong class="impact-red" style="font-size:16px;">${nightSilence}</strong><br>` +
-      `<br>🐾 <strong style="color:#b45309;">[그 함정의 뿌리]</strong>: ${trapRoot}<br><br>` +
+      `<br>🐾 <strong style="color:var(--gold);">[그 함정의 뿌리]</strong>: ${trapRoot}<br><br>` +
       `${nightClose}</p>`;
     setKeyLine('mindScanCard', `네 속을 갉는 함정의 뿌리는 <strong>${EL_KO[ps.weakKey]} 기운 부족</strong>이다 — 아래 글은 그 부족이 밤에 어떻게 드러나는지를 짚는다.`, '.mind-scan-header');
   }
@@ -979,49 +1012,49 @@ let currentSajuData = null;
     // 1. 잠재 역량 (천명 그릇): 75 ~ 98
     const potScore = 75 + ((seed * 7 + dmCount * 5) % 24);
     let potGrade = "[중상 · 잠재력 충만]";
-    let potColor = "#d97706";
+    let potColor = "#9A6A12";   // 2026-10-27: 지표 색은 웹 기본색(초록·파랑·빨강·주황) 대신 사이트 색(금·옥·주사·황) — docs/DESIGN.md
     if (potScore >= 90) {
       potGrade = "[극상 · 제왕지기]";
-      potColor = "#16a34a";
+      potColor = "#2F6B45";
     } else if (potScore >= 82) {
       potGrade = "[상 · 건록지기]";
-      potColor = "#16a34a";
+      potColor = "#2F6B45";
     }
 
     // 2. 2027 대운 폭발 지수 (골든타임): 70 ~ 99
     const timScore = 70 + ((seed * 11 + mNum * 3) % 30);
     let timGrade = "[도약 준비 태세]";
-    let timColor = "#2563eb";
+    let timColor = "#4D6F94";
     if (timScore >= 90) {
       timGrade = "[임계점 도달 · 폭발적 상승]";
-      timColor = "#d97706";
+      timColor = "#9A6A12";
     } else if (timScore >= 80) {
       timGrade = "[상승 기류 탑승]";
-      timColor = "#d97706";
+      timColor = "#9A6A12";
     }
 
     // 3. 재물 방어력 (누재살 漏財煞): 28 ~ 85
     const wScore = 28 + ((seed * 13 + dNum * 7) % 58);
     let wGrade = "[⚠️ 위험: 돈 샐 틈 많음]";
-    let wColor = "#dc2626";
+    let wColor = "#A82A20";
     if (wScore >= 65) {
       wGrade = "[양호: 재물 곳간 든든함]";
-      wColor = "#16a34a";
+      wColor = "#2F6B45";
     } else if (wScore >= 48) {
       wGrade = "[⚠️ 주의: 지출 누수 경계]";
-      wColor = "#d97706";
+      wColor = "#9A6A12";
     }
 
     // 4. 주변 인연 정화도 (악연 감별): 32 ~ 88
     const kScore = 32 + ((seed * 17 + dStemIdx * 9) % 57);
     let kGrade = "[⚠️ 위험: 흡기귀 1~2명 근접]";
-    let kColor = "#ef4444";
+    let kColor = "#A82A20";
     if (kScore >= 70) {
       kGrade = "[청정: 귀인 인연 동행]";
-      kColor = "#16a34a";
+      kColor = "#2F6B45";
     } else if (kScore >= 50) {
       kGrade = "[⚠️ 주의: 기 빨림 경계]";
-      kColor = "#d97706";
+      kColor = "#9A6A12";
     }
 
     let alerts = 0;
@@ -1029,7 +1062,7 @@ let currentSajuData = null;
     if (kScore < 50) alerts++;
     const alertHtml = alerts > 0 
       ? `<span class="impact-red" style="font-size:12px; font-weight:800;">위험 경보 ${alerts}건</span>` 
-      : `<span style="font-size:12px; font-weight:800; color:#d97706;">주의 경보 1건</span>`;
+      : `<span style="font-size:12px; font-weight:800; color:#9A6A12;">주의 경보 1건</span>`;
 
     const alertEl = document.getElementById('kpiAlertBadge');
     if (alertEl) alertEl.innerHTML = alertHtml;
@@ -1543,24 +1576,24 @@ let currentSajuData = null;
       <!-- 포트폴리오 핵심 지표 KPI 대시보드 (동적 연산 반영) -->
       <div class="kpi-dashboard" id="kpiDashboard">
         <div class="kpi-title">
-          <span style="font-size:15px; font-weight:800; color:#111827;">📊 영적 역량 & 위험 지표 진단 (KPI Analysis)</span>
+          <strong class="kpi-heading">📊 영적 역량 & 위험 지표 진단</strong>
           <span id="kpiAlertBadge" style="font-size:12px; font-weight:800;">${kpi.alertHtml}</span>
         </div>
         <div class="kpi-grid">
           <div class="kpi-row">
-            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">타고난 천명 그릇 (잠재 역량)</span><span id="kpiPotentialScore" style="font-size:14px; font-weight:800; color:${kpi.potColor};">${kpi.potScore}점 ${kpi.potGrade}</span></div>
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">타고난 천명 그릇 (잠재 역량)</span><span id="kpiPotentialScore" style="font-size:14px; font-weight:800; color:${kpi.potColor};">${kpi.potScore}점 ${kpi.potGrade}</span></div>
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiPotentialBar" data-w="${kpi.potScore}" style="width:${kpi.potScore}%; background:${kpi.potColor};"></div></div>
           </div>
           <div class="kpi-row">
-            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">${Y_R1} 대운 폭발 지수 (골든타임)</span><span id="kpiTimingScore" style="font-size:14px; font-weight:800; color:${kpi.timColor};">${kpi.timScore}점 ${kpi.timGrade}</span></div>
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">${Y_R1} 대운 폭발 지수 (골든타임)</span><span id="kpiTimingScore" style="font-size:14px; font-weight:800; color:${kpi.timColor};">${kpi.timScore}점 ${kpi.timGrade}</span></div>
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiTimingBar" data-w="${kpi.timScore}" style="width:${kpi.timScore}%; background:${kpi.timColor};"></div></div>
           </div>
           <div class="kpi-row">
-            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">재물 방어력 (누재살 漏財煞)</span><span id="kpiWealthScore" style="font-size:14px; font-weight:800; color:${kpi.wColor};">${kpi.wScore}점 ${kpi.wGrade}</span></div>
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">재물 방어력 (누재살 漏財煞)</span><span id="kpiWealthScore" style="font-size:14px; font-weight:800; color:${kpi.wColor};">${kpi.wScore}점 ${kpi.wGrade}</span></div>
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiWealthBar" data-w="${kpi.wScore}" style="width:${kpi.wScore}%; background:${kpi.wColor};"></div></div>
           </div>
           <div class="kpi-row">
-            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700; color:#111827;">주변 인연 정화도 (악연 감별)</span><span id="kpiKarmaScore" style="font-size:14px; font-weight:800; color:${kpi.kColor};">${kpi.kScore}점 ${kpi.kGrade}</span></div>
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">주변 인연 정화도 (악연 감별)</span><span id="kpiKarmaScore" style="font-size:14px; font-weight:800; color:${kpi.kColor};">${kpi.kScore}점 ${kpi.kGrade}</span></div>
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiKarmaBar" data-w="${kpi.kScore}" style="width:${kpi.kScore}%; background:${kpi.kColor};"></div></div>
           </div>
         </div>
@@ -1569,7 +1602,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 01:<!-- CHAPTER 01: 영적 악연 차단 & 방어 매뉴얼 -->
       <div class="portfolio-section-card">
-        <span class="portfolio-section-badge">CHAPTER 01 · 대외비 1급</span>
+        <span class="portfolio-section-badge">第一章 · 대외비 1급</span>
         <div class="portfolio-section-title">🗡️ 기(氣) 빨아먹는 악연 색출 및 즉각 처단 매뉴얼</div>
         ${keyLineHtml(`지금 손절할 <strong>${EL_KO[ps.dmEl]} 일간용 악연 3유형</strong>이 아래 1·2·3번이다 — 연락 빈도를 줄이는 처단 비방까지 읽어라.`)}
         <div class="portfolio-text">
@@ -1577,7 +1610,7 @@ let currentSajuData = null;
         </div>
         <div class="portfolio-highlight">
           <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:8px;">⚠️ 즉시 손절해야 할 3대 악연 유형:</strong>
-          <span style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px;">— ${dStem.char}${EL_KO[ps.dmEl]} 일간인 네게 유독 들러붙는 유형</span>
+          <span style="font-size:13px; color:var(--ink-soft); display:block; margin-bottom:4px;">— ${dStem.char}${EL_KO[ps.dmEl]} 일간인 네게 유독 들러붙는 유형</span>
           1. ${enemyList[0]}<br>
           2. ${enemyList[1]}<br>
           3. ${enemyList[2]}<br><br>
@@ -1587,7 +1620,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 02: 인연과 사랑의 체취 감별 (사랑의 냄새 대폭 확대) -->
       <div class="portfolio-section-card">
-        <span class="portfolio-section-badge">CHAPTER 02 · 후각 투시록</span>
+        <span class="portfolio-section-badge">第二章 · 후각 투시록</span>
         <div class="portfolio-section-title">🕯️ 인연과 사랑의 체취 감별 (벽사신견 후각 투시록)</div>
         ${keyLineHtml(`피할 연인은 <strong>${ruin.title}</strong>, 만날 사람은 <strong>${soulmate.title}</strong>${josa(soulmate.title, '을')} 풍기는 <strong>${nobles[0]}</strong> — 시기는 ${Y_R0}년 하반기~${Y_R1}년 상반기.`)}
         <div class="portfolio-text">
@@ -1595,14 +1628,14 @@ let currentSajuData = null;
           ${isYoung() ? `네 앞에 다가올 인연들의 냄새를 미리 맡아 두어라. <strong>처음엔 눈이 멀 것처럼 설레지만 결국 네 가슴에 생채기를 남기고 떠날 자들...</strong> 그 냄새를 알아 두면 비켜 갈 수 있다.` : lookback}
         </div>
 
-        <div class="portfolio-highlight" style="border-left: 4.5px solid #b91c1c; background: #fff8f8;">
+        <div class="portfolio-highlight" style="border-left: 4.5px solid var(--cinnabar); background: rgba(168, 42, 32, 0.06);">
           <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: ${ruin.title}</strong>
           • <strong>영적 체취</strong>: ${ruinScent}<br>
           • <strong>소름 돋는 특징</strong>: ${ruinTrait}<br>
           • <strong>경고</strong>: ${ruinWarn}
         </div>
 
-        <div class="portfolio-highlight" style="border-left: 4.5px solid #15803d; background: #f6fdf7; margin-top:12px;">
+        <div class="portfolio-highlight" style="border-left: 4.5px solid var(--jade); background: rgba(47, 107, 69, 0.08); margin-top:12px;">
           <strong class="impact-green" style="font-size:15.5px; display:block; margin-bottom:6px;">🌿 2. 너를 살려낼 천생연분: ${soulmate.title}</strong>
           • <strong>영적 체취</strong>: ${soulScent}<br>
           • <strong>소름 돋는 특징</strong>: ${soulTrait}<br>
@@ -1613,7 +1646,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 03: 누재살 방어 및 재물 축적 비방 -->
       <div class="portfolio-section-card">
-        <span class="portfolio-section-badge">CHAPTER 03 · 재물 결속 비기</span>
+        <span class="portfolio-section-badge">第三章 · 재물 결속 비기</span>
         <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 누재살(漏財煞) 봉인법</div>
         ${keyLineHtml(`네 돈이 새는 길은 <strong>${GROUP_KO[leakKey]}</strong> 쪽 · 재물 오행은 <strong>${EL_KO[ps.wealthEl]}</strong>, 방위는 ${wealthRemedy.dir} — 아래 3대 비방이 그 구멍을 막는다.`)}
         <div class="portfolio-text">
@@ -1631,7 +1664,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 04: 2026~2028년 대운 3개년 로드맵 -->
       <div class="portfolio-section-card">
-        <span class="portfolio-section-badge">CHAPTER 04 · 시기 포획</span>
+        <span class="portfolio-section-badge">第四章 · 시기 포획</span>
         <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 대운 3개년 로드맵</div>
         ${keyLineHtml(`<strong>${Y_R1}년이 골든타임</strong> — 그해 천간이 네게 <strong>${getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)}</strong>${josa(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10), '으로')} 들어온다${((((Y_R1 - 4) % 12 + 12) % 12) - ps.dayBranchIdx + 12) % 12 === 6 ? ' (단, 일지와 <strong>충</strong>이라 큰 변동을 각오할 것)' : ''}. ${c ? ph(PH.ROAD_PHASE, null, c, 46) : `${Y_R0}년은 준비, ${Y_R1}년은 승부, ${Y_R2}년은 지키기.`}`)}
         <div class="portfolio-text">
@@ -1661,7 +1694,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 05: 100일 작전 행동 수칙 -->
       <div class="portfolio-section-card">
-        <span class="portfolio-section-badge">CHAPTER 05 · 실전 결행</span>
+        <span class="portfolio-section-badge">第五章 · 실전 결행</span>
         <div class="portfolio-section-title">⚡ 내일부터 당장 결행할 [천명 100일 작전]</div>
         ${keyLineHtml(`내일부터 할 일은 딱 셋 — <strong>아침 의식 · 몰입 결계 · 정화 수칙</strong>, 그리고 <strong>${EL_KO[weakKey]}</strong> 기운을 채우는 소품 하나.`)}
         <div class="portfolio-text">
@@ -1677,7 +1710,7 @@ let currentSajuData = null;
 
       <!-- SECTION 06: 궁서체 정통 괴황지 수호부적 쇼케이스 & 원형 다운로드 -->
       <div class="talisman-section-card">
-        <span class="portfolio-section-badge">SECTION 06 · 종신 수호 비기</span>
+        <span class="portfolio-section-badge">第六章 · 종신 수호 비기</span>
         <div class="portfolio-section-title">🧧 《벽사신견 액막이 개운부 (辟邪神犬 開運符)》</div>
         
         <!-- 부적 해설 및 소장 비방 박스 (다운로드 전 상세 설명) -->
@@ -1736,6 +1769,7 @@ let currentSajuData = null;
     const t = document.getElementById('toastMsg');
     if (t) {
       t.innerText = text;
+      hideEmoji(t);   // 알림의 이모지도 화면에서만 감춘다 (2026-10-27)
       t.style.display = 'block';
       setTimeout(() => { t.style.display = 'none'; }, 2500);
     }
@@ -1926,6 +1960,42 @@ let currentSajuData = null;
     document.getElementById('reportReopen').hidden = !reportUnlocked;
     document.getElementById('unlockedReportContainer').style.display = reportUnlocked ? 'flex' : 'none';
   }
+
+  // ── 결제 다시 확인 (2026-10-27): 취소(환불)된 결제는 열림 표시를 지우고 다시 잠근다 ──
+  //   열림 표시는 결제가 성공한 순간 이 기기에만 저장되고 그 뒤로는 묻지 않았다 → 나중에 결제를 취소해도 리포트가 계속 열렸다.
+  //   사이트를 열 때마다 저장된 결제 번호를 결제 확인 서버에 다시 물어, 서버가 "결제 상태가 PAID가 아니다"(취소·환불)
+  //   또는 "그런 결제가 없다"고 분명히 답할 때만 지운다. 서버가 꺼져 있거나 통신이 안 되면 손님에게 불이익이 없게 그대로 둔다.
+  async function verifyStoredPayments() {
+    if (PAYMENT.mode !== 'portone' || !PAYMENT.verifyUrl) return 0;
+    let keys = [];
+    try { keys = Object.keys(localStorage).filter(k => k.startsWith(PAID_PREFIX)); } catch (e) { return 0; }
+    let relocked = 0;
+    for (const k of keys) {
+      let rec = null;
+      try { rec = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { /* 깨진 기록은 건드리지 않는다 */ }
+      const pid = rec && rec.paymentId;
+      if (typeof pid !== 'string' || !/^byeoksa-/.test(pid)) continue;   // 서버에 물을 수 없는 기록(테스트 모드의 'test')은 그대로
+      try {
+        const r = await fetch(PAYMENT.verifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId: pid }) });
+        if (r.ok) continue;   // 아직 결제 완료 상태
+        let j = null;
+        try { j = await r.json(); } catch (e) { /* 본문 없음 */ }
+        const cancelled = r.status === 400 && !!j && j.status === 'INVALID' && /^status:/.test(String(j.reason || ''));
+        const missing = r.status === 404 && !!j && j.status === 'NOT_FOUND';
+        if (!cancelled && !missing) continue;   // 설정 오류·서버 장애·가격 변경 같은 것은 손님 탓이 아니다
+        try { localStorage.removeItem(k); } catch (e) { /* 무시 */ }
+        relocked++;
+      } catch (e) { /* 통신 오류: 그대로 둔다 */ }
+    }
+    if (!relocked) return 0;
+    if (currentSajuData) applyPaidState();
+    const report = document.getElementById('viewReport');
+    if (report && report.style.display !== 'none' && !reportUnlocked) goToStep(3);   // 리포트를 보고 있었다면 잠긴 무료 풀이로
+    if (window.BYEOKSA_SHOP && typeof BYEOKSA_SHOP.renderShopShelf === 'function') BYEOKSA_SHOP.renderShopShelf();
+    showToast('취소된 결제가 있어 그 풀이는 다시 잠갔다.');
+    return relocked;
+  }
+  document.addEventListener('DOMContentLoaded', () => { verifyStoredPayments(); });
 
   let _portOneLoading = null;
   function loadPortOne() {

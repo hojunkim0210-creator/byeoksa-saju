@@ -80,6 +80,58 @@ test('포트원 결제 실패·취소: 잠긴 채로 남고 안내가 뜬다', a
   await ctx.close();
 });
 
+// 2026-10-27: 결제 성공 뒤 '열림' 표시는 이 기기에만 남는다 → 뒤에 결제를 취소(환불)해도 리포트가 열려 있던 문제.
+//   사이트를 열 때마다 저장된 결제 번호를 확인 서버에 다시 묻고, 취소된 결제면 표시를 지워 다시 잠근다 (app.js verifyStoredPayments).
+async function reloadWithVerifyAnswer(page, status, body) {
+  // 다음 페이지 로드부터 결제 확인 서버가 이렇게 답한다 (status 0 = 통신 오류). helpers의 가짜 서버보다 뒤에 끼워 넣어 덮어쓴다
+  await page.addInitScript(([s, b]) => {
+    const realFetch = window.fetch;
+    window.fetch = (u, o) => u === '/api/payment/complete'
+      ? (s === 0 ? Promise.reject(new TypeError('network down')) : Promise.resolve(new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } })))
+      : realFetch(u, o);
+  }, [status, body]);
+  await page.reload(); await page.waitForTimeout(700);
+}
+async function payForReport(page) {
+  await fillAndSubmit(page, ME);
+  await page.evaluate(() => openPaymentModal());
+  await page.click('#payButton'); await page.waitForTimeout(400);
+  assert.equal(await viewOf(page), 'viewReport');
+}
+
+test('결제 뒤 취소(환불)된 결제: 다시 들어오면 열림 표시가 지워지고 리포트가 잠긴다', async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await payForReport(page);
+  await reloadWithVerifyAnswer(page, 400, { status: 'INVALID', reason: 'status:CANCELLED' });
+  assert.equal(await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('byeoksa.paid.')).length), 0, '열림 표시를 지운다');
+  assert.match(await page.textContent('#toastMsg'), /취소된 결제/);
+  await fillAndSubmit(page, ME);
+  assert.ok(await locked(page), '같은 사주도 다시 잠김');
+  assert.ok(await page.isHidden('#reportReopen'));
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('확인 서버가 "없는 결제"(404)라 해도 잠근다', async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await payForReport(page);
+  await reloadWithVerifyAnswer(page, 404, { status: 'NOT_FOUND' });
+  await fillAndSubmit(page, ME);
+  assert.ok(await locked(page));
+  await ctx.close();
+});
+
+test('통신 오류·설정 오류(500)·서버 장애(502)·가격 불일치(400 amount)면 열림 표시를 지우지 않는다', async () => {
+  for (const [status, body] of [[0, null], [500, { status: 'NOT_CONFIGURED' }], [502, { status: 'UPSTREAM_ERROR' }], [400, { status: 'INVALID', reason: 'amount' }]]) {
+    const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+    await payForReport(page);
+    await reloadWithVerifyAnswer(page, status, body);
+    await fillAndSubmit(page, ME);
+    assert.equal(await locked(page), false, `${status} ${JSON.stringify(body)}: 열린 채로 둔다`);
+    await ctx.close();
+  }
+});
+
 test('서버 확인이 실패하면 열지 않는다 (verifyUrl)', async () => {
   const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
   await page.route('https://verify.test/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'FAILED' }) }));

@@ -472,49 +472,49 @@
     // 1. 잠재 역량: 75 ~ 98
     const potScore = 75 + ((seed * 7 + dmCount * 5) % 24);
     let potGrade = "[중상 · 잠재력 충만]";
-    let potColor = "#d97706";
+    let potColor = "#9A6A12";   // 2026-10-27: 사이트 색(금·옥·주사·황)으로 — app.js updateKpiDashboard와 같게
     if (potScore >= 90) {
       potGrade = "[극상 · 제왕지기]";
-      potColor = "#16a34a";
+      potColor = "#2F6B45";
     } else if (potScore >= 82) {
       potGrade = "[상 · 건록지기]";
-      potColor = "#16a34a";
+      potColor = "#2F6B45";
     }
 
     // 2. 2027 대운 폭발 지수: 70 ~ 99
     const timScore = 70 + ((seed * 11 + mNum * 3) % 30);
     let timGrade = "[도약 준비 태세]";
-    let timColor = "#2563eb";
+    let timColor = "#4D6F94";
     if (timScore >= 90) {
       timGrade = "[임계점 도달 · 폭발적 상승]";
-      timColor = "#d97706";
+      timColor = "#9A6A12";
     } else if (timScore >= 80) {
       timGrade = "[상승 기류 탑승]";
-      timColor = "#d97706";
+      timColor = "#9A6A12";
     }
 
     // 3. 재물 방어력: 28 ~ 85
     const wScore = 28 + ((seed * 13 + dNum * 7) % 58);
     let wGrade = "[⚠️ 위험: 돈 샐 틈 많음]";
-    let wColor = "#dc2626";
+    let wColor = "#A82A20";
     if (wScore >= 65) {
       wGrade = "[양호: 재물 곳간 든든함]";
-      wColor = "#16a34a";
+      wColor = "#2F6B45";
     } else if (wScore >= 48) {
       wGrade = "[⚠️ 주의: 지출 누수 경계]";
-      wColor = "#d97706";
+      wColor = "#9A6A12";
     }
 
     // 4. 주변 인연 정화도: 32 ~ 88
     const kScore = 32 + ((seed * 17 + dStemIdx * 9) % 57);
     let kGrade = "[⚠️ 위험: 흡기귀 1~2명 근접]";
-    let kColor = "#ef4444";
+    let kColor = "#A82A20";
     if (kScore >= 70) {
       kGrade = "[청정: 귀인 인연 동행]";
-      kColor = "#16a34a";
+      kColor = "#2F6B45";
     } else if (kScore >= 50) {
       kGrade = "[⚠️ 주의: 기 빨림 경계]";
-      kColor = "#d97706";
+      kColor = "#9A6A12";
     }
 
     let alerts = 0;
@@ -522,7 +522,7 @@
     if (kScore < 50) alerts++;
     const alertHtml = alerts > 0 
       ? `<span class="impact-red" style="font-size:12px; font-weight:800;">위험 경보 ${alerts}건</span>` 
-      : `<span style="font-size:12px; font-weight:800; color:#d97706;">주의 경보 1건</span>`;
+      : `<span style="font-size:12px; font-weight:800; color:#9A6A12;">주의 경보 1건</span>`;
 
     return {
       potScore, potGrade, potColor,

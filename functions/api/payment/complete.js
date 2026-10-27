@@ -48,7 +48,8 @@ export async function onRequestPost({ request, env }) {
   const r = await fetch(`https://api.portone.io/payments/${encodeURIComponent(paymentId)}`, {
     headers: { Authorization: `PortOne ${env.PORTONE_API_SECRET}` }
   });
-  if (!r.ok) return json({ status: 'NOT_FOUND' }, 404);
+  if (r.status === 404) return json({ status: 'NOT_FOUND' }, 404);
+  if (!r.ok) return json({ status: 'UPSTREAM_ERROR' }, 502);   // 포트원 장애·비밀키 오류: "없는 결제"와 구분한다 (브라우저가 열림 표시를 지우지 않게, 2026-10-27)
   const payment = await r.json();
 
   let catalog = CATALOG;

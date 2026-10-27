@@ -17,13 +17,14 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
-  <link rel="manifest" href="manifest.json">
+  <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
+  <link rel="manifest" href="manifest.json?v=24">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=24">
 </head>
 <body>
 
@@ -39,7 +40,7 @@
     <!-- 상단 축봉 (나무 롤러) -->
     <div class="scroll-roller">
       <div class="roller-cap"></div>
-      <div style="font-size:10px; color:#fde047; font-weight:800; letter-spacing:4px;">壁 邪 神 犬</div>
+      <div style="font-size:10px; color:var(--yellow); font-weight:800; letter-spacing:4px;">壁 邪 神 犬</div>
       <div class="roller-cap"></div>
     </div>
 
@@ -55,7 +56,7 @@
         <div class="scroll-title">벽사신견 설화록 (辟邪說話)</div>
         <div class="scroll-subtitle">대문 앞을 지키는 개의 내력</div>
 
-        <div style="width:30px; height:1px; background:rgba(239,68,68,0.4); margin:2px auto;"></div>
+        <div style="width:30px; height:1px; background:rgba(168,42,32,0.4); margin:2px auto;"></div>
 
         <div class="scroll-text">
           해당 사주는<br><br>
@@ -93,18 +94,17 @@
     <!-- 하단 축봉 (무게추 롤러) -->
     <div class="scroll-roller" style="box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.8);">
       <div class="roller-cap"></div>
-      <div style="font-size:10px; color:#fca5a5; letter-spacing:2px;">- 萬事亨通 辟邪萬福 -</div>
+      <div style="font-size:10px; color:#E58A7E; letter-spacing:2px;">- 萬事亨通 辟邪萬福 -</div>
       <div class="roller-cap"></div>
     </div>
   </div>
 </div>
 
 
-<!-- 🌑 사이트 전체 분위기: 불티 · 어둠 · 입자 (내용 뒤에 깔림, 클릭 안 막음). 안개는 2026-10-25 대표님 요청으로 전부 뺌 -->
+<!-- 🌑 사이트 전체 분위기: 불티 · 어둠 (내용 뒤에 깔림, 클릭 안 막음). 안개는 2026-10-25 대표님 요청으로 전부 뺌, 깜빡이는 필름 입자는 2026-10-27 뺌(큰 화면에서 지저분하고 AI 효과처럼 보임) -->
 <div class="ambience" aria-hidden="true">
   <div class="embers"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="vignette"></div>
-  <div class="grain"></div>
 </div>
 
 <!-- 🌑 첫 진입: 설화록 序 — 고서처럼 세로쓰기, 누를 때마다 한 줄씩(매번). 다 읽으면 대문 앞 -->
@@ -464,7 +464,7 @@
 
     <!-- 7. 🕯️ 벽사견의 은밀한 후각 감별 (연애·재물 한 줄 티저 후킹) -->
     <div class="sniff-teaser-card" id="sniffTeaserCard">
-      <div class="section-title" style="color:#991b1b; margin-bottom:12px;">🕯️ 벽사견의 은밀한 후각 감별 (초기 감지)</div>
+      <div class="section-title" style="margin-bottom:12px;">🕯️ 벽사견의 은밀한 후각 감별 (초기 감지)</div>
       
       <div class="sniff-item">
         <h4>💘 인연과 사랑의 냄새</h4>
@@ -800,10 +800,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js"></script>
-  <script src="js/phrases.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/extras.js"></script>
-  <script src="js/shop.js"></script>
+  <script src="js/saju-core.js?v=24"></script>
+  <script src="js/phrases.js?v=24"></script>
+  <script src="js/app.js?v=24"></script>
+  <script src="js/extras.js?v=24"></script>
+  <script src="js/shop.js?v=24"></script>
 </body>
 </html>

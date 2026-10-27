@@ -1,13 +1,16 @@
 # Cloudflare Pages 전용 설정 (GitHub Pages에서는 무시됨)
 # 화면 파일은 매번 새로 확인 → 업데이트가 바로 반영된다
+# 2026-10-27: CSS·JS를 max-age=0으로 두었더니 Cloudflare의 "브라우저 캐시 TTL"(기본 4시간)이 이를 14400초로 덮어써,
+#   새 HTML에 옛 CSS·JS가 입혀져 첫 화면이 깨졌다(맥북 크롬). HTML처럼 no-cache로 두면 덮어쓰지 않는다.
+#   (대시보드 Caching → Configuration → Browser Cache TTL을 "Respect Existing Headers"로 두면 더 확실하다)
 /
   Cache-Control: no-cache
 /*.html
   Cache-Control: no-cache
 /css/*
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-cache
 /js/*
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-cache
 /img/*
   Cache-Control: public, max-age=86400
 /*

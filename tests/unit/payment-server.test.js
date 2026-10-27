@@ -64,6 +64,13 @@ test('onRequestPost: 이상한 요청·설정 없음·없는 결제·금액 불�
   assert.equal(price.json.status, 'PAID', '가격 환경 변수');
 });
 
+test('onRequestPost: 포트원 장애(5xx)는 "없는 결제"(404)와 구분해 502로, 취소된 결제는 400 status:CANCELLED로 답한다 (2026-10-27 재잠금 판단 근거)', async () => {
+  const down = await call({ paymentId: 'byeoksa-a-b' }, { PORTONE_API_SECRET: 'k' }, () => new Response('oops', { status: 503 }));
+  assert.equal(down.status, 502); assert.equal(down.json.status, 'UPSTREAM_ERROR');
+  const cancelled = await call({ paymentId: 'byeoksa-a-b' }, { PORTONE_API_SECRET: 'k' }, () => ok({ ...PAID, status: 'CANCELLED' }));
+  assert.equal(cancelled.status, 400); assert.equal(cancelled.json.status, 'INVALID'); assert.equal(cancelled.json.reason, 'status:CANCELLED');
+});
+
 test('site/ 코드에 포트원 비밀키 자리가 없다 (비밀키는 서버 환경 변수에만)', () => {
   const fs = require('fs');
   const app = fs.readFileSync(path.resolve(__dirname, '../../site/js/app.js'), 'utf8');
