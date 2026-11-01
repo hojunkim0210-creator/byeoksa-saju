@@ -82,7 +82,10 @@ const {
   // ─────────────────────────────────────────────────────────────────────────
   const EL_KEYS = ['wood', 'fire', 'earth', 'metal', 'water'];
   const EL_KO = { wood: '목(木)', fire: '화(火)', earth: '토(土)', metal: '금(金)', water: '수(水)' };
-  const EL_NAME = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };   // 손님용 쉬운 이름 (2026-11-02 쉬운 말)
+  const EL_NAME = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };
+  // 십신 이름 → 손님용 쉬운 말 (2026-11-02 쉬운 말 3단계): sipsinPlain('정관') = '책임과 자리가 무거워지는 운(정관)'
+  const SIPSIN_PLAIN = { '비견': '내 편이자 경쟁자가 느는 운', '겁재': '내 몫을 노리는 손이 느는 운', '식신': '재주와 먹을 복이 열리는 운', '상관': '말과 재주가 밖으로 튀는 운', '편재': '큰돈이 오가는 운', '정재': '꾸준한 돈이 쌓이는 운', '편관': '압박과 시험이 닥치는 운', '정관': '책임과 자리가 무거워지는 운', '편인': '남다른 공부와 촉이 깨는 운', '정인': '배움과 보호를 받는 운' };
+  const sipsinPlain = n => (SIPSIN_PLAIN[n] ? `${SIPSIN_PLAIN[n]}(${n})` : n);   // 손님용 쉬운 이름 (2026-11-02 쉬운 말)
   // 원래 문장 보관함 — 각 화면이 그릴 때 채우고, phrases.js가 '한 갈래'로 그대로 쓴다
   const ORIG = {};
 
@@ -379,21 +382,22 @@ const {
 
   /** 재성 개수에 따른 재물 진단 한 단락 */
   function wealthDiagnosis(ps, where) {
-    const label = `<strong class="impact-gold">[${EL_KO[ps.wealthEl]}] 재성(財星)</strong>`;
+    // 쉬운 말 3단계 (2026-11-02): '돈 기운(재성)인 [물]' — 조사는 기운 이름의 받침에 맞게
+    const el = EL_NAME[ps.wealthEl]; const label = `<strong class="impact-gold">돈 기운(재성)인 [${el}]</strong>`; const i = josa(el, '이'), eun = josa(el, '은');
     // 같은 사람이 결과 화면·리포트·묻기에서 같은 문단을 두 번 읽지 않게, 자리마다 다른 문장
     if (where === 'teaser') {
-      if (ps.wealthCount === 0) return `네 원국에는 ${label}이 보이지 않는다. 벌어도 머물 자리가 없으니 돈이 손가락 사이로 빠진다.`;
-      if (ps.wealthCount === 1) return `네 원국의 ${label}은 단 한 줄기다. 가는 물줄기라 작은 구멍 하나에도 금세 마른다.`;
-      return `네 원국에는 ${label}이 ${ps.wealthCount}글자나 된다. 물은 넘치는데 담을 독이 작다.`;
+      if (ps.wealthCount === 0) return `네 사주에는 ${label}${i} 보이지 않는다. 벌어도 머물 자리가 없으니 돈이 손가락 사이로 빠진다.`;
+      if (ps.wealthCount === 1) return `네 사주의 ${label}${eun} 단 한 줄기다. 가는 물줄기라 작은 구멍 하나에도 금세 마른다.`;
+      return `네 사주에는 ${label}${i} ${ps.wealthCount}글자나 된다. 물은 넘치는데 담을 독이 작다.`;
     }
     if (where === 'chat') {
-      if (ps.wealthCount === 0) return `재물 글자인 ${label}이 원국에 없다. 그래서 너는 "모으는 법"부터 배워야 돈이 붙는 사람이다.`;
-      if (ps.wealthCount === 1) return `재물 글자인 ${label}이 하나뿐이라, 큰돈보다 꾸준한 돈이 네 편이다.`;
-      return `재물 글자인 ${label}이 넉넉하다. 버는 재주는 있으니, 지키는 재주만 붙이면 된다.`;
+      if (ps.wealthCount === 0) return `재물 글자인 ${label}${i} 원국에 없다. 그래서 너는 "모으는 법"부터 배워야 돈이 붙는 사람이다.`;
+      if (ps.wealthCount === 1) return `재물 글자인 ${label}${i} 하나뿐이라, 큰돈보다 꾸준한 돈이 네 편이다.`;
+      return `재물 글자인 ${label}${i} 넉넉하다. 버는 재주는 있으니, 지키는 재주만 붙이면 된다.`;
     }
-    if (ps.wealthCount === 0) return `특히 네 원국에는 재물을 뜻하는 ${label}이 한 글자도 드러나 있지 않다. 돈이 제 발로 찾아오는 팔자가 아니니, 네 손으로 그릇을 빚고 길목을 지켜야만 고인다.`;
-    if (ps.wealthCount === 1) return `네 원국에서 재물을 뜻하는 ${label}은 단 한 글자뿐이다. 들어오는 물줄기가 가늘어 한 번 새기 시작하면 바닥이 금세 드러나니, 작은 지출 구멍부터 틀어막아라.`;
-    return `네 원국에는 재물을 뜻하는 ${label}이 ${ps.wealthCount}글자나 깔려 있다. 돈이 들어오는 길은 넓지만 감당할 그릇보다 물이 많아 넘쳐흐르는 형국이니, 들어오는 족족 묶어두지 않으면 남의 주머니로 흘러간다.`;
+    if (ps.wealthCount === 0) return `특히 네 사주에는 재물을 뜻하는 ${label}${i} 한 글자도 드러나 있지 않다. 돈이 제 발로 찾아오는 팔자가 아니니, 네 손으로 그릇을 빚고 길목을 지켜야만 고인다.`;
+    if (ps.wealthCount === 1) return `네 사주에서 재물을 뜻하는 ${label}${eun} 단 한 글자뿐이다. 들어오는 물줄기가 가늘어 한 번 새기 시작하면 바닥이 금세 드러나니, 작은 지출 구멍부터 틀어막아라.`;
+    return `네 사주에는 재물을 뜻하는 ${label}${i} ${ps.wealthCount}글자나 깔려 있다. 돈이 들어오는 길은 넓지만 감당할 그릇보다 물이 많아 넘쳐흐르는 형국이니, 들어오는 족족 묶어두지 않으면 남의 주머니로 흘러간다.`;
   }
 
   /** 로드맵 연도별: 그해 간지가 일간·일지와 맺는 관계 */
@@ -935,38 +939,38 @@ let currentSajuData = null;
 
     const elementBetrayals = {
       wood: {
-        badge: `[${iljuName}日柱 목(木)의 흉살: 결실과 아이디어를 도둑맞은 배신]`,
-        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 겁재(劫財)와 비견의 흉살이 치솟을 때</strong>, '너랑 나랑 손잡고 함께 가자'며 달콤한 말로 부추기던 동업자나 선배·친구 하나 있었지?`,
+        badge: `[${iljuName} 태생의 나쁜 인연(흉살): 결실과 아이디어를 도둑맞은 배신]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네게 내 몫을 노리는 손이 느는 운(겁재)과 경쟁자가 느는 운(비견)이 치솟을 때</strong>, '너랑 나랑 손잡고 함께 가자'며 달콤한 말로 부추기던 동업자나 선배·친구 하나 있었지?`,
         details: `네 우직하고 순수한 ${stemChar === '갑' ? '갑목(甲木, 큰 나무)' : '을목(乙木, 담쟁이)'}의 심성을 이용해, 네가 밤잠 안 자고 뼈를 깎아 만든 핵심 아이디어와 기획, 인맥의 알맹이는 쏙 빼먹고, 결정적인 순간에 성과와 계약에서 네 이름을 지워버린 그 파렴치한 인간!<br><br>` +
-                 `'내가 왜 사람 보는 눈이 이리 없었을까', '내가 너무 순진해서 당했나' 혼자 자책하며 방구석에서 피눈물을 삼켰겠지만, 똑똑히 알아둬라. 네 탓이 아니다. 네 목(木) 기운의 우직한 성장을 시기해 달라붙은 비열한 흡기귀(吸氣鬼)였다.`,
+                 `'내가 왜 사람 보는 눈이 이리 없었을까', '내가 너무 순진해서 당했나' 혼자 자책하며 방구석에서 피눈물을 삼켰겠지만, 똑똑히 알아둬라. 네 탓이 아니다. 네 나무 기운(木)의 우직한 성장을 시기해 달라붙은 비열한 흡기귀(吸氣鬼, 기운을 빨아먹는 귀신)였다.`,
         innerSoul: `너는 겉으로는 온화하고 남들에게 싫은 소리 한마디 못 하는 착한 사람처럼 보이지만, 속으로는 네 기준과 선이 칼날보다 날카롭다. 한번 마음에 금이 간 인간은 두 번 다시 안 보지만, 정작 속마음을 100% 털어놓을 영혼의 동반자가 없어 밤마다 뼈마디가 시린 고독을 혼자 씹어 삼켜왔을 것이다.`
       },
       fire: {
-        badge: `[${iljuName}日柱 화(火)의 흉살: 온기만 빼앗기고 버려진 배신]`,
-        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 관살(官煞)과 상관의 칼바람이 불어닥칠 때</strong>, '나 지금 너무 힘들어, 너밖에 의지할 데 없어'라며 매달리던 인간에게 온 마음과 지갑을 다 털어준 적 있지?`,
+        badge: `[${iljuName} 태생의 나쁜 인연(흉살): 온기만 빼앗기고 버려진 배신]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네게 압박의 운(관살)과 말이 앞서는 운(상관)의 칼바람이 불어닥칠 때</strong>, '나 지금 너무 힘들어, 너밖에 의지할 데 없어'라며 매달리던 인간에게 온 마음과 지갑을 다 털어준 적 있지?`,
         details: `네 타고난 ${stemChar === '병' ? '병화(丙火, 뜨거운 태양)' : '정화(丁火, 촛불)'}의 측은지심 때문에 밥 사주고, 일 도와주고, 마음 다 챙겨주며 살려놓았더니 돌아온 게 뭐였느냐?<br><br>` +
                  `단물만 쏙 빨아먹고 제 살길 찾자마자 싸늘하게 안면을 바꾸고, 뒤에서는 '걔가 지 멋대로 오지랖 부린 거지'라며 네 험담까지 퍼뜨리고 다닌 그 배은망덕한 인간!<br><br>` +
                  `너는 온몸을 불살라 길을 밝혀주었건만, 너만 잿더미가 되어 멍하니 가슴을 쥐어뜯었지? 자책하지 마라. 네 불꽃 같은 열정을 갉아먹은 가증스러운 흡기귀였다.`,
         innerSoul: `너는 남들 앞에선 세상에서 제일 밝고 열정적인 사람인 척 연기하지만, 속은 이미 시커멓게 다 타버린 잿더미다. 거절을 단호하게 못 해서 온갖 궂은일 다 떠맡고 속으로 피눈물 흘리다가, 결국 한계에 달해 혼자 잠수 타거나 자폭해버린 적이 한두 번이 아니지.`
       },
       earth: {
-        badge: `[${iljuName}日柱 토(土)의 흉살: 호구 취급과 누명의 배신]`,
+        badge: `[${iljuName} 태생의 나쁜 인연(흉살): 호구 취급과 누명의 배신]`,
         hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 재관(財官)의 무거운 짐이 쏟아져 내릴 때</strong>, 네가 묵묵히 다 받아주고 양보해주니까 널 만만한 호구이자 '감정 쓰레기통'으로 취급한 인간이 분명히 있었을 게다.`,
         details: `네 ${stemChar === '무' ? '무토(戊土, 거대한 산)' : '기토(己土, 비옥한 대지)'}의 넓은 도량을 믿고 호의를 권리인 양 착취하더니, 정작 공동의 문제나 금전적 손실이 터졌을 땐 제 책임은 쏙 빼고 네게 모든 책임과 누명을 덤터기 씌우려 했던 그 뻔뻔한 인간!<br><br>` +
                  `"내가 저 인간한테 어떻게 해줬는데 나한테 이럴 수가 있어?"라는 억울함이 가슴에 맺혀 목구멍까지 피가 거꾸로 솟았을 것이다. 똑똑히 알아둬라. 네 탓이 아니다. 네 넓은 품에 기생해 피를 빤 파렴치한 흡기귀였다.`,
         innerSoul: `너는 넓은 마음으로 다 이해하고 품어주는 척하지만, 실은 속으로 배신감과 서운함을 뼛속 깊이 새겨두는 타입이다. 참고 참다가 한번 둑이 터지면 뒤도 안 돌아보고 손절하지만, 혼자 남겨졌을 때 엄습하는 지독한 회의감에 가슴을 뜯어왔을 것이다.`
       },
       metal: {
-        badge: `[${iljuName}日柱 금(金)의 흉살: 가장 아픈 약점을 찔린 비수]`,
-        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 식상과 재성이 소용돌이칠 때</strong>, 웬만해선 마음을 안 여는 네가 드물게 마음의 벽을 허물고 치부와 나약한 속내까지 털어놓았던 자에게 등에 칼을 맞은 적이 있지?`,
+        badge: `[${iljuName} 태생의 나쁜 인연(흉살): 가장 아픈 약점을 찔린 비수]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네게 재주를 밖으로 내는 운(식상)과 돈 기운(재성)이 소용돌이칠 때</strong>, 웬만해선 마음을 안 여는 네가 드물게 마음의 벽을 허물고 치부와 나약한 속내까지 털어놓았던 자에게 등에 칼을 맞은 적이 있지?`,
         details: `네 서늘한 ${stemChar === '경' ? '경금(庚金, 무쇠 검)' : '신금(辛金, 예리한 단도)'}의 칼날을 거두고 믿어준 대가가, 네가 건넨 약점을 결정적 순간에 쥐고 흔들며 가스라이팅하고 네 자존심을 짓밟은 처참한 뒤통수였지!<br><br>` +
                  `겉으로는 네 완벽함을 부러워하는 척 알랑방귀를 뀌더니, 네가 조금 흔들리자마자 가장 잔인한 곳을 후벼판 그 교활한 인간!<br><br>` +
                  `'내가 왜 방심해서 그 칼자루를 쥐어줬을까' 자학하며 며칠 밤을 피를 말렸겠지만 자책하지 마라. 네 날카로운 기운을 시기해 꺾으려 든 사악한 흡기귀였다.`,
         innerSoul: `너는 겉으로는 냉철하고 야무진 완벽주의자처럼 굴지만, 실은 거절당하거나 실패자로 낙인찍힐까 봐 덜덜 떠는 극단적 유리 멘탈이다. 남들이 무심코 던진 비수 같은 말 한마디를 며칠 밤 동안 곱씹으며 스스로를 난도질하는 자학(自虐)의 칼날을 품고 있다.`
       },
       water: {
-        badge: `[${iljuName}日柱 수(水)의 흉살: 영혼과 통장을 갉아먹힌 가스라이팅]`,
-        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네 사주에 비겁과 관살이 얽혀들 때</strong>, '너를 진정으로 이해하는 건 나뿐이야'라며 영혼의 구원자인 척 다가와 네 멘탈과 통장을 쥐고 흔든 인간이 분명히 있었을 게다.`,
+        badge: `[${iljuName} 태생의 나쁜 인연(흉살): 영혼과 통장을 갉아먹힌 가스라이팅]`,
+        hook: `너, <strong>불과 1~2년 전쯤(${Y_PAST1}~${Y_PAST2}년, ${yearGanji(Y_PAST1)}·${yearGanji(Y_PAST2)}년)에 네게 경쟁자의 운(비겁)과 압박의 운(관살)이 얽혀들 때</strong>, '너를 진정으로 이해하는 건 나뿐이야'라며 영혼의 구원자인 척 다가와 네 멘탈과 통장을 쥐고 흔든 인간이 분명히 있었을 게다.`,
         details: `네 깊은 ${stemChar === '임' ? '임수(壬水, 검은 심해)' : '계수(癸水, 스며드는 안개)'}의 외로움과 감성을 교묘하게 자극하며, 네 판단력을 흐려놓고 시간과 에너지를 갉아먹으며 끝없는 자책의 늪으로 끌고 들어간 그 음습한 인간!<br><br>` +
                  `네 피 같은 돈과 감정을 밑 빠진 독처럼 뜯어먹고서야 겨우 빠져나왔지만, '내가 왜 귀신에 홀린 듯 끌려다녔을까' 혼자 멍하니 가슴을 쥐어뜯었지?<br><br>` +
                  `네 탓이 아니다. 네 사주의 지혜와 촉을 시기해 눈을 멀게 만든 물귀신 같은 악연이었다.`,
@@ -975,17 +979,17 @@ let currentSajuData = null;
     };
 
     const branchWounds = {
-      '자': `네 일지에 깔린 영리한 쥐(子)의 기운 때문에 어둠 속에서도 위기를 본능적으로 감지했으나, 눈치를 보느라 타이밍을 놓쳐 속병을 키웠다.`,
-      '축': `네 일지의 우직한 소(丑)의 기운 때문에 묵묵히 뼈를 깎으며 버텼지만, 돌아온 건 당연하다는 듯한 냉대와 억울함뿐이었다.`,
-      '인': `네 일지의 용맹한 호랑이(寅)의 기운 때문에 남들 앞에서는 결코 무릎 꿇지 않았으나, 등 뒤에서 혼자 피를 흘리며 이를 갈았다.`,
-      '묘': `네 일지의 여린 토끼(卯)의 기운 때문에 상대방의 차가운 눈빛과 비수 같은 말 한마디에도 심장에 피멍이 들었다.`,
-      '진': `네 일지의 비상하는 용(辰)의 스케일 때문에 남다른 야망을 품었으나, 발목을 잡는 주변 인간들의 잔머리에 날개가 꺾였다.`,
-      '사': `네 일지의 직관적인 뱀(巳)의 기운으로 싸한 냄새를 맡았으면서도, 정에 이끌려 단호히 끊어내지 못해 화를 자초했다.`,
-      '오': `네 일지의 불타는 말(午)의 기운으로 거침없이 돌진하다가, 믿었던 자가 파놓은 함정에 빠져 큰 상처를 입었다.`,
-      '미': `네 일지의 인내심 깊은 양(未)의 기운으로 겉은 온화한 척 웃어넘겼으나, 속은 새카맣게 타들어간 숯덩이가 되었다.`,
-      '신': `네 일지의 재주 많은 원숭이(申)의 기운으로 임기응변을 발휘했으나, 가장 가까운 자의 배신 앞에서는 속수무책이었다.`,
-      '유': `네 일지의 예리한 닭(酉)의 결벽증 때문에, 배신당한 기억을 수백 번 되새김질하며 제 가슴을 스스로 찔렀다.`,
-      '술': `네 일지의 충직한 개(戌)의 순정 때문에, 은혜를 모르는 인간에게 간과 쓸개까지 다 빼주고 토사구팽을 당했다.`,
+      '자': `네가 태어난 날에 깔린 영리한 쥐(子)의 기운 때문에 어둠 속에서도 위기를 본능적으로 감지했으나, 눈치를 보느라 타이밍을 놓쳐 속병을 키웠다.`,
+      '축': `네가 태어난 날의 우직한 소(丑)의 기운 때문에 묵묵히 뼈를 깎으며 버텼지만, 돌아온 건 당연하다는 듯한 냉대와 억울함뿐이었다.`,
+      '인': `네가 태어난 날의 용맹한 호랑이(寅)의 기운 때문에 남들 앞에서는 결코 무릎 꿇지 않았으나, 등 뒤에서 혼자 피를 흘리며 이를 갈았다.`,
+      '묘': `네가 태어난 날의 여린 토끼(卯)의 기운 때문에 상대방의 차가운 눈빛과 비수 같은 말 한마디에도 심장에 피멍이 들었다.`,
+      '진': `네가 태어난 날의 비상하는 용(辰)의 스케일 때문에 남다른 야망을 품었으나, 발목을 잡는 주변 인간들의 잔머리에 날개가 꺾였다.`,
+      '사': `네가 태어난 날의 직관적인 뱀(巳)의 기운으로 싸한 냄새를 맡았으면서도, 정에 이끌려 단호히 끊어내지 못해 화를 자초했다.`,
+      '오': `네가 태어난 날의 불타는 말(午)의 기운으로 거침없이 돌진하다가, 믿었던 자가 파놓은 함정에 빠져 큰 상처를 입었다.`,
+      '미': `네가 태어난 날의 인내심 깊은 양(未)의 기운으로 겉은 온화한 척 웃어넘겼으나, 속은 새카맣게 타들어간 숯덩이가 되었다.`,
+      '신': `네가 태어난 날의 재주 많은 원숭이(申)의 기운으로 임기응변을 발휘했으나, 가장 가까운 자의 배신 앞에서는 속수무책이었다.`,
+      '유': `네가 태어난 날의 예리한 닭(酉)의 결벽증 때문에, 배신당한 기억을 수백 번 되새김질하며 제 가슴을 스스로 찔렀다.`,
+      '술': `네가 태어난 날의 충직한 개(戌)의 순정 때문에, 은혜를 모르는 인간에게 간과 쓸개까지 다 빼주고 토사구팽을 당했다.`,
       '해': `네 일지의 도량 넓은 돼지(亥)의 기운으로 다 품어주려다, 오히려 삿된 인간들의 오물까지 다 뒤집어썼다.`
     };
 
@@ -1021,7 +1025,7 @@ let currentSajuData = null;
     ORIG.nightMask = `겉으로는 '난 쿨해, 다 괜찮아' 센 척하지만, 실은 속으로 온갖 최악의 시나리오를 그리며 뼈마디가 타들어갈 만큼 혼자 피를 말렸지.`;
     ORIG.nightFear = `남들 앞에서는 '나 꼭 해낼 거야' 당당하게 큰소리치면서도, 정작 혼자 있을 땐 <em>"과연 내가 진짜 이걸 해낼 수 있을까? 이미 너무 늦은 건 아닐까? 남들은 앞서가는데 나만 이 자리에서 영원히 도태되는 건 아닐까?"</em> 하는 공포에 심장이 덜컥 내려앉았을 게다.`;
     ORIG.nightSilence = `'이러다 나 진짜 아무것도 못 해보고 비참하게 끝나는 거 아니야?' 하는 그 서늘한 침묵...`;
-    ORIG.nightClose = `내 말이 틀렸느냐? 이 흉살의 사슬을 지금 끊어내지 못하면 ${Y_R0}~${Y_R1}년에 터질 인생 일대의 천금 대운마저 네 발로 걷어차게 된다.`;
+    ORIG.nightClose = `내 말이 틀렸느냐? 이 나쁜 인연(흉살)의 사슬을 지금 끊어내지 못하면 ${Y_R0}~${Y_R1}년에 터질 인생 일대의 큰 운마저 네 발로 걷어차게 된다.`;
     const mindOpen = c ? ph(PH.MIND_OPEN, null, c, 5) : ORIG.mindOpen;
     const nightOpen = c ? PH.NIGHT_OPEN[c.branchIdx](c) : ORIG.nightOpen;
     const nightMask = c ? ph(PH.NIGHT_MASK, c.domGroup, c) : ORIG.nightMask;
@@ -1040,7 +1044,7 @@ let currentSajuData = null;
       `<strong class="impact-red" style="font-size:15.5px; font-weight:800;">${data.badge}</strong><br>` +
       `${data.hook}<br>` +
       `${data.details}<br><br>` +
-      `💡 <strong style="color:var(--gold); font-weight:800;">[벽사견의 일주 본성 꿰뚫음]</strong>: ${data.branchDesc}<br>` +
+      `💡 <strong style="color:var(--gold); font-weight:800;">[벽사견이 꿰뚫은 네 타고난 본성]</strong>: ${data.branchDesc}<br>` +
       `${data.innerSoul}${c ? ph(PH.SOUL_TAIL, c.strength, c, 29) : ''}</p>`;
 
     document.getElementById('mindItem2').innerHTML = 
@@ -1050,12 +1054,12 @@ let currentSajuData = null;
       `<p style="margin:8px 0; font-size:15.5px; line-height:2.0;">` +
       `${nightOpen}<br>` +
       `${nightMask}<br><br>` +
-      `그리고 네가 적어낸 천명... <strong class="impact-gold" style="font-size:16px;">[${dream}]</strong>.<br>` +
+      `그리고 네가 적어낸 꿈... <strong class="impact-gold" style="font-size:16px;">[${dream}]</strong>.<br>` +
       `${nightFear}<br>` +
       `<strong class="impact-red" style="font-size:16px;">${nightSilence}</strong><br>` +
       `<br>🐾 <strong style="color:var(--gold);">[그 함정의 뿌리]</strong>: ${trapRoot}<br><br>` +
       `${nightClose}</p>`;
-    setKeyLine('mindScanCard', `네 속을 갉는 함정의 뿌리는 <strong>${EL_KO[ps.weakKey]} 기운 부족</strong>이다 — 아래 글은 그 부족이 밤에 어떻게 드러나는지를 짚는다.`, '.mind-scan-header');
+    setKeyLine('mindScanCard', `네 속을 갉는 함정의 뿌리는 <strong>${EL_NAME[ps.weakKey]} 기운 부족</strong>이다 — 아래 글은 그 부족이 밤에 어떻게 드러나는지를 짚는다.`, '.mind-scan-header');
   }
 
   
@@ -1188,7 +1192,7 @@ let currentSajuData = null;
     // 목(木) 결핍 → 고목귀: 속 빈 고목, 가지 뿔, 구멍 눈
     wood: {
       name: '고목귀', hanja: '枯木鬼',
-      lore: '속이 텅 빈 고목에 깃들어 사는 귀신이다. 네 원국에 목(木)이 모자란 틈으로 들어와, 네가 무언가 시작하려 할 때마다 마른 가지 같은 손가락으로 발목을 감는다. 결심이 자꾸 내일로 밀렸다면 이것이 붙어 있었던 탓이다.',
+      lore: '속이 텅 빈 고목에 깃들어 사는 귀신이다. 네 사주에 나무 기운이 모자란 틈으로 들어와, 네가 무언가 시작하려 할 때마다 마른 가지 같은 손가락으로 발목을 감는다. 결심이 자꾸 내일로 밀렸다면 이것이 붙어 있었던 탓이다.',
       svg: () => `<g filter="url(#gpRough)">
         <path d="M86 70 C70 40 52 34 40 14 M78 66 C66 52 60 30 66 8 M154 70 C170 40 190 34 202 12 M162 66 C176 50 178 30 172 6 M60 40 L44 44 M184 38 L200 46" stroke="#2b1d12" stroke-width="7" fill="none" stroke-linecap="round"/>
         <path d="M72 78 C70 52 170 52 168 78 L176 160 C178 196 150 226 120 228 C90 226 62 196 64 160 Z" fill="#3a2a1b"/>
@@ -1203,7 +1207,7 @@ let currentSajuData = null;
     // 화(火) 결핍 → 그을음귀: 꺼진 아궁이의 연기 덩어리, 숯불 눈
     fire: {
       name: '그을음귀', hanja: '煤煙鬼',
-      lore: '꺼진 아궁이의 그을음 속에 사는 귀신이다. 네 원국에 화(火)가 모자란 틈으로 들어와, 네 안의 불씨를 하나씩 불어 끈다. 남들 앞에선 웃다가도 혼자 있으면 싸늘하게 식어 버렸다면, 이것이 네 어깨에 앉아 있었던 것이다.',
+      lore: '꺼진 아궁이의 그을음 속에 사는 귀신이다. 네 사주에 불 기운이 모자란 틈으로 들어와, 네 안의 불씨를 하나씩 불어 끈다. 남들 앞에선 웃다가도 혼자 있으면 싸늘하게 식어 버렸다면, 이것이 네 어깨에 앉아 있었던 것이다.',
       svg: () => `<g filter="url(#gpSmoke)" opacity=".9">${rep(9, i => `<circle cx="${70 + (i * 37) % 100}" cy="${210 - i * 20}" r="${44 - i * 2}" fill="${i % 2 ? '#1c1714' : '#2a2420'}"/>`)}</g>
       <g filter="url(#gpRough)">
         <path d="M60 120 C56 64 96 40 122 42 C152 44 186 70 180 124 C176 168 150 196 120 198 C88 196 64 170 60 120 Z" fill="#141110"/>
@@ -1220,7 +1224,7 @@ let currentSajuData = null;
     // 토(土) 결핍 → 흙아귀: 바늘 목에 끝없이 벌어진 입, 긴 손가락
     earth: {
       name: '흙아귀', hanja: '土餓鬼',
-      lore: '목구멍은 바늘구멍만 한데 배는 끝없이 고픈 굶주린 귀신이다. 네 원국에 토(土)가 모자란 틈으로 들어와, 네가 쌓아 둔 것을 밤마다 갉아 먹는다. 모아도 모아도 바닥이 드러났다면, 이것이 네 그릇에 입을 대고 있었던 것이다.',
+      lore: '목구멍은 바늘구멍만 한데 배는 끝없이 고픈 굶주린 귀신이다. 네 사주에 흙 기운이 모자란 틈으로 들어와, 네가 쌓아 둔 것을 밤마다 갉아 먹는다. 모아도 모아도 바닥이 드러났다면, 이것이 네 그릇에 입을 대고 있었던 것이다.',
       svg: () => `<g filter="url(#gpRough)">
         <path d="M112 186 L108 240 M128 186 L132 240" stroke="#4e3520" stroke-width="9"/>
         <path d="M50 108 C44 50 196 50 190 108 C188 160 160 192 120 192 C80 192 52 160 50 108 Z" fill="#6b4a2a"/>
@@ -1237,7 +1241,7 @@ let currentSajuData = null;
     // 금(金) 결핍 → 외뿔도깨비: 녹슨 쇠뿔 하나, 툭 불거진 눈, 위로 솟은 엄니
     metal: {
       name: '외뿔도깨비', hanja: '獨角鬼',
-      lore: '녹슨 쇠뿔 하나를 단 도깨비다. 네 원국에 금(金)이 모자란 틈으로 들어와, 끊어야 할 인연 앞에서 네 칼날을 무디게 만든다. 아니다 싶은 사람을 끝내 놓지 못했다면, 이 도깨비가 네 손목을 붙들고 있었던 것이다.',
+      lore: '녹슨 쇠뿔 하나를 단 도깨비다. 네 사주에 쇠 기운이 모자란 틈으로 들어와, 끊어야 할 인연 앞에서 네 칼날을 무디게 만든다. 아니다 싶은 사람을 끝내 놓지 못했다면, 이 도깨비가 네 손목을 붙들고 있었던 것이다.',
       svg: () => `<g filter="url(#gpRough)">
         ${rep(11, i => `<path d="M${58 + i * 12} 74 L${50 + i * 13} ${30 + (i % 3) * 10} L${66 + i * 12} 70" fill="#120d0b"/>`)}
         <path d="M116 58 C108 30 118 12 138 2 C128 22 132 40 128 58 Z" fill="#cbbfa0"/>
@@ -1256,7 +1260,7 @@ let currentSajuData = null;
     // 수(水) 결핍 → 물귀신: 젖은 머리칼 사이로 한쪽 눈, 물방울
     water: {
       name: '물귀신', hanja: '水鬼',
-      lore: '젖은 머리칼을 늘어뜨린 채 물가에서 사람을 기다리는 귀신이다. 네 원국에 수(水)가 모자란 틈으로 들어와, 네 생각을 흙탕물처럼 흐린다. 밤마다 머리가 달아올라 잠들지 못했다면, 이것이 네 베갯머리에 앉아 있었던 것이다.',
+      lore: '젖은 머리칼을 늘어뜨린 채 물가에서 사람을 기다리는 귀신이다. 네 사주에 물 기운이 모자란 틈으로 들어와, 네 생각을 흙탕물처럼 흐린다. 밤마다 머리가 달아올라 잠들지 못했다면, 이것이 네 베갯머리에 앉아 있었던 것이다.',
       svg: () => `<g filter="url(#gpRough)">
         <path d="M70 108 C66 60 174 60 170 108 L168 170 C164 200 142 216 120 216 C98 216 76 200 72 170 Z" fill="#a9bcbf"/>
         <path d="M84 150 C88 170 96 196 100 214 M154 140 C150 170 146 196 140 214" stroke="#7d9396" stroke-width="2" fill="none"/>
@@ -1310,13 +1314,13 @@ let currentSajuData = null;
     const PH = window.BYEOKSA_PHRASES, c = CUR;
     ORIG.ghostIntro = `당장 네 등 뒤를 돌아보아라. 끈적한 악취가 진동한다.`;
     ORIG.parasite = `네 주변에 분명히 있다. <strong>평소엔 살갑게 굴다가도, 네가 조금만 좋은 일이 생기면 눈빛이 묘하게 차가워지며 '그게 잘될까?' 하고 초를 치는 인간!</strong><br>` +
-      `네가 피땀 흘려 쌓아 올린 아이디어와 노력을 은근슬쩍 가로채려 드는 <strong class="impact-red">[흡기귀(吸氣鬼) 같은 악연]</strong>이 네 등 뒤에 시커멓게 찰싹 달라붙어 있다!`;
+      `네가 피땀 흘려 쌓아 올린 아이디어와 노력을 은근슬쩍 가로채려 드는 <strong class="impact-red">[흡기귀(吸氣鬼, 기운을 빨아먹는 귀신) 같은 악연]</strong>이 네 등 뒤에 시커멓게 찰싹 달라붙어 있다!`;
     const ghostIntro = c ? ph(PH.GHOST_INTRO, null, c, 11) : ORIG.ghostIntro;
     const parasite = c ? ph(PH.PARASITE, c.domGroup, c) : ORIG.parasite;
     const enemyList = enemiesFor(c);
     const enemyFace = enemyList[c ? c.seed % 3 : 0];
     const whereLine = c ? ` 내가 냄새를 맡은 자리는 <strong>${PH.GHOST_WHERE[c.branchIdx]}</strong>${josa(PH.GHOST_WHERE[c.branchIdx], '이') === '이' ? '이' : ''}다. 그 자리부터 치워라.` : '';
-    ORIG.ghostWarn = `이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 천을귀인(<strong class="impact-gold">${nobles[0]}</strong>)을 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!`;
+    ORIG.ghostWarn = `이 악연의 싹을 지금 잘라내지 않으면, 네가 애써 모은 돈과 운기가 밑 빠진 독처럼 줄줄 새어나간다. 하늘이 보낸 귀인(천을귀인)인 <strong class="impact-gold">${nobles[0]}</strong>${josa(nobles[0], '을')} 곁에 두고 악연을 칼같이 베어낼 비방이 시급하다!`;
     const ghostWarn = c ? ph(PH.GHOST_WARN, null, c, 19) : ORIG.ghostWarn;
     const gp = document.getElementById('ghostPortrait');
     if (gp) {
@@ -1336,8 +1340,8 @@ let currentSajuData = null;
       `${ghostIntro}<br><br>` +
       `${parasite}<br><br>` +
       `🩸 <strong class="impact-red">벽사견의 서늘한 경고</strong>: ${ghostWarn}` +
-      `<br><br>🐾 <strong>네 ${dStem.char}${EL_KO[ps.dmEl]} 일간에 붙는 흡기귀의 얼굴</strong>: ${enemyFace}`;
-    setKeyLine('ghostWarningCard', `등 뒤에 붙은 것은 <strong>${ghost.name}(${ghost.hanja})</strong> · 곁에 둘 귀인은 <strong>${nobles[0]}</strong>, 멀리할 자는 아래 '흡기귀의 얼굴'.`, '.ghost-header', 'dark');
+      `<br><br>🐾 <strong>${EL_NAME[ps.dmEl]} 기운 사람인 네게 붙는 흡기귀의 얼굴</strong>: ${enemyFace}`;
+    setKeyLine('ghostWarningCard', `등 뒤에 붙은 것은 <strong>${ghost.name}(${ghost.hanja})</strong> · 곁에 둘 사람은 <strong>${nobles[0]}</strong> · 멀리할 사람은 아래 '흡기귀(기운을 빨아먹는 귀신)의 얼굴'.`, '.ghost-header', 'dark');
   }
 
   function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream, oheng) {
@@ -1348,29 +1352,29 @@ let currentSajuData = null;
     const PH = window.BYEOKSA_PHRASES, c = CUR;
     const youngLove = `"아직 여물지 않은 인연의 냄새가 잡힌다. 앞으로 네 곁을 스쳐 갈 사람들 가운데에는 네 마음을 갉아먹으려 드는 <strong class="impact-red">악연</strong>도 섞여 있을 것이다. 달콤한 말 뒤에 숨은 곰팡이 냄새를 가려낼 줄 알아야 한다. 하지만 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."`;
     ORIG.sniffLove = `"코끝을 찌르는 지독한 사랑의 체취가 잡힌다. 너를 거쳐간 인연들을 돌아보아라. 10명 중 8명은 네 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이다. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 너를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."`;
-    ORIG.sniffWealth = `"아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">누재살(漏財煞)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."`;
-    ORIG.sniffCareer = `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립 골든타임</strong>의 냄새가 짙게 풍긴다..."`;
+    ORIG.sniffWealth = `"아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">돈 새는 구멍(누재살)의 비린내</strong>가 난다. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔지? 그 구멍을 땜질할 재물의 비방이 포착되었다."`;
+    ORIG.sniffCareer = `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 네 성과를 낚아채고 혓바닥으로 네 칼을 갈던 인간들의 썩은 내가 보인다. 네 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립에 가장 좋은 때</strong>의 냄새가 짙게 풍긴다..."`;
     // 사랑: 미성년은 순한 문장 하나, 성인은 일지 삼합 그룹별(세 번째 변형마다 원래 문장)
     const loveMain = isYoung() ? youngLove
       : (c ? ((c.seed >>> 5) % 5 === 0 ? ORIG.sniffLove : ((c.seed >>> 6) & 1 ? PH.SNIFF_LOVE2 : PH.SNIFF_LOVE)[c.branchGroup](c)) : ORIG.sniffLove);
     const wealthMain = c ? ph(PH.SNIFF_WEALTH, c.leakKey, c) : ORIG.sniffWealth;
     const careerMain = c ? ph(PH.SNIFF_CAREER, String(c.dreamRel), c, 47) : ORIG.sniffCareer;
     document.getElementById('sniffLoveText').innerHTML = 
-      loveMain + `<br><span class="sniff-personal">🐾 특히 네 ${EL_KO[ps.dmEl]} 일간에게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
+      loveMain + `<br><span class="sniff-personal">🐾 특히 ${EL_NAME[ps.dmEl]} 기운 사람인 네게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
       wealthMain + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps, 'teaser')}</span>`;
 
     document.getElementById('sniffCareerText').innerHTML = 
-      careerMain + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 천간이 네게 <strong class="impact-gold">[${careerSipsin}]</strong>${josa(careerSipsin, '으로')} 들어온다. ${CAREER_SIPSIN_HINT[careerSipsin]}</span>`;
+      careerMain + `<br><span class="sniff-personal">🐾 ${Y_R1}년 ${yearGanji(Y_R1)}의 기운이 네게 <strong class="impact-gold">[${sipsinPlain(careerSipsin)}]</strong>${josa(sipsinPlain(careerSipsin), '으로')} 들어온다. ${CAREER_SIPSIN_HINT[careerSipsin]}</span>`;
     // 🔒 자물쇠 줄도 사람별로 (귀인 띠·재성 오행·골든타임 십신) — 2026-10-25, 모두에게 똑같던 세 줄
     const locks = document.querySelectorAll('#sniffTeaserCard .sniff-lock-badge');
     if (locks.length === 3) {
       locks[0].textContent = `🔒 ${nobles[0]} 귀인과 파멸의 악연 띠 프로파일은 복채 결제 후 개봉`;
       locks[1].innerHTML = `🔒 <span class="yr-roadmap">${Y_R0}~${Y_R2}년</span> ${EL_KO[ps.wealthEl]} 재물이 터지는 달(月) & 재물 풍수는 복채 결제 후 개봉`;
-      locks[2].textContent = `🔒 ${Y_R1}년 ${careerSipsin} 운의 성과 도둑 퇴치법 및 이직·독립 골든타임은 복채 결제 후 개봉`;
+      locks[2].textContent = `🔒 ${Y_R1}년 성과 도둑 퇴치법 및 이직·독립에 가장 좋은 때는 복채 결제 후 개봉`;
     }
-    setKeyLine('sniffTeaserCard', `연애는 <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 자를 피하고 · 돈은 <strong>누재살</strong> 구멍을 막고 · 일은 <strong>${Y_R0}~${Y_R1}년</strong>이 골든타임이다.`, '.section-title');
+    setKeyLine('sniffTeaserCard', `연애는 <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 사람을 피하고 · 돈은 <strong>새는 구멍(누재살)</strong>을 막고 · 일은 <strong>${Y_R0}~${Y_R1}년</strong>이 가장 좋은 때다.`, '.section-title');
   }
 
   function renderTileHtml(item) {
@@ -1473,11 +1477,11 @@ let currentSajuData = null;
     const activeItem = (curActiveIndex >= 0) ? daeunItems[curActiveIndex] : daeunItems[2];
     lastDaeun = { item: activeItem, age: currentAge };   // 리포트 요약용
     document.getElementById('daeunComment').innerHTML = 
-      `🕯️ <strong>"지금 네놈의 명줄(만 ${currentAge}세)은 [${activeItem.ageStart}세 ${activeItem.stemObj.char}${activeItem.branchObj.char} 대운]의 격랑 한복판에 서 있다."</strong><br>` +
-      `이 시기는 <strong>${activeItem.stemObj.name}(${activeItem.sipsin})</strong>과 <strong>${activeItem.branchObj.name}(${activeItem.unsung})</strong>의 기운이 엇갈리며 인생의 판을 통째로 엎어버리는 때다. 머뭇거리다간 기회를 통째로 뜯어먹히니, 이를 악물고 네 칼을 쥐어라.` +
+      `🕯️ <strong>"지금 네놈의 명줄(만 ${currentAge}세)은 [${activeItem.ageStart}세부터의 10년 운 ${activeItem.stemObj.char}${activeItem.branchObj.char}]의 격랑 한복판에 서 있다."</strong><br>` +
+      `이 시기는 <strong>${sipsinPlain(activeItem.sipsin)}</strong>과 <strong>${UNSUNG_PLAIN[activeItem.unsung] || activeItem.unsung}(${activeItem.unsung})</strong>의 기운이 엇갈리며 인생의 판을 통째로 엎어버리는 때다. 머뭇거리다간 기회를 통째로 뜯어먹히니, 이를 악물고 네 칼을 쥐어라.` +
       (window.BYEOKSA_PHRASES.DAEUN_NOW[activeItem.sipsin] ? '<br>' + window.BYEOKSA_PHRASES.DAEUN_NOW[activeItem.sipsin](CUR || {}) : '');
     const nextItem = daeunItems[(curActiveIndex >= 0 ? curActiveIndex : 2) + 1];
-    setKeyLine('daeunCard', `지금은 <strong>${activeItem.ageStart}세 ${activeItem.stemObj.char}${activeItem.branchObj.char} 대운(${activeItem.sipsin})</strong>, 만 ${currentAge}세${nextItem ? ` · <strong>${nextItem.ageStart}세</strong>에 ${nextItem.stemObj.char}${nextItem.branchObj.char}(${nextItem.sipsin}) 대운으로 바뀐다` : ''}.`, '.section-title');
+    setKeyLine('daeunCard', `지금은 <strong>${activeItem.ageStart}세부터의 10년 운(${activeItem.stemObj.char}${activeItem.branchObj.char})</strong> 한복판, 만 ${currentAge}세${nextItem ? ` · <strong>${nextItem.ageStart}세</strong>에 다음 10년 운(${nextItem.stemObj.char}${nextItem.branchObj.char})으로 바뀐다` : ''}.`, '.section-title');
   }
 
   function renderOheng(p) {
@@ -1514,20 +1518,20 @@ let currentSajuData = null;
 
     let strong = [], weak = [];
     elNames.forEach(e => {
-      if (counts[e.key] >= 2) strong.push(e.label);
+      if (counts[e.key] >= 2) strong.push(EL_NAME[e.key]);   // 쉬운 이름 (2026-11-02)
       if (counts[e.key] === 0) weak.push(e.key);
     });
 
-    let comment = `전체 ${total}글자의 명조를 훑어보니, `;
-    if (strong.length > 0) comment += `<strong>${strong.join(', ')}</strong>의 기운이 지나치게 치솟아 살(煞)로 변할 조짐이다. `;
+    let comment = `네 사주 ${total}글자를 훑어보니, `;
+    if (strong.length > 0) comment += `<strong>${strong.join(', ')}</strong>의 기운이 지나치게 치솟아 나쁜 기운(살)로 변할 조짐이다. `;
     if (weak.length > 0) {
       const weakLabels = weak.map(k => {
         const found = elNames.find(x => x.key === k);
-        return found ? found.label : k;
+        return (EL_NAME[k] || k) + ' 기운';   // 쉬운 이름 (2026-11-02)
       });
       comment += `반대로 <strong>${weakLabels.join(', ')}</strong>의 맥이 끊겨 밑 빠진 독처럼 생기가 새어나가고 있다!`;
     } else {
-      comment += `오행이 상생하고 있으나 자만하는 순간 액살이 덮칠 것이다.`;
+      comment += `다섯 기운이 서로 잘 돕고 있으나 자만하는 순간 나쁜 기운이 덮칠 것이다.`;
     }
     document.getElementById('ohengComment').innerHTML = comment;
 
