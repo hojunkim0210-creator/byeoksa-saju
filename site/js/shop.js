@@ -497,6 +497,63 @@
   }
   document.addEventListener('DOMContentLoaded', renderShopShelf);
 
+  // ═════════════════════════════════════════════════════════════════════
+  // 실제 손님 흔적 (2026-11-01 후기 1단계 — 가짜 후기·가짜 숫자 금지 규칙 안에서)
+  //   REVIEW_FORM_URL : 후기를 받는 구글 폼 주소. 비어 있으면 리포트 끝의 '후기 남기기' 단추를 숨긴다 (대표님이 폼을 만들면 여기만 채운다)
+  //   REVIEWS         : 대표님이 포트원 결제 내역과 대조해 확인한 실제 구매자 후기만. 효과를 장담하는 글('진짜 맞았다', '효과 봤다')과
+  //                     개인정보가 든 글은 싣지 않는다. 할인 등 대가를 주고 받은 글은 when 에 '(할인 받고 작성)'을 붙인다. 비어 있으면 후기 칸 숨김
+  //   STATS_MIN_SHOW  : 결제 수 서버(/api/stats)가 포트원에서 센 실제 결제 수가 이 수 이상일 때만 "N명이 봉인을 풀었다"를 보인다 (적을 땐 역효과)
+  // ═════════════════════════════════════════════════════════════════════
+  let REVIEW_FORM_URL = '';
+  let REVIEWS = [
+    // { text: '한 줄 후기(받은 글 그대로)', who: '별명', when: '2026-11', verified: true }
+  ];
+  const STATS_MIN_SHOW = 100;
+
+  function reviewItemHtml(r) {
+    const who = [r.who ? esc(r.who) : '손님', r.verified ? '실제 구매자' : null, r.when ? esc(r.when) : null].filter(Boolean).join(' · ');
+    return `<li class="review-item"><p class="review-text">“${esc(r.text)}”</p><p class="review-who">${who}</p></li>`;
+  }
+  /** 대문 '먼저 다녀간 손님의 한 줄'(최대 3개)과 결제창의 후기 두 줄. 후기가 없으면 둘 다 숨긴다 */
+  function renderReviews() {
+    const list = REVIEWS.filter(r => r && r.text);
+    const home = $('reviewsHome'), homeList = $('reviewsHomeList'), pay = $('reviewsPay');
+    if (home && homeList) { home.hidden = list.length === 0; homeList.innerHTML = list.slice(0, 3).map(reviewItemHtml).join(''); }
+    if (pay) { pay.hidden = list.length === 0; pay.innerHTML = list.length ? `<ul class="review-list review-list-mini">${list.slice(0, 2).map(reviewItemHtml).join('')}</ul>` : ''; }
+  }
+  /** 실측 결제 수: 서버가 포트원에서 센 수가 STATS_MIN_SHOW 이상일 때만 보인다. 서버가 없거나 실패하면 조용히 숨긴다 */
+  async function renderStats(count) {
+    const el = $('shopCount'); if (!el) return;
+    let n = count;
+    if (n === undefined) {
+      try { const r = await fetch('/api/stats'); const j = r.ok ? await r.json() : null; n = (j && j.status === 'OK') ? j.paid : null; } catch (e) { n = null; }
+    }
+    const ok = Number.isInteger(n) && n >= STATS_MIN_SHOW;
+    el.hidden = !ok;
+    if (ok) el.textContent = `지금까지 ${won(n)}명이 봉인을 풀었다. 결제 확인 서버가 센 수다.`;
+  }
+  /** 이 사람의 결제 번호(리포트 또는 전부 묶음 열림 표시에서). 후기 폼에 적어 실제 구매자인지 확인하는 용도 — 개인정보가 아니다 */
+  function paidIdFor(sd) {
+    if (!sd) return '';
+    for (const k of [`byeoksa.paid.report.${sajuKey(sd)}`, `byeoksa.paid.bundle.${sajuKey(sd)}`]) {
+      try { const v = JSON.parse(localStorage.getItem(k) || 'null'); if (v && v.paymentId) return String(v.paymentId); } catch (e) { /* 무시 */ }
+    }
+    return '';
+  }
+  /** 리포트 끝 '후기 남기기': 구글 폼 주소가 있을 때만 */
+  function renderReviewAsk() {
+    const box = $('reviewAsk'), link = $('reviewAskLink'), idEl = $('reviewAskId');
+    if (!box || !link) return;
+    box.hidden = !REVIEW_FORM_URL;
+    if (!REVIEW_FORM_URL) return;
+    link.href = REVIEW_FORM_URL;
+    const pid = paidIdFor(typeof currentSajuData !== 'undefined' ? currentSajuData : null);
+    if (idEl) { idEl.hidden = !pid; idEl.textContent = pid ? `결제 번호 ${pid} (후기에 적어 주면 확인이 빠르다)` : ''; }
+  }
+  document.addEventListener('DOMContentLoaded', () => { renderReviews(); renderStats(); });
+
   window.openBundleFromShelf = openBundleFromShelf;
-  window.BYEOKSA_SHOP = { openBundle, openBundleFromShelf, afterCompat, renderShopShelf, newYearData, compatDetailData, NY, targetYear };
+  window.BYEOKSA_SHOP = { openBundle, openBundleFromShelf, afterCompat, renderShopShelf, newYearData, compatDetailData, NY, targetYear,
+    // 후기·결제 수 (테스트에서 값을 넣어 본다)
+    renderReviews, renderStats, renderReviewAsk, setReviews: list => { REVIEWS = Array.isArray(list) ? list : []; renderReviews(); }, setReviewFormUrl: url => { REVIEW_FORM_URL = url || ''; renderReviewAsk(); } };
 })();

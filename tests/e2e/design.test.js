@@ -1,6 +1,6 @@
 // 디자인 2차 (2026-11-01 벤치마킹 ⑤⑥):
 //   ⑤ 강조는 카드당 '핵심' 줄 하나 — 본문 strong·impact 낱말은 굵게만(형광펜·붓 밑줄·색 없음). 색은 핵심 줄과 악연 경고 카드에만.
-//   ⑥ 긴 단락은 '더 보기'로 접되 글은 그대로 남는다(문구 보존). 짧은 글은 접지 않는다. 새 풀이를 하면 다시 접힌다.
+//   ⑥ 긴 단락은 '더 보기'로 접되 글은 그대로 남는다(문구 보존). 짧은 글은 접지 않는다. 새 풀이를 하면 다시 접힌다. 펼친 뒤 단추는 '접기'로 남는다(업데이트 28).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium, openPage, fillAndSubmit } = require('./helpers');
@@ -58,7 +58,7 @@ test('불티는 대문 사진 안에서만 여덟 점, 상단 바에는 공유 �
 const foldState = (page, sel) => page.evaluate(s => {
   const el = document.querySelector(s); const btn = el.nextElementSibling;
   return { clamped: el.classList.contains('fold-clamp'), open: el.classList.contains('is-open'), overflow: el.scrollHeight > el.clientHeight + 1,
-    btn: (btn && btn.classList.contains('fold-more')) ? btn.textContent : null };
+    btn: (btn && btn.classList.contains('fold-more')) ? btn.textContent : null, aria: btn && btn.getAttribute('aria-expanded'), focus: document.activeElement === btn };
 }, sel);
 
 test('긴 단락 접기: 대문 설화 단락은 더 보기로 접히고 누르면 펼쳐진다, 글은 그대로', async () => {
@@ -69,7 +69,10 @@ test('긴 단락 접기: 대문 설화 단락은 더 보기로 접히고 누르�
   assert.ok(await page.evaluate(() => document.querySelector('.lore-strip').textContent.includes('벽사견은 지금도 대문 앞에서')), '접혀도 글은 남아 있다');
   await page.click('.lore-strip + .fold-more');
   const after = await foldState(page, '.lore-strip');
-  assert.ok(after.open && !after.overflow && after.btn === null, JSON.stringify(after));
+  assert.ok(after.open && !after.overflow && after.btn === '접기' && after.aria === 'true' && after.focus, '펼친 뒤 단추는 접기로 남고 초점 유지: ' + JSON.stringify(after));
+  await page.click('.lore-strip + .fold-more');
+  const refold = await foldState(page, '.lore-strip');
+  assert.ok(!refold.open && refold.overflow && refold.btn === '더 보기' && refold.aria === 'false', '다시 누르면 접힘: ' + JSON.stringify(refold));
   assert.deepEqual(page._errors, []);
   await ctx.close();
 });
@@ -87,7 +90,7 @@ test('긴 단락 접기: 결과의 긴 풀이는 접히고 짧은 글은 안 접
   const long = items.find(x => x.clamped);
   await page.click(`#${long.id} + .fold-more`);
   const opened = await foldState(page, '#' + long.id);
-  assert.ok(opened.open && opened.btn === null, JSON.stringify(opened));
+  assert.ok(opened.open && opened.btn === '접기' && opened.aria === 'true', JSON.stringify(opened));
   await fillAndSubmit(page, { y: '1995', m: '3', d: '15', gender: 'F' });
   const again = await foldState(page, '#' + long.id);
   assert.ok(again.clamped && !again.open && again.btn === '더 보기', '새 풀이는 다시 접힌다: ' + JSON.stringify(again));

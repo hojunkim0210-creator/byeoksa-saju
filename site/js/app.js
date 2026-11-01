@@ -520,7 +520,7 @@ let currentSajuData = null;
   //    글은 지우지 않는다(문구 보존 테스트·인쇄는 전부). 요소가 화면에 그려진 뒤에 재야 하므로 보이는 화면에만 건다 ──
   let _resultFoldsDirty = false;   // 새로 푼 풀이는 결과 화면이 보일 때 다시 접는다
   function applyFolds(root) {
-    (root || document).querySelectorAll('[data-fold]').forEach(el => {
+    (root || document).querySelectorAll('[data-fold]').forEach((el, i) => {
       const old = el.nextElementSibling; if (old && old.classList.contains('fold-more')) old.remove();
       el.classList.remove('fold-clamp', 'is-open');
       el.style.setProperty('--fold-lines', parseInt(el.dataset.fold, 10) || 5);
@@ -531,7 +531,15 @@ let currentSajuData = null;
       btn.className = 'fold-more' + (el.dataset.foldTone === 'dark' ? ' fold-more--dark' : '');
       btn.textContent = '더 보기';
       btn.setAttribute('aria-expanded', 'false');
-      btn.onclick = () => { el.classList.add('is-open'); btn.remove(); };
+      if (!el.id) el.id = 'fold-' + i;
+      btn.setAttribute('aria-controls', el.id);
+      btn.onclick = () => {   // 펼친 뒤에도 단추를 남겨 '접기'로 (업데이트 28: 키보드 초점이 빠지지 않고, 화면 읽어 주는 기기에도 펼침/접힘이 전해지게)
+        const open = !el.classList.contains('is-open');
+        el.classList.toggle('is-open', open);
+        btn.textContent = open ? '접기' : '더 보기';
+        btn.setAttribute('aria-expanded', String(open));
+        if (!open) el.scrollIntoView({ block: 'nearest' });   // 접으면 접힌 글의 머리가 보이게
+      };
       el.after(btn);
     });
   }
@@ -2212,6 +2220,7 @@ let currentSajuData = null;
     showView('viewReport');
     setupReportBook();
     tidyTitles(document.getElementById('viewReport'));
+    if (window.BYEOKSA_SHOP && BYEOKSA_SHOP.renderReviewAsk) BYEOKSA_SHOP.renderReviewAsk();   // 리포트 끝 '후기 남기기' (shop.js, 폼 주소가 있을 때만)
     verifyStoredPaymentsThrottled();   // 리포트를 열 때마다 취소된 결제인지 한 번 더 확인 (취소면 잠긴 무료 풀이로 돌아간다)
   }
 

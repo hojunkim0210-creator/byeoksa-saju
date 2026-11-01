@@ -18,13 +18,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=27">
+  <link rel="manifest" href="manifest.json?v=28">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=27">
+    <link rel="stylesheet" href="css/style.css?v=28">
 </head>
 <body>
 
@@ -238,9 +238,17 @@
       </div>
     </section>
 
+    <!-- 먼저 다녀간 손님의 한 줄 (2026-11-01 후기 1단계): shop.js REVIEWS에 대표님이 확인한 실제 구매자 후기만 넣는다. 비어 있으면 통째로 숨김 -->
+    <section class="review-strip" id="reviewsHome" hidden aria-labelledby="reviewsHeading">
+      <h2 class="slip-heading" id="reviewsHeading">먼저 다녀간 손님의 한 줄</h2>
+      <ul class="review-list" id="reviewsHomeList"></ul>
+      <p class="review-note">실제로 결제한 손님이 남긴 글만 싣는다. 대가를 주고 받은 글은 그렇다고 적는다.</p>
+    </section>
+
     <!-- 벽사견의 비방 보따리: 유료 풀이 진열 (가격은 shop.js가 할인 반영해 채움) -->
     <section class="shop-shelf" aria-labelledby="shopHeading">
       <h2 class="slip-heading" id="shopHeading">벽사견이 물어 온 비방 보따리</h2>
+      <p class="shop-count" id="shopCount" hidden></p>   <!-- 실측 결제 수: /api/stats 가 센 값이 100명 이상일 때만 (shop.js renderStats) -->
       <div class="shop-list">
         <button class="shop-item" onclick="openMySaju()">
           <span class="shop-seal" aria-hidden="true">秘</span>
@@ -620,6 +628,12 @@
       <span class="book-hint" id="bookHint">옆으로 밀어도 넘어간다</span>
       <button class="book-btn book-next" id="bookNext" onclick="bookTurn(1)">다음 장 ›</button>
     </nav>
+    <!-- 후기 남기기 (2026-11-01 후기 1단계): shop.js REVIEW_FORM_URL(구글 폼 주소)이 있을 때만 보인다. 결제 번호는 손님이 폼에 적어 확인하는 용도(개인정보 아님) -->
+    <div class="review-ask" id="reviewAsk" hidden>
+      <p class="review-ask-text">"다 읽었으면 한 줄만 남기고 가거라. 다음에 오는 손님에게 등불이 된다."</p>
+      <a class="btn-action review-ask-link" id="reviewAskLink" href="#" target="_blank" rel="noopener">후기 남기기</a>
+      <p class="review-ask-id" id="reviewAskId" hidden></p>
+    </div>
   </div>
 
   <!-- 📍 인연 궁합 -->
@@ -792,6 +806,7 @@
       <dt>제공</dt><dd>결제 즉시 이 화면에서 열람 · PDF로 저장 가능</dd>
       <dt>다시 보기</dt><dd>같은 기기·같은 생년월일로 들어오면 다시 열림</dd>
     </dl>
+    <div class="review-mini" id="reviewsPay" hidden></div>   <!-- 실제 구매자 후기 두 줄 (shop.js renderReviews, 후기가 있을 때만) -->
     <p class="payment-notice">결제 후 리포트가 열리면 디지털 콘텐츠의 특성상 청약철회(환불)가 제한됩니다. 리포트가 열리지 않았거나 내용이 정상적으로 보이지 않으면 환불해 드립니다. <a href="legal.html#refund" target="_blank" rel="noopener">환불 안내 보기</a></p>
     <p class="payment-notice">만 19세 미만은 법정대리인(부모님 등)의 동의를 받아 결제해 주십시오. 동의 없이 결제한 경우 본인 또는 법정대리인이 취소할 수 있습니다.</p>
     <div id="reportPromo"></div>
@@ -815,10 +830,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=27"></script>
-  <script src="js/phrases.js?v=27"></script>
-  <script src="js/app.js?v=27"></script>
-  <script src="js/extras.js?v=27"></script>
-  <script src="js/shop.js?v=27"></script>
+  <script src="js/saju-core.js?v=28"></script>
+  <script src="js/phrases.js?v=28"></script>
+  <script src="js/app.js?v=28"></script>
+  <script src="js/extras.js?v=28"></script>
+  <script src="js/shop.js?v=28"></script>
 </body>
 </html>
