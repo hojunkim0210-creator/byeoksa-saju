@@ -18,13 +18,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=26">
+  <link rel="manifest" href="manifest.json?v=27">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=26">
+    <link rel="stylesheet" href="css/style.css?v=27">
 </head>
 <body>
 
@@ -103,11 +103,11 @@
 
 <!-- 🌑 사이트 전체 분위기: 불티 · 어둠 (내용 뒤에 깔림, 클릭 안 막음). 안개는 2026-10-25 대표님 요청으로 전부 뺌, 깜빡이는 필름 입자는 2026-10-27 뺌(큰 화면에서 지저분하고 AI 효과처럼 보임) -->
 <div class="ambience" aria-hidden="true">
-  <div class="embers"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <!-- 불티는 2026-11-01부터 대문 사진(.spirit-portrait-box) 안에서만 떠오른다 — 다른 화면에서 먼지처럼 보였다 -->
   <div class="vignette"></div>
 </div>
 
-<!-- 🌑 첫 진입: 설화록 序 — 고서처럼 세로쓰기, 누를 때마다 한 줄씩(매번). 다 읽으면 대문 앞 -->
+<!-- 🌑 첫 진입: 설화록 序 — 고서처럼 세로쓰기, 누를 때마다 한 줄씩. 처음 온 손님에게 한 번만(2026-11-01). 다 읽으면 현판 버튼 → 대문이 열리며 접견실 -->
 <div class="opening-veil" id="openingVeil" hidden>
   <div class="opening-lantern" aria-hidden="true"></div>
   <div class="opening-book">
@@ -118,11 +118,14 @@
       <p>하여 옛사람들은 대문 앞에 개를 두고 <strong>벽사견(辟邪犬)</strong>이라 불렀다. 삿된 것을 보고 짖어 쫓는 개라는 뜻이다.</p>
       <p>이 대문을 지키는 개도 그런 개다. 사람의 등 뒤에 붙은 것을 먼저 보고, 먼저 짖는다.</p>
       <p class="opening-last">그 개가 지금, <strong>네 등 뒤</strong>를 보고 있다.</p>
+      <p class="opening-ask">"이 문턱을 넘어… <strong>당신의 인생을 바꾸시겠습니까?</strong>"</p>
     </div>
     <span class="opening-seal" aria-hidden="true">辟邪</span>
   </div>
   <p class="opening-hint" id="openingHint">화면을 누르면 다음 줄</p>
   <button class="opening-skip" id="openingSkip">건너뛰기</button>
+  <!-- 마지막 줄 뒤에 나오는 현판 버튼: 序가 걷히며 대문이 열리고 접견실로 (2026-11-01, 대문 안내창의 글·버튼을 序에 합쳐 관문을 한 겹으로) -->
+  <button class="btn-plaque opening-enter" id="openingEnter" hidden><span class="plaque-nail" aria-hidden="true"></span><span class="plaque-text">문을 두드린다</span><span class="plaque-seal" aria-hidden="true">入</span><span class="plaque-nail" aria-hidden="true"></span></button>
 </div>
 
 <!-- 🕯️ 풀이 의식: 생년월일을 대면 벽사견이 냄새를 맡는 동안 잠깐 -->
@@ -164,12 +167,14 @@
     <nav class="home-topbar" aria-label="상단">
       <span class="home-seal" aria-hidden="true">辟邪</span>
       <span class="home-brand">벽사신견</span>
-      <button class="home-topbar-link" onclick="shareSite()" aria-label="벽사신견 사주 사이트 공유하기">💬 공유하기</button>
+      <!-- 2026-11-01 벤치마킹(포스텔러는 공유를 내용 아래에): 상단의 공유 버튼은 내리고, 처음 한 번만 나오는 序를 다시 읽을 수 있게 설화록 단추를 둔다. 공유는 아래 '공유하기'와 결과 화면에 -->
+      <button class="home-topbar-link" onclick="openHanjiScroll()" title="한지 두루마리 설화록 펼쳐보기">설화록</button>
     </nav>
     <header>
       <!-- 벽사견 영물 정면 초상화 프레임 -->
       <div class="spirit-portrait-box">
         <img src="mung.jpg" alt="대문 앞 벽사견" class="spirit-portrait-img">
+        <div class="embers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>   <!-- 떠오르는 불티: 사진 안에서만 (2026-11-01) -->
       </div>
 
       <!-- 타이틀 & 벽사신견 정의 -->
@@ -182,7 +187,7 @@
       </div>
 
       <!-- 벽사신견이란: 개는 귀신을 본다 -->
-      <div class="lore-strip">
+      <div class="lore-strip" data-fold="6" data-fold-tone="dark">   <!-- 2026-11-01: 여섯 줄까지만 보이고 '더 보기' (글은 그대로) -->
         <p class="lore-line">예로부터 <strong>개는 귀신을 보고 짖어 쫓는다</strong> 했다.</p>
         <p class="lore-sub">개를 대문 앞에 두어 삿된 것을 막던 우리 옛 풍습, 그 개를 <strong>벽사견(辟邪犬)</strong>이라 불렀다. 벽사견은 지금도 대문 앞에서 지나가는 사람의 등 뒤를 본다.</p>
         <p class="lore-hook">벽사견이 짖는 것은 둘 중 하나다. <em>네 등 뒤에 붙은 것</em>, 혹은 <em>너를 지키고 있는 것</em>. 어느 쪽인지는 생년월일을 대야 안다.</p>
@@ -355,7 +360,9 @@
     </div>
 
     <p class="scare-notice">⚠️ 풀이 결과에는 귀신 그림이 나옵니다. 어린이·노약자·임산부, 무서운 그림을 힘들어하는 분은 주의하세요. (그림은 직접 눌러야 보입니다)</p>
-    <button class="btn-submit" onclick="submitAndGoToResult()">내 등 뒤의 악운 쫓고 사주 영안(靈眼) 개안하기</button>
+    <!-- 버튼 문구는 짧게, 긴 문구는 버튼 위 한 줄로 (2026-11-01 벤치마킹: 네이버 '운세 확인하기', 포스텔러 '구매하기 7,700원') -->
+    <p class="submit-lead">내 등 뒤의 악운 쫓고 사주 영안(靈眼) 개안하기</p>
+    <button class="btn-submit" onclick="submitAndGoToResult()">무료 풀이 보기</button>
   </div>
   </div>
 
@@ -379,7 +386,7 @@
       <div class="animal-tag" id="animalTag">-</div>
       <div class="animal-emoji" id="animalEmoji">✨</div>
       <div class="animal-name" id="animalTitle">-</div>
-      <div class="animal-sub" id="animalDesc">-</div>
+      <div class="animal-sub" id="animalDesc" data-fold="5" data-fold-tone="dark">-</div>
     </div>
 
     <!-- 1-2. 📌 한눈에 보는 핵심 — 아래 긴 풀이에서 꼭 볼 것만 (renderGlance) -->
@@ -395,7 +402,7 @@
         <div class="section-title" style="margin-bottom:0;">🎯 꿈과 타고난 팔자의 영적 조화율</div>
         <div class="fit-score-badge" id="fitScore">조화율 -%</div>
       </div>
-      <div class="fit-content" id="fitContent">-</div>
+      <div class="fit-content" id="fitContent" data-fold="6">-</div>
     </div>
 
     <!-- 3. 사주 원국 테이블 -->
@@ -429,7 +436,7 @@
         <div class="daeun-badge" id="daeunBadge">대운 분석 중...</div>
       </div>
       <div class="daeun-scroll" id="daeunScroll"></div>
-      <div class="daeun-comment" id="daeunComment">대운 해설 준비 중...</div>
+      <div class="daeun-comment" id="daeunComment" data-fold="5">대운 해설 준비 중...</div>
     </div>
 
     <!-- 4. 오행 그래프 -->
@@ -437,7 +444,7 @@
       <div class="section-title">🔥 오행(木火土金水) 불균형 및 결핍 감별</div>
       <div class="stacked-bar" id="stackedBar"></div>
       <div class="oheng-list" id="ohengList"></div>
-      <div class="oheng-comment" id="ohengComment">오행 분석 중...</div>
+      <div class="oheng-comment" id="ohengComment" data-fold="5">오행 분석 중...</div>
     </div>
 
     <!-- 5. 🔮 영적 심리 투시 카드 (살을 대폭 붙인 팩트 폭격) -->
@@ -446,8 +453,8 @@
         <div class="section-title" style="margin-bottom:0;">🔮 벽사견의 영적 투시: 등 뒤의 그림자와 고질병</div>
         <div class="mind-badge" id="mindBadge">심리 투시 -%</div>
       </div>
-      <div class="mind-item" id="mindItem1">속마음 분석 중...</div>
-      <div class="mind-item" id="mindItem2">치명적 함정 분석 중...</div>
+      <div class="mind-item" id="mindItem1" data-fold="6">속마음 분석 중...</div>
+      <div class="mind-item" id="mindItem2" data-fold="6">치명적 함정 분석 중...</div>
     </div>
 
     <!-- 6. ⚠️ 긴급 위험 경고 (기 빨아먹는 악연 경고) -->
@@ -767,6 +774,12 @@
   <button class="tab-item" data-views="viewChat" onclick="openFeature('chat')"><span class="tab-seal" aria-hidden="true">問</span><span class="tab-label">묻기</span></button>
 </nav>
 
+<!-- 결과 화면 하단 고정 구매 바 (2026-11-01 벤치마킹: 포스텔러 상품 페이지의 '구매하기 7,700원' 바): 리포트가 잠긴 결과 화면에서만, 하단 메뉴 바로 위. app.js updateBuyBar -->
+<div class="buy-bar" id="buyBar" hidden>
+  <div class="buy-bar-text"><span class="buy-bar-name">천명 리포트 · 6개 장</span><strong class="buy-bar-price" id="buyBarPrice">4,900원</strong></div>
+  <button class="btn-submit buy-bar-btn" onclick="openPaymentModal()">봉인 풀기</button>
+</div>
+
 <!-- 결제 모달 -->
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box">
@@ -785,6 +798,8 @@
     <div class="pay-actions">
     <label class="pay-agree"><input type="checkbox" class="pay-agree-box" id="payAgree"> <span>위 상품 내용·가격·환불 규정을 확인했으며, 결제에 동의합니다. <strong>(필수)</strong></span></label>
     <button class="btn-submit" id="payButton" onclick="startPayment()">💳 4,900원 결제하고 봉인 풀기</button>
+    <!-- 카카오페이(KCP 간편결제): KCP 승인 전까지 숨김 — app.js PAYMENT.kakaoPay.enabled 를 켜면 renderPaymentMode 가 보여 준다 -->
+    <button class="btn-submit btn-kakao" id="payKakaoButton" onclick="startPayment('kakaopay')" style="display:none">카카오페이로 4,900원 결제하기</button>
     </div>
     <!-- 전부 묶음 권유: 리포트 대신 묶음으로 한꺼번에 (shop.js openBundle) -->
     <button class="btn-bundle" id="reportBundleBtn" onclick="openBundleForReport()">📦 <span>신년운세·궁합 상세까지 <strong>전부 10,900원</strong></span></button>
@@ -800,10 +815,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=26"></script>
-  <script src="js/phrases.js?v=26"></script>
-  <script src="js/app.js?v=26"></script>
-  <script src="js/extras.js?v=26"></script>
-  <script src="js/shop.js?v=26"></script>
+  <script src="js/saju-core.js?v=27"></script>
+  <script src="js/phrases.js?v=27"></script>
+  <script src="js/app.js?v=27"></script>
+  <script src="js/extras.js?v=27"></script>
+  <script src="js/shop.js?v=27"></script>
 </body>
 </html>

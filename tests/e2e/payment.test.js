@@ -60,6 +60,7 @@ test('포트원 결제 성공: 4,900원·KRW로 요청하고, 개인정보는 �
   const [call] = await page.evaluate(() => window.__calls);
   assert.equal(call.totalAmount, 4900); assert.equal(call.currency, 'KRW');
   assert.equal(call.storeId, 'store-test'); assert.equal(call.channelKey, 'channel-key-test');
+  assert.equal(call.payMethod, 'CARD'); assert.equal(call.easyPay, undefined, '카드 버튼은 카카오페이 준비 뒤에도 그대로 KCP 카드 결제');
   assert.match(call.paymentId, /^byeoksa-/);
   assert.ok(!/2002|창업|대학생/.test(call.redirectUrl), call.redirectUrl);
   assert.equal(await viewOf(page), 'viewReport');
@@ -77,6 +78,59 @@ test('포트원 결제 실패·취소: 잠긴 채로 남고 안내가 뜬다', a
   assert.ok(await locked(page));
   assert.notEqual(await viewOf(page), 'viewReport');
   assert.match(await page.textContent('#toastMsg'), /결제가 완료되지 않았다/);
+  await ctx.close();
+});
+
+// 2026-11-01: 카카오페이 버튼(KCP 간편결제 허브형). KCP 승인 전까지 app.js PAYMENT.kakaoPay.enabled=false 로 숨겨 둔다.
+//   켜면 같은 상품·금액을 포트원에 payMethod EASY_PAY + easyPayProvider KAKAOPAY 로 요청한다 (카드 버튼은 그대로).
+test('카카오페이 버튼: 스위치가 꺼져 있으면 보이지 않고, 켜면 같은 금액을 간편결제(KAKAOPAY)로 KCP 채널에 요청하고 리포트가 열린다', async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await fillAndSubmit(page, ME);
+  await page.evaluate(() => openPaymentModal());
+  assert.ok(await page.isHidden('#payKakaoButton'), '꺼짐: 카카오페이 버튼 숨김');
+  await page.evaluate(() => { PAYMENT.kakaoPay.enabled = true; renderPaymentMode(); });
+  assert.ok(await page.isVisible('#payKakaoButton'), '켬: 카카오페이 버튼 보임');
+  assert.match(await page.textContent('#payKakaoButton'), /카카오페이로 4,900원 결제/);
+  await page.click('#payKakaoButton'); await page.waitForTimeout(400);
+  const [call] = await page.evaluate(() => window.__calls);
+  assert.equal(call.payMethod, 'EASY_PAY'); assert.deepEqual(call.easyPay, { easyPayProvider: 'KAKAOPAY' });
+  assert.equal(call.channelKey, 'channel-key-test', '전용 채널 키를 안 적으면 KCP 채널 그대로');
+  assert.equal(call.storeId, 'store-test'); assert.equal(call.totalAmount, 4900); assert.equal(call.orderName, '벽사신견 천명 리포트');
+  assert.equal(await viewOf(page), 'viewReport');
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('카카오페이 전용 채널 키를 적어 두면(KCP가 별도 사이트코드를 준 경우) 그 채널로 요청한다', async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await fillAndSubmit(page, ME);
+  await page.evaluate(() => { PAYMENT.kakaoPay.enabled = true; PAYMENT.kakaoPay.channelKey = 'channel-key-kakao'; openPaymentModal(); });
+  await page.click('#payKakaoButton'); await page.waitForTimeout(400);
+  const [call] = await page.evaluate(() => window.__calls);
+  assert.equal(call.channelKey, 'channel-key-kakao'); assert.equal(call.payMethod, 'EASY_PAY');
+  assert.equal(await viewOf(page), 'viewReport');
+  await ctx.close();
+});
+
+// 2026-11-01 벤치마킹(포스텔러 상품 페이지의 '구매하기 7,700원' 바): 잠긴 결과 화면에는 하단 메뉴 위에 가격 + '봉인 풀기' 바가 늘 보인다
+test('결과 화면 하단 구매 바: 잠긴 동안만 가격과 함께 보이고, 누르면 결제창, 열리면 사라진다', async () => {
+  const { ctx, page } = await openPage(browser);
+  assert.ok(await page.isHidden('#buyBar'), '대문에서는 없음');
+  await fillAndSubmit(page, ME);
+  assert.ok(await page.isVisible('#buyBar'), '잠긴 결과 화면: 보임');
+  assert.match(await page.textContent('#buyBar'), /4,900원/);
+  const r = await page.evaluate(() => { const b = document.getElementById('buyBar').getBoundingClientRect(), t = document.getElementById('tabBar').getBoundingClientRect(); return { bBottom: b.bottom, tTop: t.top, bLeft: b.left, bRight: b.right, vw: innerWidth }; });
+  assert.ok(r.bBottom <= r.tTop + 1 && r.bLeft >= 0 && r.bRight <= r.vw, `하단 메뉴 바로 위, 화면 안: ${JSON.stringify(r)}`);
+  await page.click('.buy-bar-btn'); await page.waitForTimeout(200);
+  assert.ok(await page.isVisible('#paymentModal'), '누르면 결제창');
+  await page.click('#payButton'); await page.waitForTimeout(400);   // 테스트 결제 → 리포트 열림
+  assert.equal(await viewOf(page), 'viewReport');
+  assert.ok(await page.isHidden('#buyBar'), '리포트 화면: 없음');
+  await page.evaluate(() => goToStep(3));
+  assert.ok(await page.isHidden('#buyBar'), '열린 사주의 결과 화면: 없음');
+  await page.evaluate(() => goToStep(1));
+  assert.ok(await page.isHidden('#buyBar'));
+  assert.deepEqual(page._errors, []);
   await ctx.close();
 });
 

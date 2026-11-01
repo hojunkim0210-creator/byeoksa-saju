@@ -93,4 +93,7 @@ test('배포 설정: 실결제(포트원) 모드, KCP 채널 키·상점 아이�
   assert.match(cfg, /storeId: 'store-[0-9a-f-]{36}'/);
   assert.match(cfg, /channelKey: 'channel-key-[0-9a-f-]{36}'/);
   assert.match(cfg, /verifyUrl: '\/api\/payment\/complete'/);
+  // 2026-11-01 카카오페이(KCP 간편결제 허브형) 준비: 스위치와 전용 채널 키 칸. KCP 승인 전엔 enabled: false 로 둔다
+  assert.match(cfg, /kakaoPay: \{ enabled: (true|false), channelKey: '(channel-key-[0-9a-f-]{36})?' \}/);
+  assert.match(cfg, /payMethod: 'CARD'/, '카드 결제는 그대로');
 });

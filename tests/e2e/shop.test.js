@@ -130,6 +130,30 @@ test('포트원 결제: 신년운세는 상품명·할인가로 요청된다', a
   await ctx.close();
 });
 
+// 2026-11-01: 카카오페이 버튼(KCP 간편결제 허브형)은 app.js PAYMENT.kakaoPay.enabled 를 켠 때만 상품 결제창에도 나온다
+test('상품 결제창 카카오페이 버튼: 꺼져 있으면 없고, 켜면 상품명·할인가 그대로 간편결제(KAKAOPAY)로 요청하고 풀이가 열린다', async () => {
+  const { ctx, page } = await openPage(browser);
+  await withMe(page);
+  await page.evaluate(() => {
+    PAYMENT.mode = 'portone'; PAYMENT.storeId = 'store-t'; PAYMENT.channelKey = 'channel-key-t';
+    window.__calls = []; window.PortOne = { requestPayment: async o => { window.__calls.push(o); return { paymentId: o.paymentId }; } };
+    grantCoupon('invite');
+  });
+  await page.evaluate(() => openFeature('newyear'));
+  await page.click('#nyBuy');
+  assert.equal(await page.$('#productKakaoBtn'), null, '스위치 꺼짐: 카카오페이 버튼 없음');
+  await page.evaluate(() => { closePaymentModal(); PAYMENT.kakaoPay.enabled = true; });
+  await page.click('#nyBuy');
+  assert.match(await text(page, '#productKakaoBtn'), /카카오페이로 3,900원 결제/);
+  await page.click('#productKakaoBtn'); await page.waitForTimeout(400);
+  const [c] = await page.evaluate(() => window.__calls);
+  assert.equal(c.payMethod, 'EASY_PAY'); assert.deepEqual(c.easyPay, { easyPayProvider: 'KAKAOPAY' });
+  assert.equal(c.channelKey, 'channel-key-t'); assert.equal(c.orderName, '벽사신견 신년운세'); assert.equal(c.totalAmount, 3900);
+  assert.equal(await page.$$eval('.ny-month', e => e.length), 12, '결제 뒤 12달 풀이가 열린다');
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
 test('할인 코드: 맞는 코드는 1,000원 할인, 틀린 코드는 안내만', async () => {
   const { ctx, page } = await openPage(browser);
   await withMe(page);

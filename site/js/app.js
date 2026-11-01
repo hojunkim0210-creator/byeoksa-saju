@@ -38,6 +38,7 @@ const {
     storeId: 'store-67ebf046-cd7c-4e32-972a-458803ee77e0',
     channelKey: 'channel-key-5ab4bb46-ee2f-4c04-852e-c7f3688834df',   // NHN KCP 실연동 채널 (사이트코드 IPD5B, V2)
     payMethod: 'CARD',
+    kakaoPay: { enabled: false, channelKey: '' },   // 카카오페이(KCP 간편결제 허브형, 2026-11-01 준비만). KCP 승인 뒤 enabled: true 로 켠다. KCP가 별도 사이트코드를 내주면 포트원 콘솔에 그 채널을 추가하고 채널 키를 channelKey 에 적는다(비우면 위 KCP 채널 그대로)
     orderName: '벽사신견 천명 리포트',
     verifyUrl: '/api/payment/complete'   // Cloudflare Pages 결제 확인 서버 (포트원 비밀 값은 Cloudflare 환경 변수에만)
   };
@@ -59,11 +60,16 @@ const {
   }
   document.addEventListener('DOMContentLoaded', renderSale);
 
+  /** 카카오페이 버튼을 보일지: 실결제 모드이고, KCP 승인 뒤 PAYMENT.kakaoPay.enabled 를 켠 때만 (shop.js의 상품 결제창도 이걸 본다) */
+  function kakaoPayOn() { return PAYMENT.mode === 'portone' && !!(PAYMENT.kakaoPay && PAYMENT.kakaoPay.enabled); }
+
   /** 결제창 버튼·안내를 결제 모드에 맞춘다 */
   function renderPaymentMode() {
     const live = PAYMENT.mode === 'portone';
     const btn = document.getElementById('payButton');
     if (btn) { btn.textContent = live ? `💳 ${won(priceFor('report').final)}원 결제하고 봉인 풀기` : '테스트로 봉인 해제해보기'; tidyTitles(btn.parentElement); }
+    const kb = document.getElementById('payKakaoButton');   // 스위치가 꺼져 있으면 숨긴 채로 둔다 (index.html의 style="display:none")
+    if (kb) { kb.style.display = kakaoPayOn() ? '' : 'none'; kb.textContent = `카카오페이로 ${won(priceFor('report').final)}원 결제하기`; }
     const note = document.getElementById('paymentTestNote');
     if (note) note.hidden = live;
   }
@@ -501,9 +507,39 @@ let currentSajuData = null;
     let _tidyTimer = null;
     new MutationObserver(() => { clearTimeout(_tidyTimer); _tidyTimer = setTimeout(() => tidyTitles(document.body), 40); }).observe(document.body, { childList: true, subtree: true });
   }
+  /** 결과 화면 하단 고정 구매 바 (2026-11-01 벤치마킹): 리포트가 잠긴 결과 화면에서만 보이고, 가격은 할인까지 반영 */
+  function updateBuyBar(viewId) {
+    const bar = document.getElementById('buyBar'); if (!bar) return;
+    const id = viewId || (([...document.querySelectorAll('.app-container > .view-step')].find(v => v.style.display !== 'none') || {}).id);
+    const on = id === 'viewResult' && !!currentSajuData && !reportUnlocked;
+    bar.hidden = !on;
+    document.body.classList.toggle('buy-bar-on', on);
+    const p = document.getElementById('buyBarPrice'); if (p && on) p.textContent = `${won(priceFor('report').final)}원`;
+  }
+  // ── 긴 단락 '더 보기' 접기 (2026-11-01 벤치마킹: 포스텔러 '… 더 보기'): data-fold="줄 수" 요소를 그 줄 수까지만 보이고, 넘치면 '더 보기' 단추를 단다.
+  //    글은 지우지 않는다(문구 보존 테스트·인쇄는 전부). 요소가 화면에 그려진 뒤에 재야 하므로 보이는 화면에만 건다 ──
+  let _resultFoldsDirty = false;   // 새로 푼 풀이는 결과 화면이 보일 때 다시 접는다
+  function applyFolds(root) {
+    (root || document).querySelectorAll('[data-fold]').forEach(el => {
+      const old = el.nextElementSibling; if (old && old.classList.contains('fold-more')) old.remove();
+      el.classList.remove('fold-clamp', 'is-open');
+      el.style.setProperty('--fold-lines', parseInt(el.dataset.fold, 10) || 5);
+      el.classList.add('fold-clamp');
+      if (el.scrollHeight <= el.clientHeight + 8) { el.classList.remove('fold-clamp'); return; }   // 짧은 글은 접지 않는다
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'fold-more' + (el.dataset.foldTone === 'dark' ? ' fold-more--dark' : '');
+      btn.textContent = '더 보기';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.onclick = () => { el.classList.add('is-open'); btn.remove(); };
+      el.after(btn);
+    });
+  }
   function showView(id) {
     document.querySelectorAll('.app-container > .view-step').forEach(v => { v.style.display = (v.id === id) ? 'flex' : 'none'; });
     tidyTitles(document.getElementById(id));
+    updateBuyBar(id);
+    if (id === 'viewResult' && _resultFoldsDirty) { _resultFoldsDirty = false; applyFolds(document.getElementById('viewResult')); }
     // 하단 메뉴: 지금 화면에 해당하는 칸을 표시
     document.querySelectorAll('#tabBar .tab-item').forEach(t => {
       const on = (t.dataset.views || '').split(' ').includes(id);
@@ -606,6 +642,7 @@ let currentSajuData = null;
 
     playRitual();          // 막을 먼저 내리고 (결과가 뒤로 비치지 않게)
     calculateSaju(y, m, d);
+    _resultFoldsDirty = true;   // 새 풀이: 긴 단락을 다시 접는다 (showView에서)
     goToStep(3);
   }
 
@@ -616,21 +653,35 @@ let currentSajuData = null;
   const QUIET = () => !!window.__BYEOKSA_TEST__;
   const REDUCED = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const SEEN_KEY = 'byeoksa.seen.v1';
+  const seenOpening = () => { try { return localStorage.getItem(SEEN_KEY) === '1'; } catch (e) { return false; } };
+  function hideGate() { const m = document.getElementById('introGateModal'); if (m) m.style.display = 'none'; }
 
+  // 관문은 한 겹 (2026-11-01 벤치마킹: 다른 운세 서비스 9곳 모두 첫 화면에 바로 내용):
+  //   처음 온 손님은 序만 — 줄을 다 읽으면 序 안에 현판 버튼 '문을 두드린다'가 나오고, 누르면 序가 걷히며 대문이 열리고 접견실로.
+  //   대문 안내창(introGateModal)의 글·버튼은 序에 합쳐져(is-merged) 사진만 문 여는 장면으로 쓴다. 건너뛰기는 관문 없이 대문(홈).
+  //   두 번째 방문부터는 序도 안내창도 없이 바로 대문(홈). 자동 테스트(QUIET)는 예전처럼 序 없이 대문 안내창만 본다.
   function playOpening() {
     const veil = document.getElementById('openingVeil');
     if (!veil || QUIET()) return;
+    if (seenOpening()) { hideGate(); return; }
     try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) { /* 무시 */ }
+    const gate = document.getElementById('introGateModal'); if (gate) gate.classList.add('is-merged');
     const lines = [...veil.querySelectorAll('.opening-lines p')];
     const hint = document.getElementById('openingHint');
+    const skipBtn = document.getElementById('openingSkip');
+    const enterBtn = document.getElementById('openingEnter');
     let shown = 0, done = false;
     const reveal = () => {   // 누를 때마다 한 줄(세로 한 단): 새 줄은 오른쪽에서 먹이 번지듯 떠오르고, 앞 줄은 옅어지고, 오래된 줄은 책장 넘기듯 사라진다
-      if (shown >= lines.length) { finish(); return; }
+      if (shown >= lines.length) return;
       const keep = window.innerWidth < 360 ? 1 : 2;   // 좁은 화면은 앞 줄을 하나만 남긴다 (세로 단이 넘치지 않게)
       lines.forEach((p, i) => { p.classList.toggle('is-dim', i < shown); p.classList.toggle('is-gone', i < shown - keep); });
       lines[shown].classList.add('is-on');
       shown++;
-      if (shown === lines.length && hint) hint.textContent = '한 번 더 누르면 대문 앞';
+      if (shown === lines.length) {   // 다 읽었다: 안내 글·건너뛰기 대신 현판 버튼
+        if (hint) hint.hidden = true;
+        if (skipBtn) skipBtn.hidden = true;
+        if (enterBtn) enterBtn.hidden = false;
+      }
     };
     const finish = () => {
       if (done) return; done = true;
@@ -641,10 +692,13 @@ let currentSajuData = null;
         if (_toastAfterOpening) { const t = _toastAfterOpening; _toastAfterOpening = null; setTimeout(() => showToast(t), 300); }   // 序 뒤로 미뤄 둔 알림
       }, 900);
     };
+    const enterGate = () => { if (done) return; finish(); acceptDestiny(); };   // 序가 걷히는 동안 대문이 열리고 접견실로
+    const skip = () => { if (done) return; finish(); hideGate(); };             // 건너뛰기: 관문 없이 대문(홈)으로
     veil.hidden = false;
     document.body.classList.add('veil-on');
-    veil.addEventListener('click', e => { if (e.target.closest('#openingSkip')) return; reveal(); });
-    document.getElementById('openingSkip').onclick = finish;
+    veil.addEventListener('click', e => { if (e.target.closest('#openingSkip, #openingEnter')) return; if (shown >= lines.length) { enterGate(); return; } reveal(); });
+    if (skipBtn) skipBtn.onclick = skip;
+    if (enterBtn) enterBtn.onclick = enterGate;
     setTimeout(reveal, REDUCED() ? 0 : 500);   // 첫 줄은 저절로
   }
 
@@ -1963,6 +2017,7 @@ let currentSajuData = null;
     document.getElementById('paywallOverlay').style.display = reportUnlocked ? 'none' : '';
     document.getElementById('reportReopen').hidden = !reportUnlocked;
     document.getElementById('unlockedReportContainer').style.display = reportUnlocked ? 'flex' : 'none';
+    updateBuyBar();
   }
 
   // ── 결제 다시 확인 (2026-10-27): 취소(환불)된 결제는 열림 표시를 지우고 다시 잠근다 ──
@@ -2041,9 +2096,11 @@ let currentSajuData = null;
     showToast('구매 조건 확인 및 결제 동의에 체크해 주세요.');
     return false;
   }
-  async function purchase(productId, subjectKey, data, btn) {
+  async function purchase(productId, subjectKey, data, btn, method) {
     const hooks = PRODUCT_HOOKS[productId] || {};
     const pr = priceFor(productId);
+    const kakao = method === 'kakaopay';   // 카카오페이 버튼 (KCP 간편결제 허브형) — 같은 KCP 채널에 간편결제로 요청한다
+    if (kakao && !kakaoPayOn()) { showToast('카카오페이 결제는 아직 열리지 않았다.'); return false; }
     if (!payAgreed(btn)) return false;
     if (PAYMENT.mode !== 'portone') {
       markPaidFor(productId, subjectKey, 'test');
@@ -2060,12 +2117,13 @@ let currentSajuData = null;
       savePending({ paymentId, productId, subjectKey, data });
       const res = await window.PortOne.requestPayment({
         storeId: PAYMENT.storeId,
-        channelKey: PAYMENT.channelKey,
+        channelKey: (kakao && PAYMENT.kakaoPay.channelKey) || PAYMENT.channelKey,   // 카카오페이 전용 채널 키를 적어 두지 않았으면 KCP 채널 그대로
         paymentId,
         orderName: PRODUCTS[productId].name,
         totalAmount: pr.final,
         currency: 'KRW',
-        payMethod: PAYMENT.payMethod,
+        payMethod: kakao ? 'EASY_PAY' : PAYMENT.payMethod,
+        ...(kakao ? { easyPay: { easyPayProvider: 'KAKAOPAY' } } : {}),   // 포트원 V2 KCP: 간편결제 허브형 카카오페이
         customData: JSON.stringify({ product: productId, coupon: !!pr.coupon }),
         redirectUrl: siteHomeUrl() + '?pay=return'   // 휴대폰은 결제 페이지에 다녀온 뒤 이 주소로 돌아온다
       });
@@ -2119,11 +2177,12 @@ let currentSajuData = null;
     return true;
   }
 
-  /** 천명 리포트 결제창 버튼 */
-  function startPayment() {
+  /** 천명 리포트 결제창 버튼 (method 'kakaopay' = 카카오페이 버튼) */
+  function startPayment(method) {
     if (!currentSajuData) return;
     const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream });
-    return purchase('report', sajuKey(currentSajuData), pick(currentSajuData), document.getElementById('payButton'));
+    const btn = document.getElementById(method === 'kakaopay' ? 'payKakaoButton' : 'payButton');
+    return purchase('report', sajuKey(currentSajuData), pick(currentSajuData), btn, method);
   }
   registerProduct('report', {
     onPaid: () => unlockContent(),
@@ -2485,6 +2544,7 @@ let currentSajuData = null;
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    applyFolds(document.getElementById('viewLanding'));   // 대문 설화 단락 '더 보기' 접기 (2026-11-01)
     const params = new URLSearchParams(window.location.search);
     if (resumePaymentFromRedirect(params)) return;
     const toHelp = window.location.hash === '#help';   // 약관 페이지 등에서 고객센터로 바로 들어옴
@@ -2494,6 +2554,7 @@ let currentSajuData = null;
       if (grantCoupon('invite')) setTimeout(() => showToast(`🎁 친구가 보낸 문으로 들어왔구나. 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인을 걸어 두었다.`), 600);
     }
     if (params.get('y') && params.get('m') && params.get('d')) {
+      hideGate();   // 결과 링크로 들어온 손님: 대문 안내창이 결과를 덮지 않게 (2026-11-01, 전엔 덮였다)
       document.getElementById('year').value = params.get('y');
       document.getElementById('month').value = params.get('m');
       document.getElementById('day').value = params.get('d');

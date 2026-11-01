@@ -93,9 +93,11 @@
       <div class="pay-actions">
       <label class="pay-agree"><input type="checkbox" class="pay-agree-box" id="productPayAgree"> <span>위 상품 내용·가격·환불 규정을 확인했으며, 결제에 동의합니다. <strong>(필수)</strong></span></label>
       <button class="btn-submit" id="productPayBtn">${live ? `💳 ${won(pr.final)}원 결제하기` : '테스트로 봉인 해제해보기'}</button>
+      ${live && typeof kakaoPayOn === 'function' && kakaoPayOn() ? `<button class="btn-submit btn-kakao" id="productKakaoBtn">카카오페이로 ${won(pr.final)}원 결제하기</button>` : ''}
       </div>
       <button class="btn-close" onclick="closePaymentModal()">닫기</button>`;
     $('productPayBtn').onclick = () => purchase(productId, subjectKey, data, $('productPayBtn'));
+    const kakaoBtn = $('productKakaoBtn'); if (kakaoBtn) kakaoBtn.onclick = () => purchase(productId, subjectKey, data, kakaoBtn, 'kakaopay');   // 카카오페이 (스위치 켠 때만 버튼이 있다)
     if (typeof tidyTitles === 'function') tidyTitles($('productModalBody'));
     const cl = $('productModalBody').querySelector('[data-coupon-line]'); if (cl) cl.hidden = !cl.innerHTML;
     const m = $('productModal');
