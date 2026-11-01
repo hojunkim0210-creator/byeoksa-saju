@@ -1,5 +1,5 @@
 // 첫 진입 관문 (2026-11-01 벤치마킹: 다른 운세 서비스 9곳 모두 첫 화면에 바로 내용):
-//   序와 대문 안내창을 한 관문으로 합쳤다. 처음 온 손님만 序(마지막 줄 뒤 현판 버튼 → 접견실), 건너뛰기·두 번째 방문·결과 링크는 관문 없이 바로 화면.
+//   序와 대문 안내창을 한 관문으로 합쳤다. 序는 하루 한 번(마지막 줄 뒤 현판 버튼 → 접견실), 건너뛰기·같은 날 재방문·결과 링크는 관문 없이 바로 화면.
 //   helpers.openPage는 자동 테스트용으로 序를 건너뛰므로(QUIET), 여기서는 序가 실제로 도는 조건(움직임 줄이기로 짧게)으로 연다.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,7 +14,8 @@ async function realPage({ seen = false, url = 'file://' + SITE } = {}) {
   const page = await ctx.newPage();
   page._errors = []; page.on('pageerror', e => page._errors.push(e.message));
   await page.route('**/*', r => { const u = r.request().url(); (u.startsWith('file:') || u.startsWith('data:')) ? r.continue() : r.abort(); });
-  if (seen) await page.addInitScript(() => { try { localStorage.setItem('byeoksa.seen.v1', '1'); } catch (e) { /* 무시 */ } });
+  // seen: 'today' = 오늘 이미 序를 봄, 'yesterday' = 어제 봄 (값은 YYYY-MM-DD, app.js todayStr 와 같은 모양)
+  if (seen) await page.addInitScript(when => { const d = new Date(); if (when === 'yesterday') d.setDate(d.getDate() - 1); const s = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; try { localStorage.setItem('byeoksa.seen.v1', s); } catch (e) { /* 무시 */ } }, seen);
   await page.goto(url); await page.waitForTimeout(700);
   return { ctx, page };
 }
@@ -49,12 +50,20 @@ test('건너뛰기: 序를 걷고 관문 없이 대문(홈)으로', async () => 
   await ctx.close();
 });
 
-test('두 번째 방문부터: 序도 대문 안내창도 없이 바로 대문(홈)', async () => {
-  const { ctx, page } = await realPage({ seen: true });
+test('같은 날 다시 오면: 序도 대문 안내창도 없이 바로 대문(홈)', async () => {
+  const { ctx, page } = await realPage({ seen: 'today' });
   assert.ok(!(await shown(page, 'openingVeil')));
   assert.equal(await gateDisplay(page), 'none');
   assert.equal(await viewOf(page), 'viewLanding');
   assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('다음 날 오면 다시 序부터 (하루 한 번, 2026-11-01 대표님 결정), 본 날짜를 다시 적는다', async () => {
+  const { ctx, page } = await realPage({ seen: 'yesterday' });
+  assert.ok(await shown(page, 'openingVeil'), '어제 봤으면 오늘은 다시 序');
+  const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  assert.equal(await page.evaluate(() => localStorage.getItem('byeoksa.seen.v1')), today);
   await ctx.close();
 });
 

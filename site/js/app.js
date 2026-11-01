@@ -660,19 +660,20 @@ let currentSajuData = null;
   // ─────────────────────────────────────────────────────────────────────────
   const QUIET = () => !!window.__BYEOKSA_TEST__;
   const REDUCED = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const SEEN_KEY = 'byeoksa.seen.v1';
-  const seenOpening = () => { try { return localStorage.getItem(SEEN_KEY) === '1'; } catch (e) { return false; } };
+  const SEEN_KEY = 'byeoksa.seen.v1';   // 값 = 序를 마지막으로 본 날짜(YYYY-MM-DD). 같은 날 다시 오면 序 없이 바로 대문, 다음 날엔 다시 序 (2026-11-01 대표님: 하루 한 번)
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const seenOpening = () => { try { return localStorage.getItem(SEEN_KEY) === todayStr(); } catch (e) { return false; } };
   function hideGate() { const m = document.getElementById('introGateModal'); if (m) m.style.display = 'none'; }
 
   // 관문은 한 겹 (2026-11-01 벤치마킹: 다른 운세 서비스 9곳 모두 첫 화면에 바로 내용):
-  //   처음 온 손님은 序만 — 줄을 다 읽으면 序 안에 현판 버튼 '문을 두드린다'가 나오고, 누르면 序가 걷히며 대문이 열리고 접견실로.
+  //   그날 처음 온 손님은 序만 — 줄을 다 읽으면 序 안에 현판 버튼 '문을 두드린다'가 나오고, 누르면 序가 걷히며 대문이 열리고 접견실로.
   //   대문 안내창(introGateModal)의 글·버튼은 序에 합쳐져(is-merged) 사진만 문 여는 장면으로 쓴다. 건너뛰기는 관문 없이 대문(홈).
-  //   두 번째 방문부터는 序도 안내창도 없이 바로 대문(홈). 자동 테스트(QUIET)는 예전처럼 序 없이 대문 안내창만 본다.
+  //   같은 날 다시 오면 序도 안내창도 없이 바로 대문(홈), 다음 날엔 다시 序(하루 한 번). 자동 테스트(QUIET)는 예전처럼 序 없이 대문 안내창만 본다.
   function playOpening() {
     const veil = document.getElementById('openingVeil');
     if (!veil || QUIET()) return;
     if (seenOpening()) { hideGate(); return; }
-    try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) { /* 무시 */ }
+    try { localStorage.setItem(SEEN_KEY, todayStr()); } catch (e) { /* 무시 */ }
     const gate = document.getElementById('introGateModal'); if (gate) gate.classList.add('is-merged');
     const lines = [...veil.querySelectorAll('.opening-lines p')];
     const hint = document.getElementById('openingHint');

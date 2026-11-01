@@ -10,14 +10,18 @@ test.after(async () => { await browser.close(); });
 const home = page => page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; goToStep(1); });
 const hidden = (page, id) => page.evaluate(i => { const e = document.getElementById(i); return !e || e.hidden || getComputedStyle(e).display === 'none'; }, id);
 
-test('기본: 후기 칸·결제 수·후기 남기기 단추가 모두 숨겨져 있다 (실제 값이 없으니)', async () => {
+test('기본: 후기 칸·결제 수는 숨겨져 있고(실제 값이 없으니), 후기 남기기는 폼 주소가 있을 때만 보인다', async () => {
   const { ctx, page } = await openPage(browser);
   await home(page); await page.waitForTimeout(300);
   for (const id of ['reviewsHome', 'shopCount', 'reviewsPay']) assert.ok(await hidden(page, id), id + ' 숨김');
   await fillAndSubmit(page); await page.evaluate(() => openPaymentModal());
   assert.ok(await hidden(page, 'reviewsPay'), '결제창 후기 칸 숨김');
   await page.click('#payButton'); await page.waitForTimeout(400);
-  assert.ok(await hidden(page, 'reviewAsk'), '폼 주소가 없으면 후기 남기기 없음');
+  // 2026-11-01: 구글 폼 주소를 넣었으니 기본값으로도 리포트 끝 '후기 남기기'가 보인다. 주소를 비우면 숨는다
+  assert.equal(await hidden(page, 'reviewAsk'), false, '폼 주소가 있으니 후기 남기기 보임');
+  assert.match(await page.evaluate(() => document.getElementById('reviewAskLink').href), /^https:\/\/docs\.google\.com\/forms\/d\/e\/[\w-]+\/viewform$/, '구글 폼 응답 주소(쿼리 없이)');
+  await page.evaluate(() => BYEOKSA_SHOP.setReviewFormUrl(''));
+  assert.ok(await hidden(page, 'reviewAsk'), '폼 주소를 비우면 후기 남기기 없음');
   assert.ok(!/명이 봉인을 풀었다/.test(await page.evaluate(() => document.body.innerText)), '결제 수 문구 없음');
   assert.deepEqual(page._errors, []);
   await ctx.close();

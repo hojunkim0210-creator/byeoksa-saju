@@ -504,7 +504,7 @@
   //                     개인정보가 든 글은 싣지 않는다. 할인 등 대가를 주고 받은 글은 when 에 '(할인 받고 작성)'을 붙인다. 비어 있으면 후기 칸 숨김
   //   STATS_MIN_SHOW  : 결제 수 서버(/api/stats)가 포트원에서 센 실제 결제 수가 이 수 이상일 때만 "N명이 봉인을 풀었다"를 보인다 (적을 땐 역효과)
   // ═════════════════════════════════════════════════════════════════════
-  let REVIEW_FORM_URL = '';
+  let REVIEW_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdFsz5PEyxecv6mbj1JNg66FUDrMtQUaKS2xdPW7hLXf-eQLQ/viewform';   // 구글 폼 '벽사신견 후기' (2026-11-01 만듦, 응답은 대표님 구글 계정 설문지 '응답' 탭에서 확인)
   let REVIEWS = [
     // { text: '한 줄 후기(받은 글 그대로)', who: '별명', when: '2026-11', verified: true }
   ];
