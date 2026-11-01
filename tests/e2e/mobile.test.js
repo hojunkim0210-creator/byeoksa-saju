@@ -70,7 +70,7 @@ test('입력 검증: 2월 30일 거부, 음력 선택 불가', async () => {
 test('결과: 대운수 9세(1990-03-10 남 오시), 요약문 출생시 "오시(午時)"', async () => {
   const { ctx, page } = await openPage(browser);
   await fillAndSubmit(page);
-  assert.match(await page.textContent('#daeunBadge'), /순행.*9세 대운/);
+  assert.match(await page.textContent('#daeunBadge'), /9세부터 10년마다 바뀜/);
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('termBoundaryNote')).display), 'none');
   const copied = await page.evaluate(async () => { let got = null; Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { got = t; return Promise.resolve(); } }, configurable: true }); copySummaryText(); await new Promise(r => setTimeout(r, 50)); return got; });
   assert.match(copied, /출생시: 오시\(午時\)/);

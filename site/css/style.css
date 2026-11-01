@@ -566,6 +566,8 @@ option:disabled { color: #9C8E7C; }
 }
 /* 카드 밖(밤 바탕)에 놓인 제목 */
 .view-step > .section-title { color: var(--yellow); margin: 8px 2px -6px; }
+.section-sub { margin: 10px 2px 8px; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }   /* 제목 아래 쉬운 말 한 줄 (2026-11-02 쉬운 말) */
+.view-step > .section-sub { color: var(--yellow); opacity: 0.8; margin-top: 14px; }   /* 어두운 바탕 위라 제목과 같은 색 */
 
 .action-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .btn-action { padding: 10px 6px; font-size: 13px; line-height: 1.4; }

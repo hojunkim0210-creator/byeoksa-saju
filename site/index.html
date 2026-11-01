@@ -18,13 +18,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=31">
+  <link rel="manifest" href="manifest.json?v=32">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=31">
+    <link rel="stylesheet" href="css/style.css?v=32">
 </head>
 <body>
 
@@ -201,7 +201,7 @@
         </div>
         <div class="landing-teaser-sub">
           밤의 대문 앞을 지키는 벽사견이
-          당신의 천명을 틔우고 <span class="yr-roadmap">2026~2028년</span> 대운을 직격 투시합니다.
+          당신의 천명(하늘이 준 길)을 틔우고 <span class="yr-roadmap">2026~2028년</span> 운의 흐름을 똑바로 꿰뚫어 봅니다.
         </div>
       </div>
 
@@ -222,7 +222,7 @@
         </button>
         <button class="slip" onclick="openFeature('daily')">
           <span class="slip-title">오늘의 운세</span>
-          <span class="slip-desc">오늘 일진이 네 일간에 닿는 기운</span>
+          <span class="slip-desc">오늘의 기운이 네게 어떻게 닿는지</span>
           <span class="slip-seal" aria-hidden="true">日</span>
         </button>
         <button class="slip" onclick="openFeature('tarot')">
@@ -314,7 +314,7 @@
 
     <div class="card">
     <div class="form-group">
-      <span class="form-label">태어난 생년월일 (생기 生氣)</span>
+      <span class="form-label">태어난 날 (생년월일)</span>
       <div class="input-row">
         <input type="number" id="year" placeholder="년 (1990)" min="1920" max="2030">
         <input type="number" id="month" placeholder="월 (1~12)" min="1" max="12">
@@ -323,7 +323,7 @@
     </div>
 
     <div class="form-group">
-      <span class="form-label">태어난 시간 (시주 時柱)</span>
+      <span class="form-label">태어난 시간 (모르면 '시간 모름')</span>
       <select id="hourSelect">
         <option value="-1" selected>시간 모름 / 선택 안 함</option>
         <option value="0">자시 (23:30 ~ 01:29)</option>
@@ -347,7 +347,7 @@
     </div>
 
     <div class="form-group">
-      <span class="form-label">현재 하는 일 (현세의 신분/업)</span>
+      <span class="form-label">지금 하는 일</span>
       <input type="text" id="userJob" placeholder="예: 대학생, 취준생, 개발자, 사업가 등">
     </div>
 
@@ -363,13 +363,13 @@
     </div>
 
     <div class="form-group">
-      <span class="form-label">간절히 이루고 싶은 꿈 / 천명(天命) 🌟</span>
+      <span class="form-label">간절히 이루고 싶은 꿈 🌟</span>
       <input type="text" id="userDream" placeholder="예: 1인 개발자로 성공, 창업, 취업, 큰 자산 형성">
     </div>
 
     <p class="scare-notice">⚠️ 풀이 결과에는 귀신 그림이 나옵니다. 어린이·노약자·임산부, 무서운 그림을 힘들어하는 분은 주의하세요. (그림은 직접 눌러야 보입니다)</p>
     <!-- 버튼 문구는 짧게, 긴 문구는 버튼 위 한 줄로 (2026-11-01 벤치마킹: 네이버 '운세 확인하기', 포스텔러 '구매하기 7,700원') -->
-    <p class="submit-lead">내 등 뒤의 악운 쫓고 사주 영안(靈眼) 개안하기</p>
+    <p class="submit-lead">내 등 뒤의 악운을 쫓고, 사주를 꿰뚫어 보는 눈을 뜬다</p>
     <button class="btn-submit" onclick="submitAndGoToResult()">무료 풀이 보기</button>
   </div>
   </div>
@@ -415,6 +415,7 @@
 
     <!-- 3. 사주 원국 테이블 -->
     <div class="section-title">📊 네 기둥 원국 (四柱) 영적 분석</div>
+    <p class="section-sub">태어난 해·달·날·시간을 옛 글자로 적은 표다. 전문 용어라 몰라도 된다. 아래 풀이가 쉬운 말로 다시 말한다.</p>
     <table class="saju-table">
       <thead>
         <tr>
@@ -443,6 +444,7 @@
         <div class="section-title" style="margin-bottom:0;">🌊 벽사견이 읽어내는 10년 대운(大運) 파도</div>
         <div class="daeun-badge" id="daeunBadge">대운 분석 중...</div>
       </div>
+      <p class="section-sub">대운은 10년마다 바뀌는 큰 운의 흐름이다. 지금 네가 어느 구간에 있는지 본다.</p>
       <div class="daeun-scroll" id="daeunScroll"></div>
       <div class="daeun-comment" id="daeunComment" data-fold="5">대운 해설 준비 중...</div>
     </div>
@@ -450,6 +452,7 @@
     <!-- 4. 오행 그래프 -->
     <div class="oheng-card">
       <div class="section-title">🔥 오행(木火土金水) 불균형 및 결핍 감별</div>
+      <p class="section-sub">나무·불·흙·쇠·물 다섯 기운이 네 사주에 몇 개씩 있는지 센 것이다. 없는 기운이 네 약점이자 채워야 할 곳이다.</p>
       <div class="stacked-bar" id="stackedBar"></div>
       <div class="oheng-list" id="ohengList"></div>
       <div class="oheng-comment" id="ohengComment" data-fold="5">오행 분석 중...</div>
@@ -461,6 +464,7 @@
         <div class="section-title" style="margin-bottom:0;">🔮 벽사견의 영적 투시: 등 뒤의 그림자와 고질병</div>
         <div class="mind-badge" id="mindBadge">심리 투시 -%</div>
       </div>
+      <p class="section-sub">네 속마음과 사람 관계에서 되풀이되는 버릇을 짚는다.</p>
       <div class="mind-item" id="mindItem1" data-fold="6">속마음 분석 중...</div>
       <div class="mind-item" id="mindItem2" data-fold="6">치명적 함정 분석 중...</div>
     </div>
@@ -479,7 +483,8 @@
 
     <!-- 7. 🕯️ 벽사견의 은밀한 후각 감별 (연애·재물 한 줄 티저 후킹) -->
     <div class="sniff-teaser-card" id="sniffTeaserCard">
-      <div class="section-title" style="margin-bottom:12px;">🕯️ 벽사견의 은밀한 후각 감별 (초기 감지)</div>
+      <div class="section-title" style="margin-bottom:4px;">🕯️ 벽사견의 은밀한 후각 감별 (초기 감지)</div>
+      <p class="section-sub">사랑·돈·일 세 가지를 한 줄씩만 미리 맡아 본 것이다. 자세한 풀이는 리포트에 있다.</p>
       
       <div class="sniff-item">
         <h4>💘 인연과 사랑의 냄새</h4>
@@ -556,7 +561,7 @@
         <!-- 액막이 헌화비: 처음부터 전부 묶음을 앞에 두고, 따로 사는 풀이 넷도 작게 모두 보여 준다 -->
         <div class="price-box">
           <div class="price-tag">
-            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>액막이 헌화비</strong>
+            <span class="sale-event-name">오픈 기념 이벤트</span> <strong>복채 (한 번만 결제)</strong>
           </div>
           <p class="plan-lead">보따리째 열어도 되고, 필요한 것만 하나씩 골라도 된다.</p>
           <div class="plan-list">
@@ -797,8 +802,8 @@
 <!-- 결제 모달 -->
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box">
-    <h3>🕯️ 벽사신견 액막이 복채 안내</h3>
-    <p><span id="paymentTestNote" hidden>결제 설정이 테스트 모드일 때만 보이는 안내입니다. 실제 결제는 NHN KCP 결제창에서 진행됩니다.<br><br></span>액막이 복채(<span class="sale-price">4,900</span>원) 정성 완료 시 봉인이 풀리고 6단계 퇴마 비밀 포트폴리오가 전체 공개됩니다.</p>
+    <h3>🕯️ 벽사신견 복채(결제) 안내</h3>
+    <p><span id="paymentTestNote" hidden>결제 설정이 테스트 모드일 때만 보이는 안내입니다. 실제 결제는 NHN KCP 결제창에서 진행됩니다.<br><br></span><span class="sale-price">4,900</span>원을 한 번 결제하면 봉인이 풀리고, 이 화면에서 바로 리포트 6개 장이 열립니다. 자동 결제는 없습니다.</p>
     <!-- 상품 안내: 결제대행사 심사에서 보는 항목 (상품명·가격·제공 방식·이용 기간) -->
     <dl class="product-info">
       <dt>상품</dt><dd>벽사신견 천명 리포트 (6개 장)</dd>
@@ -830,10 +835,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=31"></script>
-  <script src="js/phrases.js?v=31"></script>
-  <script src="js/app.js?v=31"></script>
-  <script src="js/extras.js?v=31"></script>
-  <script src="js/shop.js?v=31"></script>
+  <script src="js/saju-core.js?v=32"></script>
+  <script src="js/phrases.js?v=32"></script>
+  <script src="js/app.js?v=32"></script>
+  <script src="js/extras.js?v=32"></script>
+  <script src="js/shop.js?v=32"></script>
 </body>
 </html>

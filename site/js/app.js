@@ -82,6 +82,7 @@ const {
   // ─────────────────────────────────────────────────────────────────────────
   const EL_KEYS = ['wood', 'fire', 'earth', 'metal', 'water'];
   const EL_KO = { wood: '목(木)', fire: '화(火)', earth: '토(土)', metal: '금(金)', water: '수(水)' };
+  const EL_NAME = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };   // 손님용 쉬운 이름 (2026-11-02 쉬운 말)
   // 원래 문장 보관함 — 각 화면이 그릴 때 채우고, phrases.js가 '한 갈래'로 그대로 쓴다
   const ORIG = {};
 
@@ -822,7 +823,7 @@ let currentSajuData = null;
     };
     const elColors = { 'wood': '푸른', 'fire': '붉은', 'earth': '황금빛', 'metal': '서늘한 백색', 'water': '검은 심해의' };
     
-    document.getElementById('animalTag').innerText = `${dStem.char}${dBranch.char} (${dStem.hanja}${dBranch.hanja}) 일주 본성`;
+    document.getElementById('animalTag').innerText = `태어난 날 ${dStem.char}${dBranch.char}(${dStem.hanja}${dBranch.hanja}) · 타고난 본성`;   // '일주' 대신 쉬운 말 (2026-11-02)
     // 큰 이모지 대신 일지 한자를 붉은 도장처럼 (이모지 표는 공유 카드 등에서 계속 쓴다)
     const ae = document.getElementById('animalEmoji');
     ae.textContent = dBranch.hanja; ae.classList.add('animal-seal'); ae.setAttribute('data-emoji', animalEmojis[dBranch.char] || '✨');
@@ -853,7 +854,9 @@ let currentSajuData = null;
     card.querySelectorAll(':scope > .key-line, :scope > .key-line-wrap').forEach(e => e.remove());
     const wrap = document.createElement('div'); wrap.className = 'key-line-wrap'; wrap.innerHTML = keyLineHtml(text, tone);
     const anchor = afterSelector ? card.querySelector(afterSelector) : null;
-    if (anchor && anchor.parentNode === card) anchor.insertAdjacentElement('afterend', wrap);
+    // 제목 아래 쉬운 말 한 줄(.section-sub)이 있으면 그 뒤에 (2026-11-02 쉬운 말 2단계: 제목 → 쉬운 말 → 핵심 순서)
+    const after = (anchor && anchor.nextElementSibling && anchor.nextElementSibling.classList.contains('section-sub')) ? anchor.nextElementSibling : anchor;
+    if (after && after.parentNode === card) after.insertAdjacentElement('afterend', wrap);
     else card.insertAdjacentElement('afterbegin', wrap);
   }
   function updateDreamFitCard(dStem, dBranch, oheng, job, major, hobby, dream) {
@@ -1030,7 +1033,7 @@ let currentSajuData = null;
     document.getElementById('mindItem1').innerHTML = 
       `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">` +
       `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">👀 속마음 투시 (골수까지 도려내는 소름 돋는 팩폭)</strong>` +
-      `  <span style="font-size:12px; font-family:var(--font-display); color:var(--cinnabar-deep); border:1px solid rgba(168,42,32,0.5); padding:2px 8px; border-radius:2px;">${data.iljuName}日柱 맞춤</span>` +
+      `  <span style="font-size:12px; font-family:var(--font-display); color:var(--cinnabar-deep); border:1px solid rgba(168,42,32,0.5); padding:2px 8px; border-radius:2px;">${data.iljuName}(태어난 날) 맞춤</span>` +
       `</div>` +
       `<p style="margin:8px 0; font-size:15.5px; line-height:2.0;">` +
       `${mindOpen}<br><br>` +
@@ -1067,11 +1070,11 @@ let currentSajuData = null;
     const dn = lastDaeun && lastDaeun.item;
     const safe = String(dream || '').replace(/[<>&]/g, '');
     const rows = [
-      ['타고난 결', `<strong>${dStem.char}${dBranch.char}일주 · ${EL_KO[ps.dmEl]} 일간</strong> — 가장 모자란 기운은 <strong>${EL_KO[ps.weakKey]}</strong>`],
-      ['지금 운', dn ? `<strong>${dn.ageStart}세 ${dn.stemObj.char}${dn.branchObj.char} 대운(${dn.sipsin})</strong> 한복판 · <strong>${Y_R1}년</strong>이 골든타임(${kpi.timScore}점)` : `<strong>${Y_R1}년</strong>이 골든타임(${kpi.timScore}점)`],
+      ['타고난 결', `<strong>${EL_NAME[ps.dmEl]} 기운 사람</strong>(태어난 날 ${dStem.char}${dBranch.char}) — 가장 모자란 기운은 <strong>${EL_NAME[ps.weakKey]}</strong>`],   // 쉬운 말 (2026-11-02): 일주·일간·오행 이름 대신
+      ['지금 운', dn ? `<strong>${dn.ageStart}세부터의 10년 운(${dn.stemObj.char}${dn.branchObj.char})</strong> 한복판 · <strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)` : `<strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)`],
       ['사람', `멀리할 자: <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 자 · 곁에 둘 귀인: <strong>${nobles[0]}</strong>`],
-      ['돈', `재물 방어력 <strong>${kpi.wScore}점</strong> · 재물 오행 <strong>${EL_KO[ps.wealthEl]}</strong> · 방위 ${(ELEMENT_REMEDIES[ps.wealthEl] || {}).dir || ''}`],
-      ['등 뒤', `벽사견이 본 것은 <strong>${ghost.name}(${ghost.hanja})</strong> — ${EL_KO[ps.weakKey]} 기운이 모자란 틈으로 들어왔다`]
+      ['돈', `재물 방어력 <strong>${kpi.wScore}점</strong> · 돈이 붙는 기운 <strong>${EL_NAME[ps.wealthEl]}</strong> · 방위 ${(ELEMENT_REMEDIES[ps.wealthEl] || {}).dir || ''}`],
+      ['등 뒤', `벽사견이 본 것은 <strong>${ghost.name}(${ghost.hanja})</strong> — ${EL_NAME[ps.weakKey]} 기운이 모자란 틈으로 들어왔다`]
     ];
     if (safe) rows.splice(1, 0, ['네 꿈', `[<strong>${safe}</strong>] — 조화율 <strong>${(document.getElementById('fitScore') || {}).innerText || ''}</strong>`.replace('영적 조화율 ', '')]);
     ul.innerHTML = rows.map(([k, v]) => `<li><span class="glance-key">${k}</span><span class="glance-val">${v}</span></li>`).join('');
@@ -1449,8 +1452,7 @@ let currentSajuData = null;
     const { isForward, daeunNum, currentAge, daeunItems, curActiveIndex } =
       calculateDaeun(birthYear, birthMonth, birthDay, gender, yStemIdx, mStemIdx, mBranchIdx, dStemIdx, pillars);
 
-    const dirText = isForward ? "순행(順行)" : "역행(逆行)";
-    document.getElementById('daeunBadge').innerText = `${gender === 'M' ? '남성' : '여성'} ${dirText} · ${daeunNum}세 대운 주기`;
+    document.getElementById('daeunBadge').innerText = `${daeunNum}세부터 10년마다 바뀜`;   // 쉬운 말 (2026-11-02): '여성 순행 · 4세 대운 주기' 대신
 
     const scrollContainer = document.getElementById('daeunScroll');
     scrollContainer.innerHTML = daeunItems.map((item) => `
