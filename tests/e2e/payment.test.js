@@ -205,7 +205,7 @@ test('휴대폰 결제 페이지에서 돌아오면: 맡겨 둔 사주를 다시
   await page.goto('file://' + SITE + '?pay=return&paymentId=byeoksa-abc&transactionType=PAYMENT&txId=tx-9');
   await page.waitForTimeout(500);
   assert.equal(await viewOf(page), 'viewReport');
-  assert.match(await page.textContent('#reportSummary'), /을사일주/);
+  assert.match(await page.textContent('#reportSummary'), /태어난 날 을사/);
   assert.ok(!page.url().includes('paymentId'), page.url());
   assert.deepEqual(page._errors, []);
   await ctx.close();

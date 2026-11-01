@@ -231,7 +231,7 @@ const {
       loveScent: SOULMATE_SCENTS[ps.weakKey].short,
       Y: { P1: Y_PAST1, P2: Y_PAST2, R0: Y_R0, R1: Y_R1, R2: Y_R2 },
       yearSipsin: { P1: sip(Y_PAST1), P2: sip(Y_PAST2), R0: sip(Y_R0), R1: sip(Y_R1), R2: sip(Y_R2) },
-      josa, ganji: y => yearGanji(y), EL_KO, orig: ORIG,
+      josa, ganji: y => yearGanji(y), EL_KO, EL_NAME, orig: ORIG,
       sipsinGroup: name => SIPSIN_GROUP[name],
       get daeunSipsin() { return lastDaeun && lastDaeun.item ? lastDaeun.item.sipsin : null; },
       get daeunGroup() { return lastDaeun && lastDaeun.item ? SIPSIN_GROUP[lastDaeun.item.sipsin] : null; }
@@ -313,6 +313,7 @@ const {
     in: `2. <strong>배움 지출 차단</strong>: 네 명식은 배움과 문서의 기운이 짙어, 강의·책·자격증 결제가 끝없이 이어진다. 지금 붙든 공부 하나를 끝내기 전에는 새 강의를 결제하지 마라.`
   };
   const GROUP_KO = { bi: '비겁(比劫)', sik: '식상(食傷)', gwan: '관성(官星)', in: '인성(印星)' };
+  const GROUP_PLAIN = { bi: '내 편과 경쟁자(비겁)', sik: '재주와 표현(식상)', jae: '돈(재성)', gwan: '책임과 체면(관성)', in: '배움(인성)' };   // 손님용 쉬운 말 (2026-11-02 쉬운 말 4단계: 리포트)
 
   // ── 천명 100일 작전: 세 수칙을 각각 다른 기준으로 고른다 (원래 문장은 각각 한 유형으로 보존) ──
   // ① 기상 의식 — 가장 모자란 오행 (수(水) 보충 = 원래 문장)
@@ -404,9 +405,9 @@ const {
   function yearRelationText(year, ps) {
     const ys = ((year - 4) % 10 + 10) % 10, yb = ((year - 4) % 12 + 12) % 12;
     const sipsin = getSipsin(ps.dayStemIdx, ys);
-    let t = `🔎 <strong>명식 대조</strong>: ${yearGanji(year)}년의 천간이 네게 <strong class="impact-gold">[${sipsin}]</strong>${josa(sipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[sipsin]}`;
+    let t = `🔎 <strong>네 사주와 대조</strong>: ${yearGanji(year)}년의 기운이 네게 <strong class="impact-gold">[${sipsinPlain(sipsin)}]</strong>${josa(sipsinPlain(sipsin), '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[sipsin]}`;
     if ((yb - ps.dayBranchIdx + 12) % 12 === 6) {
-      t += ` 또한 이 해의 지지(${BRANCHES[yb].char})가 네 일지(${BRANCHES[ps.dayBranchIdx].char})와 정면으로 부딪히는 <strong class="impact-red">충(沖)</strong>이 걸려 있으니, 이사·이직·관계의 큰 변동에 대비하거라.`;
+      t += ` 또한 이 해의 글자(${BRANCHES[yb].char})가 네가 태어난 날의 글자(${BRANCHES[ps.dayBranchIdx].char})와 정면으로 부딪히는 <strong class="impact-red">충돌(충)</strong>이 걸려 있으니, 이사·이직·관계의 큰 변동에 대비하거라.`;
     } else if (SajuCore.branchRelation) {
       const rel = SajuCore.branchRelation(ps.dayBranchIdx, yb), H = window.BYEOKSA_PHRASES.YEAR_HAP;
       if (rel.yukhap) t += H.yukhap(year, BRANCHES[yb].char);
@@ -1564,9 +1565,9 @@ let currentSajuData = null;
           이 자들은 네가 힘들 땐 곁에 없다가, 네게 뭔가 이득이 생기거나 성과가 보이면 귀신같이 냄새를 맡고 나타난다.`;
     ORIG.cut = `변명할 기회를 주지 마라. 서서히 연락 빈도를 줄이고 카톡 답장을 3시간 이상 늦추며 영적 연결고리를 완전히 끊어내라.`;
     ORIG.ch2Lookback = `너를 스쳐 지나간 인연들을 돌아보아라. <strong>처음엔 눈이 멀 것처럼 설레었지만 결국 네 가슴에 지독한 생채기를 남기고 떠난 자들...</strong> 그들의 냄새를 복기해보아라.`;
-    ORIG.ruinWarn = `이 자를 깊은 연인으로 들이면, 네 사주 원국의 명예운과 금전운이 3년간 송두리째 잿더미가 된다. 지금 그런 냄새가 나는 자가 주변에 있다면 뒤도 돌아보지 말고 뛰어 도망쳐라!`;
+    ORIG.ruinWarn = `이 자를 깊은 연인으로 들이면, 네 사주의 명예운과 금전운이 3년간 송두리째 잿더미가 된다. 지금 그런 냄새가 나는 자가 주변에 있다면 뒤도 돌아보지 말고 뛰어 도망쳐라!`;
     ORIG.meetWhere = `<strong class="impact-gold">${Y_R0}년 하반기~${Y_R1}년 상반기</strong>, 일이나 학업으로 얽힌 공적인 자리 또는 조용한 이동 중에 우연처럼 마주치게 된다.`;
-    ORIG.ch3Intro = `네 명식에는 돈을 버는 재능은 있으나, 담아두는 그릇의 밑바닥에 실금이 가 있어 물이 줄줄 새어나가는 <strong class="impact-red">누재살(漏財煞)</strong>의 기운이 감돌고 있다.<br><br>
+    ORIG.ch3Intro = `네 사주에는 돈을 버는 재능은 있으나, 담아두는 그릇의 밑바닥에 실금이 가 있어 물이 줄줄 새어나가는 <strong class="impact-red">돈 새는 구멍(누재살)</strong>의 기운이 감돌고 있다.<br><br>
           "돈이 좀 모였다 싶으면 꼭 엉뚱한 곳에서 목돈이 깨지는 상황", 기억나지 않느냐? 병원비, 가족이나 친구의 부탁, 충동적인 지출 등으로 공든 탑이 무너지는 패턴이다.`;
     ORIG.guard1 = WEALTH_GUARD_BY_COUNT;
     ORIG.guard2 = WEALTH_LEAK_BY_GROUP;
@@ -1578,7 +1579,7 @@ let currentSajuData = null;
     };
     ORIG.ch5Intro = `운명은 가만히 앉아 있는 자에게 찾아오지 않는다. 벽사견의 기운을 받아 내일부터 당장 실천할 3가지 행동 수칙이다:`;
     ORIG.ch2Intro = `벽사신견의 코는 거짓말을 하지 않는다. 사람이 입으로는 온갖 달콤한 사랑을 맹세해도, 그 영혼에서 뿜어져 나오는 냄새는 숨길 수 없는 법이다.`;
-    ORIG.soulTrait = `네 결핍된 오행(${EL_KO[weakKey]})을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>]의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.`;
+    ORIG.soulTrait = `네게 모자란 ${EL_NAME[weakKey]} 기운을 자신의 온기로 묵묵히 채워주는 [<strong class="impact-green">${nobles[0]}</strong>]의 인연이다. 네가 인생의 벼랑 끝에 몰려도 손가락질하지 않고 묵묵히 네 등을 받쳐줄 사람이며, 이 사람을 맞이하는 순간 막혀 있던 네 재물의 수문이 함께 터진다.`;
     const ch2Intro = (c ? ph(PH.CH2_INTRO, null, c, 23) : ORIG.ch2Intro) + (c && c.hourKnown && c.hourSipsin && PH.LOVE_HOUR[c.hourSipsin] ? ' ' + PH.LOVE_HOUR[c.hourSipsin](c) : '');
     const soulTrait = c ? ph(PH.SOUL_TRAIT, c.strength, c) : ORIG.soulTrait;
     const soulKeep = c ? ph(PH.SOUL_KEEP, c.branchKind, c) : '';
@@ -1614,7 +1615,7 @@ let currentSajuData = null;
     // 6장 효능·사용법: 원래 문장은 ORIG에 두고, 사람별(짙은 십신·재성 글자 수·골든타임 십신·일간 오행)로 고른다 (2026-10-24)
     ORIG.talismanEffect1 = `내 기를 빨아먹고 성과를 가로채려는 자들의 살기를 튕겨냅니다.`;
     ORIG.talismanEffect2 = `피 같은 돈이 줄줄 새어나가지 않도록 재물의 문을 단단히 걸어 잠급니다.`;
-    ORIG.talismanEffect3 = `${Y_R0}~${Y_R2}년 대운 골든타임에 폭발적 기회를 온전히 틀어쥐도록 기운을 틔웁니다.`;
+    ORIG.talismanEffect3 = `${Y_R0}~${Y_R2}년 가장 좋은 때에 폭발적 기회를 온전히 틀어쥐도록 기운을 틔웁니다.`;
     ORIG.talismanUse = [
       `• 다운로드한 부적 이미지를 <strong>스마트폰 잠금화면이나 배경화면</strong>으로 설정해 두면 매일 첫 순간 액살을 털어냅니다.`,
       `• 출력하여 지갑 속이나 작업 공간(모니터 뒤편, 책상 서랍)에 넣어두셔도 좋습니다.`,
@@ -1639,7 +1640,7 @@ let currentSajuData = null;
         <div class="dossier-info-table">
           <div class="dossier-info-cell">
             <span class="dossier-label">수신 (受信)</span>
-            <span class="dossier-val">${iljuName}日柱 (${dStem.hanja}${dBranch.hanja}) 本元</span>
+            <span class="dossier-val">${iljuName} (${dStem.hanja}${dBranch.hanja}) · 태어난 날의 글자</span>
           </div>
           <div class="dossier-info-cell">
             <span class="dossier-label">발신 (發信)</span>
@@ -1668,11 +1669,11 @@ let currentSajuData = null;
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiPotentialBar" data-w="${kpi.potScore}" style="width:${kpi.potScore}%; background:${kpi.potColor};"></div></div>
           </div>
           <div class="kpi-row">
-            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">${Y_R1} 대운 폭발 지수 (골든타임)</span><span id="kpiTimingScore" style="font-size:14px; font-weight:800; color:${kpi.timColor};">${kpi.timScore}점 ${kpi.timGrade}</span></div>
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">${Y_R1} 운 폭발 지수 (가장 좋은 때)</span><span id="kpiTimingScore" style="font-size:14px; font-weight:800; color:${kpi.timColor};">${kpi.timScore}점 ${kpi.timGrade}</span></div>
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiTimingBar" data-w="${kpi.timScore}" style="width:${kpi.timScore}%; background:${kpi.timColor};"></div></div>
           </div>
           <div class="kpi-row">
-            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">재물 방어력 (누재살 漏財煞)</span><span id="kpiWealthScore" style="font-size:14px; font-weight:800; color:${kpi.wColor};">${kpi.wScore}점 ${kpi.wGrade}</span></div>
+            <div class="kpi-label-bar"><span style="font-size:14px; font-weight:700;">재물 방어력 (돈 새는 구멍)</span><span id="kpiWealthScore" style="font-size:14px; font-weight:800; color:${kpi.wColor};">${kpi.wScore}점 ${kpi.wGrade}</span></div>
             <div class="kpi-bar-bg"><div class="kpi-bar-fill" id="kpiWealthBar" data-w="${kpi.wScore}" style="width:${kpi.wScore}%; background:${kpi.wColor};"></div></div>
           </div>
           <div class="kpi-row">
@@ -1687,13 +1688,13 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">第一章 · 대외비 1급</span>
         <div class="portfolio-section-title">🗡️ 기(氣) 빨아먹는 악연 색출 및 즉각 처단 매뉴얼</div>
-        ${keyLineHtml(`지금 손절할 <strong>${EL_KO[ps.dmEl]} 일간용 악연 3유형</strong>이 아래 1·2·3번이다 — 연락 빈도를 줄이는 처단 비방까지 읽어라.`)}
+        ${keyLineHtml(`지금 손절할 <strong>${EL_NAME[ps.dmEl]} 기운 사람용 악연 3유형</strong>이 아래 1·2·3번이다 — 연락 빈도를 줄이는 처단 비방까지 읽어라.`)}
         <div class="portfolio-text">
           ${ch1Intro}
         </div>
         <div class="portfolio-highlight">
           <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:8px;">⚠️ 즉시 손절해야 할 3대 악연 유형:</strong>
-          <span style="font-size:13px; color:var(--ink-soft); display:block; margin-bottom:4px;">— ${dStem.char}${EL_KO[ps.dmEl]} 일간인 네게 유독 들러붙는 유형</span>
+          <span style="font-size:13px; color:var(--ink-soft); display:block; margin-bottom:4px;">— ${EL_NAME[ps.dmEl]} 기운 사람인 네게 유독 들러붙는 유형</span>
           1. ${enemyList[0]}<br>
           2. ${enemyList[1]}<br>
           3. ${enemyList[2]}<br><br>
@@ -1730,18 +1731,18 @@ let currentSajuData = null;
       <!-- CHAPTER 03: 누재살 방어 및 재물 축적 비방 -->
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">第三章 · 재물 결속 비기</span>
-        <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 누재살(漏財煞) 봉인법</div>
-        ${keyLineHtml(`네 돈이 새는 길은 <strong>${GROUP_KO[leakKey]}</strong> 쪽 · 재물 오행은 <strong>${EL_KO[ps.wealthEl]}</strong>, 방위는 ${wealthRemedy.dir} — 아래 3대 비방이 그 구멍을 막는다.`)}
+        <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 구멍(누재살) 봉인법</div>
+        ${keyLineHtml(`네 돈이 새는 길은 <strong>${GROUP_PLAIN[leakKey]}</strong> 쪽 · 돈이 붙는 기운은 <strong>${EL_NAME[ps.wealthEl]}</strong>, 방위는 ${wealthRemedy.dir} — 아래 3대 비방이 그 구멍을 막는다.`)}
         <div class="portfolio-text">
           ${ch3Intro}<br><br>
           ${wealthDiagnosis(ps)}
         </div>
         <div class="portfolio-highlight">
-          <strong class="impact-gold" style="font-size:15.5px; display:block; margin-bottom:8px;">🔒 누재살 방어 3대 황금 비방:</strong>
-          <span class="guard-basis">— 재성 ${ps.wealthCount}글자 · 가장 짙은 기운 ${GROUP_KO[leakKey]} · 재물 오행 ${EL_KO[ps.wealthEl]} · 모자란 오행 ${EL_KO[weakKey]}</span>
+          <strong class="impact-gold" style="font-size:15.5px; display:block; margin-bottom:8px;">🔒 돈 새는 구멍 막는 3대 황금 비방:</strong>
+          <span class="guard-basis">— 돈 기운(재성) ${ps.wealthCount}글자 · 가장 짙은 기운 ${GROUP_PLAIN[leakKey]} · 돈이 붙는 기운 ${EL_NAME[ps.wealthEl]} · 모자란 기운 ${EL_NAME[weakKey]}</span>
           ${guard1}<br>
           ${guard2}<br>
-          3. <strong>재물 방위 풍수</strong>: 잠잘 때 머리를 재물 오행(${EL_KO[ps.wealthEl]})의 방위인 [<strong class="impact-gold">${wealthRemedy.dir}</strong>] 방향으로 두고, 작업 책상 위에 모자란 기운을 채우는 [<strong class="impact-gold">${remedy.item}</strong>]${josa(remedy.item, '을')} 두어 재물의 살을 튕겨내라.${guard3Tail}
+          3. <strong>재물 방위 풍수</strong>: 잠잘 때 머리를 돈이 붙는 기운(${EL_NAME[ps.wealthEl]})의 방위인 [<strong class="impact-gold">${wealthRemedy.dir}</strong>] 방향으로 두고, 작업 책상 위에 모자란 기운을 채우는 [<strong class="impact-gold">${remedy.item}</strong>]${josa(remedy.item, '을')} 두어 재물의 살을 튕겨내라.${guard3Tail}
         </div>
       </div>
 
@@ -1749,7 +1750,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">第四章 · 시기 포획</span>
         <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 대운 3개년 로드맵</div>
-        ${keyLineHtml(`<strong>${Y_R1}년이 골든타임</strong> — 그해 천간이 네게 <strong>${getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)}</strong>${josa(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10), '으로')} 들어온다${((((Y_R1 - 4) % 12 + 12) % 12) - ps.dayBranchIdx + 12) % 12 === 6 ? ' (단, 일지와 <strong>충</strong>이라 큰 변동을 각오할 것)' : ''}. ${c ? ph(PH.ROAD_PHASE, null, c, 46) : `${Y_R0}년은 준비, ${Y_R1}년은 승부, ${Y_R2}년은 지키기.`}`)}
+        ${keyLineHtml(`<strong>${Y_R1}년이 가장 좋은 때</strong> — 그해의 기운이 네게 <strong>${sipsinPlain(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10))}</strong>${josa(sipsinPlain(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)), '으로')} 들어온다${((((Y_R1 - 4) % 12 + 12) % 12) - ps.dayBranchIdx + 12) % 12 === 6 ? ' (단, 일지와 <strong>충</strong>이라 큰 변동을 각오할 것)' : ''}. ${c ? ph(PH.ROAD_PHASE, null, c, 46) : `${Y_R0}년은 준비, ${Y_R1}년은 승부, ${Y_R2}년은 지키기.`}`)}
         <div class="portfolio-text">
           ${roadIntro}
         </div>
@@ -1762,7 +1763,7 @@ let currentSajuData = null;
           </div>
           <div class="timeline-step">
             <div class="timeline-dot"></div>
-            <div class="timeline-title">${Y_R1}년 (${yearGanji(Y_R1)}년 ${yearGanji(Y_R1,true)}) · 인생 최고의 폭발적 골든타임 🎯</div>
+            <div class="timeline-title">${Y_R1}년 (${yearGanji(Y_R1)}년 ${yearGanji(Y_R1,true)}) · 인생 최고의 폭발적 상승기 🎯</div>
             <div class="timeline-desc">${roadText('R1')}</div>
             <div class="timeline-desc timeline-relation">${yearRelationText(Y_R1, ps)}</div>
           </div>
@@ -1787,7 +1788,7 @@ let currentSajuData = null;
           ${rule1}<br>
           ${rule2}${hourFocus}<br>
           ${rule3}<br><br>
-          ➕ <strong class="impact-gold">네 명식에만 내리는 맞춤 수칙 · ${EL_KO[weakKey]} 기운 보충</strong>: ${c ? ph(PH.REMEDY_FRAME, null, c, 49) : `네 원국에 가장 모자란 기운이다. <strong>${remedy.color}</strong> 계열의 소지품을 몸에 지니고, <strong>${remedy.food}</strong>${josa(remedy.food, '을')} 가까이하며, 중요한 결정은 <strong>${remedy.dir}</strong>을 바라보고 내리거라. 행운의 숫자는 <strong>${remedy.num}</strong>이다.`}${ch5Month}
+          ➕ <strong class="impact-gold">네 사주에만 내리는 맞춤 수칙 · ${EL_NAME[weakKey]} 기운 보충</strong>: ${c ? ph(PH.REMEDY_FRAME, null, c, 49) : `네 사주에 가장 모자란 기운이다. <strong>${remedy.color}</strong> 계열의 소지품을 몸에 지니고, <strong>${remedy.food}</strong>${josa(remedy.food, '을')} 가까이하며, 중요한 결정은 <strong>${remedy.dir}</strong>을 바라보고 내리거라. 행운의 숫자는 <strong>${remedy.num}</strong>이다.`}${ch5Month}
         </div>
       </div>
 
@@ -1810,8 +1811,8 @@ let currentSajuData = null;
           <div class="talisman-info-item">
             <strong>🛡️ 3대 영적 수호 효능</strong>
             <ul>
-              <li><strong>1. 흡기귀(吸氣鬼) 및 악연 차단</strong>: ${talismanEffect1}</li>
-              <li><strong>2. 누재살(漏財煞) 방어</strong>: ${talismanEffect2}</li>
+              <li><strong>1. 흡기귀(吸氣鬼, 기운을 빨아먹는 귀신) 및 악연 차단</strong>: ${talismanEffect1}</li>
+              <li><strong>2. 돈 새는 구멍(누재살) 방어</strong>: ${talismanEffect2}</li>
               <li><strong>3. 천명([${dream}]) 개운</strong>: ${talismanEffect3}</li>
             </ul>
           </div>${talismanMine}
@@ -1820,7 +1821,7 @@ let currentSajuData = null;
             <strong>📱 소장 및 사용 비방</strong>
             <p>
               ${talismanUse.join('<br>\n              ')}<br>
-              • <strong>네 명식 맞춤</strong>: 네 원국에 모자란 <strong>${EL_KO[weakKey]}</strong> 기운을 채우려면, 출력한 부적을 <strong>${remedy.dir}</strong> 벽에 붙이거나 <strong>${remedy.color}</strong> 계열 지갑에 넣어 지니십시오. 효험이 배가됩니다.
+              • <strong>네 사주 맞춤</strong>: 네 사주에 모자란 <strong>${EL_NAME[weakKey]}</strong> 기운을 채우려면, 출력한 부적을 <strong>${remedy.dir}</strong> 벽에 붙이거나 <strong>${remedy.color}</strong> 계열 지갑에 넣어 지니십시오. 효험이 배가됩니다.
             </p>
           </div>
         </div>
@@ -2407,12 +2408,12 @@ let currentSajuData = null;
     const ps = getPersona(sd.dStemIdx, sd.dBranchIdx, sd.ohengResult);
     const dn = lastDaeun && lastDaeun.item;
     const daeunLine = dn
-      ? `${dn.ageStart}세부터 ${dn.stemObj.char}${dn.branchObj.char} 대운 · ${dn.sipsin}의 기운 · 12운성 '${dn.unsung}' (지금 만 ${lastDaeun.age}세)`
+      ? `${dn.ageStart}세부터의 10년 운 ${dn.stemObj.char}${dn.branchObj.char} · ${sipsinPlain(dn.sipsin)} · ${UNSUNG_PLAIN[dn.unsung] || dn.unsung}(${dn.unsung}) (지금 만 ${lastDaeun.age}세)`
       : txt('daeunBadge');
     box.innerHTML = `
       <div class="feature-card rs-card">
         <h3 class="feature-card-title">먼저 맡은 냄새 · 무료 풀이 요약</h3>
-        <p class="rs-meta">${sd.y}년 ${sd.m}월 ${sd.d}일 ${sd.hBranch ? sd.hBranch.char + '시' : '(시간 모름)'} · ${sd.genderVal === 'M' ? '남성' : '여성'} · <strong>${sd.dStem.char}${sd.dBranch.char}일주</strong></p>
+        <p class="rs-meta">${sd.y}년 ${sd.m}월 ${sd.d}일 ${sd.hBranch ? sd.hBranch.char + '시' : '(시간 모름)'} · ${sd.genderVal === 'M' ? '남성' : '여성'} · 태어난 날 <strong>${sd.dStem.char}${sd.dBranch.char}</strong></p>
         <div class="rs-pillars">
           ${cell(sd.hStem, sd.hBranch, '시')}${cell(sd.dStem, sd.dBranch, '일')}${cell(sd.mStem, sd.mBranch, '월')}${cell(sd.yStem, sd.yBranch, '년')}
         </div>
@@ -2420,7 +2421,7 @@ let currentSajuData = null;
           ${EL_KEYS.map(k => `<li class="rs-el ${k}${k === ps.weakKey ? ' is-weak' : ''}"><span>${EL_KO[k]}</span><strong>${counts[k] || 0}</strong></li>`).join('')}
         </ul>
         <dl class="rs-list">
-          <dt>일주 본성</dt><dd>${esc(txt('animalTitle'))}</dd>
+          <dt>타고난 본성</dt><dd>${esc(txt('animalTitle'))}</dd>
           <dt>꿈과 팔자</dt><dd>${esc(txt('fitScore'))} · ${esc(sd.userDream)}</dd>
           <dt>모자란 기운</dt><dd>${EL_KO[ps.weakKey]} — 이 리포트의 맞춤 비방은 이 기운을 채우는 쪽으로 짜였다</dd>
           <dt>지금 대운</dt><dd>${esc(daeunLine || '대운 정보 없음')}</dd>
