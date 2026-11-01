@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=29">
+  <link rel="stylesheet" href="css/style.css?v=30">
 </head>
 <body>
 <!--
@@ -64,7 +64,7 @@
 
   <section class="feature-card legal-section" id="privacy">
     <h2 class="feature-card-title">개인정보처리방침</h2>
-    <p class="legal-meta">시행일: 2026년 10월 13일</p>
+    <p class="legal-meta">시행일: 2026년 11월 1일 (2026년 10월 13일 제정, 2026년 11월 1일 후기 수집 항목 추가)</p>
     <h3>1. 서비스가 다루는 정보와 저장 위치</h3>
     <table class="legal-table">
       <thead><tr><th>정보</th><th>쓰는 곳</th><th>저장</th></tr></thead>
@@ -73,10 +73,11 @@
         <tr><td data-label="정보">직업·전공·취미·꿈 (선택 입력)</td><td data-label="쓰는 곳">풀이 문장에 넣어 보여 주기</td><td data-label="저장">저장하지 않음(화면을 닫으면 사라짐)</td></tr>
         <tr><td data-label="정보">궁합 상대의 생년월일·호칭</td><td data-label="쓰는 곳">궁합 계산</td><td data-label="저장">저장하지 않음. 상세 궁합을 결제하면 두 생년월일로 만든 암호값만 기기에 남김(휴대폰 결제 중에는 잠시 보관 후 삭제)</td></tr>
         <tr><td data-label="정보">결제한 상품 표시(결제 번호, 생년월일·소원으로 만든 암호값)</td><td data-label="쓰는 곳">같은 기기에서 결제한 풀이 다시 열기</td><td data-label="저장">이용자 기기의 브라우저 저장소</td></tr>
-        <tr><td data-label="정보">첫 방문 여부</td><td data-label="쓰는 곳">다시 올 때 첫 화면 연출을 짧게</td><td data-label="저장">이용자 기기의 브라우저 저장소</td></tr>
+        <tr><td data-label="정보">첫 화면 설화록(序)을 마지막으로 본 날짜</td><td data-label="쓰는 곳">같은 날 다시 올 때 첫 화면 연출 생략</td><td data-label="저장">이용자 기기의 브라우저 저장소</td></tr>
         <tr><td data-label="정보">할인 사용 여부와 기한</td><td data-label="쓰는 곳">공유·할인 코드 할인 적용</td><td data-label="저장">이용자 기기의 브라우저 저장소</td></tr>
         <tr><td data-label="정보">결제 진행 중인 생년월일·입력값</td><td data-label="쓰는 곳">휴대폰 결제 페이지에 다녀온 뒤 풀이 이어 보기</td><td data-label="저장">이용자 기기에 잠시 보관, 결제가 끝나면 삭제</td></tr>
         <tr><td data-label="정보">오늘 뒤집은 벽사 패 번호, 무작위 식별값</td><td data-label="쓰는 곳">같은 날 같은 패 보여 주기</td><td data-label="저장">이용자 기기의 브라우저 저장소</td></tr>
+        <tr><td data-label="정보">후기 — 한 줄 글, 별점, 별명, 결제 번호 (모두 이용자가 직접 적은 것, 별점·별명·결제 번호는 선택)</td><td data-label="쓰는 곳">동의한 글만 별명과 함께 사이트에 실제 구매자 후기로 싣기, 결제 번호로 실제 결제 확인</td><td data-label="저장">이용자가 '후기 남기기'로 보낸 경우에만 Google Forms 응답(운영자 구글 계정)에 보관. 게시를 내리거나 삭제를 요청하면 지우고, 늦어도 받은 날로부터 1년 안에 지움</td></tr>
       </tbody>
     </table>
     <p>서비스의 사주 계산은 모두 이용자의 브라우저 안에서 이루어지며, 운영자는 이용자가 입력한 생년월일 등을 서버로 받거나 보관하지 않습니다.</p>
@@ -89,6 +90,8 @@
       <li><strong>웹 호스팅</strong>: Cloudflare Pages(Cloudflare, Inc.). 사이트 접속 시 접속 기록(IP 주소, 브라우저 정보, 접속 시간)이 호스팅 업체에 남을 수 있습니다.</li>
       <li><strong>웹 글꼴</strong>: Google Fonts. 글꼴을 불러올 때 IP 주소 등 기본 접속 정보가 Google에 전달됩니다.</li>
       <li><strong>결제</strong>: 유료 결제는 전자결제대행사 <strong>NHN KCP(주)</strong>의 결제창에서 이루어지며, 결제 연동과 결제 결과 조회는 <strong>(주)코리아포트원(PortOne)</strong>을 거칩니다. 카드번호·계좌번호 등 결제 정보는 두 회사가 각자의 개인정보처리방침에 따라 처리하고, 운영자는 이를 저장하지 않습니다. 운영자가 받는 것은 주문번호·결제 금액·결제 일시·결제 상태뿐입니다. 결제 확인을 위해 주문번호·결제 금액·결제 일시를 「전자상거래법」에 따라 5년간 보관합니다.</li>
+      <li><strong>후기 수집</strong>: 리포트 끝의 "후기 남기기"는 <strong>Google Forms(Google LLC)</strong> 설문지로 열립니다. 적어 보낸 후기 글·별점·별명·결제 번호는 운영자의 구글 계정 설문지 응답에 저장되며 Google의 서버(국외)에 보관됩니다. 이름·전화번호·이메일 같은 개인정보는 적지 말아 주십시오. 게시에 동의한 글만 별명과 함께 사이트에 싣고, 삭제를 원하시면 아래 연락처로 알려 주십시오.</li>
+      <li><strong>결제 건수 표시</strong>: 사이트는 결제대행사 기록에서 결제 완료 건수만 받아 "지금까지 몇 명" 형태로 보일 수 있습니다. 이때 개인정보는 다루지 않습니다.</li>
       <li><strong>인스타그램 자동 응답</strong>: 공식 인스타그램(@byeoksa) 게시물에 정해진 키워드로 댓글을 남기면, 사이트 주소를 안내하는 자동 메시지(DM)를 보내기 위해 <strong>인스타그램 아이디·댓글 및 메시지 내용</strong>을 처리합니다. 이 처리는 <strong>Manychat, Inc.(ManyChat)</strong>에 위탁하며, 정보는 키워드 댓글을 남기는 때에 인스타그램을 통해 <strong>미국</strong>에 있는 ManyChat의 서버로 전송되어 처리됩니다(국외 이전). 처리된 정보는 운영자가 ManyChat 계정 연결을 해지하거나 삭제할 때까지 보관합니다. 자동 응답을 원하지 않으시면 키워드 댓글을 남기지 않으시면 되고, 이미 처리된 정보의 삭제는 아래 개인정보 보호책임자에게 요청하실 수 있습니다.</li>
     </ul>
     <h3>5. 고객 문의</h3>
