@@ -210,7 +210,7 @@ const {
       branchGroup: PH.branchGroup(pillars.dBranchIdx), branchKind: PH.branchKind(pillars.dBranchIdx),
       ilju: `${pillars.dStem.char}${pillars.dBranch.char}`,
       monthBranchIdx: pillars.mBranchIdx, yearBranchIdx: BRANCHES.indexOf(pillars.yBranch),
-      unsung, strength: PH.unsungStrength(unsung),
+      unsung, unsungPlain: UNSUNG_PLAIN[unsung] || '', strength: PH.unsungStrength(unsung),
       weakKey: ps.weakKey, weakCount: counts[ps.weakKey] || 0, wealthEl: ps.wealthEl, wealthCount: ps.wealthCount,
       counts, groups: grp, domGroup, leakKey, gwanCount: grp.gwan,
       dreamRel: fit.rel, dream, job: u.job || '현재의 신분', major: u.major || '갈고닦는 무기', hobby: u.hobby || '숨 쉬는 구멍',
@@ -341,9 +341,13 @@ const {
     wood: ['교육', '교사', '선생', '강사', '디자인', '기획', '출판', '작가', '글', '상담', '복지', '간호', '농', '패션', '뷰티', '건축', '창작', '공부'],
     fire: ['방송', '영상', '유튜브', '연예', '배우', '가수', '아이돌', '마케팅', '광고', '강연', '요리', '셰프', '게임', '콘텐츠', '인플루언서', '스타', '유명', '개발', '앱', '웹'],
     earth: ['부동산', '건물', '건설', '공무원', '중개', '컨설팅', '유통', '관리', '행정', '보험', '안정', '집', '자산', '땅', '카페', '가게', '장사'],
-    metal: ['금융', '투자', '주식', '코인', '법', '변호사', '판사', '검사', '회계', '세무', '엔지니어', '기계', '반도체', '군인', '경찰', '의사', '치과', '약사', '분석', '데이터', '자동차', '부자', '돈'],
-    water: ['무역', '여행', '물류', '연구', '박사', '철학', '심리', '해외', '유학', '이민', '음악', '작곡', '예술', '프리랜서', '코딩', '프로그래', '사업', '창업', '1인']
+    metal: ['금융', '투자', '주식', '코인', '법', '변호사', '판사', '검사', '회계', '세무', '엔지니어', '기계', '반도체', '군인', '경찰', '의사', '치과', '약사', '분석', '데이터', '자동차', '부자', '돈', '억만장자', '백만장자', '재벌', '갑부', '부유', '재산', '자산가', '연봉', '월급', '수익', '매출', '경제적 자유', '로또'],
+    water: ['무역', '여행', '물류', '연구', '박사', '철학', '심리', '해외', '유학', '이민', '음악', '작곡', '예술', '프리랜서', '코딩', '프로그래', '사업', '창업', '1인', '사장', '대표', 'CEO', '내 회사']
   };
+  // ── 쉬운 말 표 (2026-11-02, 손님 평 "뭔 소린지 모르겠다"): 풀이 문장 앞에 사실을 평어로 한 줄 먼저 말할 때 쓴다 ──
+  const EL_PLAIN = { wood: '나무 기운(뻗어 나가는 힘)', fire: '불 기운(의욕과 열기)', earth: '흙 기운(중심과 안정)', metal: '쇠 기운(맺고 끊는 힘)', water: '물 기운(쉬어 가는 힘)' };
+  const REL_PLAIN = ['네 성격과 같은 결이라 남이 시키지 않아도 혼자 밀고 간다', '네 재주를 밖으로 꺼내 보이는 일이라 잘 맞는다', '손댄 만큼 돈으로 돌아오는 일이라 결과가 바로 보인다', '네 어깨를 누르는 일이라 버겁지만, 해내면 이름이 선다', '배울수록 힘이 붙는 일이라 서두르지 않으면 된다'];
+  const UNSUNG_PLAIN = { '장생': '힘이 돋아나는 자리', '목욕': '멋을 알고 흔들리기 쉬운 자리', '관대': '어깨에 힘이 들어가는 자리', '건록': '제 힘으로 서는 자리', '제왕': '힘이 가장 센 자리', '쇠': '힘이 조금 꺾이는 자리', '병': '지치기 쉬운 자리', '사': '멈춰 서는 자리', '묘': '안으로 갈무리하는 자리', '절': '끊겼다 다시 잇는 자리', '태': '새로 품는 자리', '양': '길러지는 자리' };
   /** 꿈 문장에서 가장 많이 걸리는 오행 (없으면 null) */
   function dreamElement(dream) {
     const t = String(dream || '');
@@ -861,24 +865,31 @@ let currentSajuData = null;
     const PH = window.BYEOKSA_PHRASES, c = CUR;
     // 원래 문장(기토·토 결핍·꿈 자리 모름일 때 그대로 나온다)
     ORIG.fitOpen = `<strong>"[${dream}]${josa(dream, '을')} 품은 네 가슴속 불길이 내 털끝을 태우는구나."</strong>`;
-    ORIG.fitWeapon = `지금 뒹굴고 있는 [${job}]과 [${major}]... 네놈의 무기인 [${dStem.name}]의 기운을 담금질하는 모진 연단이다. 피하지 말고 칼날을 갈아라.`;
+    ORIG.fitWeapon = `지금 뒹굴고 있는 [${job}]${josa(job, '과')} [${major}]... 네놈의 무기인 [${dStem.name}]의 기운을 담금질하는 모진 연단이다. 피하지 말고 칼날을 갈아라.`;   // 조사는 받침에 맞게 (2026-11-02)
     ORIG.fitHobby = `가볍게 즐기는 [${hobby}]... 단순한 노름이 아니라 네 메마른 명줄에 음기를 채워주는 은밀한 영약이다.`;
     ORIG.fitShout = `주변의 잡것들이 '그게 되겠냐' 짓껄여도 귓등으로도 흘려듣지 마라. 이 문턱을 지키며 숱한 사람을 보았으나, 제 고집대로 밀어붙인 자만이 살아서 성채를 세웠다.`;
     const openLine = c ? (c.dreamRel >= 0 ? `<strong>${ph(PH.FIT_OPEN, String(c.dreamRel), c)}</strong>` : ph(PH.FIT_OPEN_UNKNOWN, null, c, 41)) : ORIG.fitOpen;
-    if (c && c.dreamRel < 0) fit.reason = fit.reason.replace('꿈을 구체적으로 적어 내면 더 정확히 맡아주마.', ph(PH.FIT_REASON_UNKNOWN, null, c, 42));
     const weapon = c ? ph(PH.FIT_WEAPON, null, { ...c, seed: c.stemIdx }) + ph(PH.FIT_STAMINA, c.strength, c) : ORIG.fitWeapon;
     const hobbyLine = c ? PH.FIT_HOBBY[c.weakKey][c.yin](c) : ORIG.fitHobby;
     const shout = c ? ph(PH.FIT_SHOUT, String(c.dreamRel), c, 3) : ORIG.fitShout;
-    let html = `${openLine}<br><br>`;
-    html += `• <strong>현세의 신분과 무기</strong>: ${weapon}<br>`;
-    const hobbyTitle = (c && c.hobbyLabel.charAt(0) !== '[') ? '정신의 숨구멍' : `정신의 숨구멍([${hobby}])`;
-    html += `• <strong>${hobbyTitle}</strong>: ${hobbyLine}<br>`;
-    html += `• <strong>벽사견의 일갈</strong>: ${shout}<br>`;
-    html += `• <strong>조화율을 맡은 근거</strong>: ${fit.reason}`;
+    // 쉬운 말 (2026-11-02, 손님 평 "뭔 소린지 모르겠다" → 대표님 "더 쉽게"): 명리 용어 없이 항목마다 사실을 평어로. 벽사견 비유 문장(phrases.js FIT_*)도 쉬운 말로 다시 씀.
+    //   원래 문장(ORIG.*)은 phrases.js가 없을 때의 대비로만 남는다. 점수 근거는 calculateDreamFit의 reason 대신 아래 쉬운 문장으로.
+    const spreadPlain = fit.present >= 5 ? '다섯 기운(나무·불·흙·쇠·물)이 다 있어 바탕이 고르다'
+      : fit.present === 4 ? '다섯 기운(나무·불·흙·쇠·물) 중 4가지가 있어 바탕이 고른 편이다'
+      : fit.present === 3 ? '다섯 기운(나무·불·흙·쇠·물) 중 3가지만 있어 바탕이 보통이다'
+      : `다섯 기운(나무·불·흙·쇠·물) 중 ${fit.present}가지뿐이라 한쪽으로 쏠렸다`;
+    const reasonPlain = fit.rel >= 0
+      ? `네 사주에 ${spreadPlain}. 꿈 '${dream}'${josa(dream, '은')} ${EL_PLAIN[fit.dreamEl]}의 일인데, ${REL_PLAIN[fit.rel]}. 둘을 합쳐 ${baseScore}%로 보았다.`
+      : `꿈 '${dream}'${josa(dream, '이')} 어떤 종류의 일인지는 사주로 가늠하기 어렵다. 그래서 점수는 타고난 기운이 고른 정도로만 매겼다. 네 사주에 ${spreadPlain}. ${c ? ph(PH.FIT_REASON_UNKNOWN, null, c, 42) : '꿈을 구체적으로 적어 내면 더 정확히 맡아주마.'}`;
+    let html = `네가 적은 꿈이 타고난 사주와 얼마나 맞는지 본 것이다. 100%에 가까울수록 잘 맞는다.<br><br>${openLine}<br><br>`;
+    html += `• <strong>지금 하는 일과 공부</strong>: ${weapon}<br>`;
+    html += `• <strong>틈틈이 하는 일</strong>: ${hobbyLine}<br>`;
+    html += `• <strong>벽사견의 한마디</strong>: ${shout}<br>`;
+    html += `• <strong>왜 이 점수인가</strong>: ${reasonPlain}`;
 
     document.getElementById('fitContent').innerHTML = html;
-    const relName = ['네 일간과 같은 기운', '네 재주가 밖으로 뻗는 식상(食傷)', '손댄 만큼 돈으로 잡히는 재성(財星)', '버거운 만큼 이름이 서는 관성(官星)', '배울수록 힘이 붙는 인성(印星)'][fit.rel];
-    setKeyLine('dreamFitCard', `[${String(dream).replace(/[<>&]/g, '')}]${josa(dream, '은')} ${fit.rel >= 0 ? `<strong>${relName}</strong>의 일` : '오행의 냄새가 흐린 꿈'} · 조화율 <strong>${baseScore}%</strong> — 오행 ${fit.present}가지가 드러난 원국이다.`, '.fit-header');
+    const relName = ['네 성격과 같은 결의 일', '네 재주를 밖으로 꺼내 보이는 일', '손댄 만큼 돈으로 돌아오는 일', '버거운 만큼 이름이 서는 일', '배울수록 힘이 붙는 일'][fit.rel];
+    setKeyLine('dreamFitCard', `[${String(dream).replace(/[<>&]/g, '')}]${josa(dream, '은')} <strong>${fit.rel >= 0 ? relName : '어떤 종류의 일인지 아직 흐린 꿈'}</strong> · 조화율 <strong>${baseScore}%</strong> — 타고난 다섯 기운 중 ${fit.present}가지를 갖췄다.`, '.fit-header');
   }
 
   /** 영적 조화율: 원국 오행이 고른 정도 + 꿈이 일간에게 어떤 자리의 일인지 (60~98) */
