@@ -82,7 +82,7 @@
 
   function profileLine(p, sj) {
     const hour = p.hour >= 0 ? ` ${HOUR_NAMES[p.hour]}` : '';
-    return `<p class="profile-line">${p.y}. ${p.m}. ${p.d}.${hour} · ${esc(sj.ilju)}일주
+    return `<p class="profile-line">${p.y}. ${p.m}. ${p.d}.${hour} · 태어난 날 ${esc(sj.ilju)}
       <button class="link-btn" data-act="change">다른 생년월일로</button>
       <button class="link-btn" data-act="forget">이 기기에서 지우기</button></p>`;
   }
@@ -107,6 +107,22 @@
   // ─────────────────────────────────────────────────────────────────────
   // ① 인연 궁합
   // ─────────────────────────────────────────────────────────────────────
+  // 쉬운 말 (2026-11-03 대표님 점검): 오늘의 운세·궁합도 결과 화면과 같은 말을 쓴다
+  const EL_NAME = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };
+  const sp = n => ((window.BYEOKSA_PHRASES && window.BYEOKSA_PHRASES.sp) ? window.BYEOKSA_PHRASES.sp(n) : n);
+  // 두 사람이 사랑하는 방식 — 일간 10 (궁합 무료 풀이, 2026-11-03 내용 보강)
+  const LOVE_STYLE = {
+    '갑': '큰 나무답게 곧게 사랑한다. 한번 정하면 오래 버티지만, 굽히는 말은 서툴다.',
+    '을': '담쟁이답게 기대어 사랑한다. 곁에 붙어 있을 때 가장 환하고, 혼자 두면 금세 시든다.',
+    '병': '태양답게 환하게 사랑한다. 표현이 크고 빠르지만, 식는 것도 티가 난다.',
+    '정': '촛불답게 조용히 오래 사랑한다. 말보다 챙김으로 보여 주니, 그 챙김을 알아봐 주어야 한다.',
+    '무': '큰 산답게 묵묵히 사랑한다. 흔들리지 않는 대신 먼저 다가가는 걸음이 느리다.',
+    '기': '기름진 땅답게 품어 사랑한다. 다 받아 주다 제 속을 말 못 하니, 먼저 물어봐 주어야 한다.',
+    '경': '무쇠답게 단단하게 사랑한다. 한 말은 지키지만, 부드러운 말 한마디가 아쉽다.',
+    '신': '보석답게 섬세하게 사랑한다. 작은 말에 빛나고 작은 말에 긁히니, 말을 고르게 하라.',
+    '임': '큰물답게 넓게 사랑한다. 다 받아들이는 듯하다가 한번 넘치면 걷잡기 어렵다.',
+    '계': '안개비답게 스며드는 사랑이다. 티 안 나게 챙기고 티 안 나게 서운해하니, 자주 물어봐 주어라.'
+  };
   const COMPAT_BANDS = [
     { min: 88, name: '천생의 짝', text: '대문 앞에서 수많은 인연을 맡아 봤지만, 이렇게 서로의 냄새가 포개지는 짝은 드물다. 놓치면 두고두고 아쉬울 인연이다.',
       alt: ['두 냄새가 하나처럼 섞인다. 서로 애쓰지 않아도 결이 맞는 사이라, 이런 짝은 대문 앞에서도 한 해에 몇 번 못 본다.', '한쪽이 숨을 들이쉬면 다른 쪽이 내쉬는 사이다. 말보다 먼저 통하는 인연이니, 흔한 다툼으로 흘려보내지 마라.'] },
@@ -131,35 +147,35 @@
 
   function compatPartText(part, A, B, seed) {
     const nm = who => (who === 'A' ? A : B);
-    const el = k => EL_KO[k];
+    const el = k => EL_NAME[k];   // '나무·불 기운'처럼 쉬운 이름으로
     const alt = ((seed >>> 0) + part.key.length) % 2 === 1;   // 짝마다 두 갈래를 번갈아 (같은 합·충이라도 문장이 다르게, 2026-10-25)
     switch (part.key) {
-      case 'stemHap': return alt ? `두 사람의 일간이 <strong>천간합(天干合)</strong>으로 묶여 있다. 이유 없이 자꾸 눈이 가고 마음이 쓰였다면 그게 이 합의 냄새다.`
-        : `두 사람의 일간이 <strong>천간합(天干合)</strong>이다. 처음 만난 날부터 서로를 끌어당기는 냄새가 났을 게다.`;
-      case 'stemSame': return alt ? `두 사람 다 <strong>${el(part.detail.el)}</strong> 일간이다. 같은 결이라 편한데, 같은 결이라 양보도 잘 안 된다. 먼저 물러서는 쪽이 이긴다.`
-        : `두 사람의 일간이 같은 <strong>${el(part.detail.el)}</strong> 기운이다. 말하지 않아도 통하지만, 고집이 부딪히면 둘 다 물러서지 않는다.`;
+      case 'stemHap': return alt ? `두 사람의 타고난 기운이 <strong>서로 끌어당기는 짝(천간합)</strong>으로 묶여 있다. 이유 없이 자꾸 눈이 가고 마음이 쓰였다면 그게 이 합의 냄새다.`
+        : `두 사람의 타고난 기운이 <strong>서로 끌어당기는 짝(천간합)</strong>이다. 처음 만난 날부터 서로를 끌어당기는 냄새가 났을 게다.`;
+      case 'stemSame': return alt ? `두 사람 다 <strong>${el(part.detail.el)} 기운</strong> 사람이다. 같은 결이라 편한데, 같은 결이라 양보도 잘 안 된다. 먼저 물러서는 쪽이 이긴다.`
+        : `두 사람의 타고난 기운이 같은 <strong>${el(part.detail.el)} 기운</strong>이다. 말하지 않아도 통하지만, 고집이 부딪히면 둘 다 물러서지 않는다.`;
       case 'stemGenerate': {
         const g = part.detail.giver === 'A' ? A : B, r = part.detail.giver === 'A' ? B : A;
-        return alt ? `<strong>${esc(subj(g))}</strong> 기운을 보태고 <strong>${esc(subj(r))}</strong> 그 기운으로 자라는 <strong>상생(相生)</strong>이다. 주는 쪽이 비는 줄 모르고 주니, 받는 쪽이 채워 주어라.`
-          : `<strong>${esc(subj(g))}</strong> 주고 <strong>${esc(subj(r))}</strong> 받는 <strong>상생(相生)</strong>의 흐름이다. 받는 쪽이 고마움을 말로 꺼내야 오래 간다.`;
+        return alt ? `<strong>${esc(subj(g))}</strong> 기운을 보태고 <strong>${esc(subj(r))}</strong> 그 기운으로 자라는 <strong>키우고 자라는 사이(상생)</strong>다. 주는 쪽이 비는 줄 모르고 주니, 받는 쪽이 채워 주어라.`
+          : `<strong>${esc(subj(g))}</strong> 주고 <strong>${esc(subj(r))}</strong> 받는 <strong>흐름(상생)</strong>이다. 받는 쪽이 고마움을 말로 꺼내야 오래 간다.`;
       }
       case 'stemControl': {
         const c = nm(part.detail.controller);
-        return alt ? `<strong>${esc(c)}</strong> 쪽이 판을 쥐는 <strong>상극(相剋)</strong>의 사이다. 끌림이 세서 시작은 빠르지만, 눌리는 쪽이 말을 잃기 시작하면 멈춰 서서 들어라.`
-          : `<strong>${esc(c)}</strong>의 기운이 상대를 누르는 <strong>상극(相剋)</strong>이다. 끌림은 강하지만, 한쪽이 숨 막혀 하지 않는지 살펴야 한다.`;
+        return alt ? `<strong>${esc(c)}</strong> 쪽이 판을 쥐는 <strong>누르는 사이(상극)</strong>다. 끌림이 세서 시작은 빠르지만, 눌리는 쪽이 말을 잃기 시작하면 멈춰 서서 들어라.`
+          : `<strong>${esc(c)}</strong>의 기운이 상대를 누르는 <strong>사이(상극)</strong>다. 끌림은 강하지만, 한쪽이 숨 막혀 하지 않는지 살펴야 한다.`;
       }
-      case 'dayYukhap': return alt ? `일지(日支)가 <strong>육합(六合)</strong>으로 맞물린다. 같이 사는 자리, 같이 먹는 밥상에서 편해지는 사이다.`
-        : `배우자 자리인 일지(日支)끼리 <strong>육합(六合)</strong>이다. 한 지붕 아래 살면 더 편안해지는 궁합이다.`;
-      case 'daySamhap': return alt ? `일지가 <strong>삼합(三合)</strong>의 한 패다. 같은 일을 꾸밀 때 손발이 맞고, 셋째 사람이 끼면 더 커지는 사이다.`
-        : `일지가 <strong>삼합(三合)</strong>으로 이어진다. 같은 목표를 함께 좇을 때 힘이 몇 배가 된다.`;
-      case 'dayChung': return alt ? `일지가 <strong>충(沖)</strong>이다. 사소한 버릇이 유난히 거슬리는 사이라, 거슬리는 것을 고치려 말고 피할 자리를 만들어라.`
-        : `일지가 <strong>충(沖)</strong>으로 부딪힌다. 생활 습관과 말투에서 불꽃이 튀니, 다툼은 그날을 넘기지 마라.`;
-      case 'yearYukhap': return alt ? `띠가 <strong>육합</strong>이다. 양쪽 집안 어른들이 먼저 알아보고 반기는 인연이다.`
-        : `띠끼리 <strong>육합</strong>이다. 서로의 집안과 주변 사람들도 이 인연을 반긴다.`;
-      case 'yearSamhap': return alt ? `띠가 <strong>삼합</strong>의 한 패다. 서로의 친구가 친구가 되는 사이라, 모임 자리가 편하다.`
-        : `띠끼리 <strong>삼합</strong>이다. 함께 어울리는 무리가 자연스럽게 겹친다.`;
-      case 'yearChung': return alt ? `띠가 <strong>충</strong>이다. 둘 사이는 괜찮아도 집안·친구 일로 틀어지기 쉬우니, 바깥일은 바깥에 두어라.`
-        : `띠가 <strong>충</strong>으로 맞선다. 서로의 가족·친구와는 거리를 적당히 두는 게 좋다.`;
+      case 'dayYukhap': return alt ? `태어난 날의 글자(생활 자리)가 <strong>손을 잡는 사이(육합)</strong>로 맞물린다. 같이 사는 자리, 같이 먹는 밥상에서 편해지는 사이다.`
+        : `배우자 자리인 태어난 날의 글자끼리 <strong>손을 잡는 사이(육합)</strong>다. 한 지붕 아래 살면 더 편안해지는 궁합이다.`;
+      case 'daySamhap': return alt ? `태어난 날의 글자가 <strong>한 패(삼합)</strong>다. 같은 일을 꾸밀 때 손발이 맞고, 셋째 사람이 끼면 더 커지는 사이다.`
+        : `태어난 날의 글자가 <strong>한 패(삼합)</strong>로 이어진다. 같은 목표를 함께 좇을 때 힘이 몇 배가 된다.`;
+      case 'dayChung': return alt ? `태어난 날의 글자가 <strong>정면으로 부딪히는 사이(충)</strong>다. 사소한 버릇이 유난히 거슬리는 사이라, 거슬리는 것을 고치려 말고 피할 자리를 만들어라.`
+        : `태어난 날의 글자가 <strong>정면으로(충)</strong> 부딪힌다. 생활 습관과 말투에서 불꽃이 튀니, 다툼은 그날을 넘기지 마라.`;
+      case 'yearYukhap': return alt ? `띠가 <strong>손을 잡는 사이(육합)</strong>다. 양쪽 집안 어른들이 먼저 알아보고 반기는 인연이다.`
+        : `띠끼리 <strong>손을 잡는 사이(육합)</strong>다. 서로의 집안과 주변 사람들도 이 인연을 반긴다.`;
+      case 'yearSamhap': return alt ? `띠가 <strong>한 패(삼합)</strong>다. 서로의 친구가 친구가 되는 사이라, 모임 자리가 편하다.`
+        : `띠끼리 <strong>한 패(삼합)</strong>다. 함께 어울리는 무리가 자연스럽게 겹친다.`;
+      case 'yearChung': return alt ? `띠가 <strong>정면으로 부딪히는 사이(충)</strong>다. 둘 사이는 괜찮아도 집안·친구 일로 틀어지기 쉬우니, 바깥일은 바깥에 두어라.`
+        : `띠가 <strong>정면으로(충)</strong> 맞선다. 서로의 가족·친구와는 거리를 적당히 두는 게 좋다.`;
       case 'fillA': return alt ? `<strong>${esc(A)}</strong>에게 비어 있는 <strong>${part.detail.els.map(el).join('·')}</strong> 기운이 상대에겐 넉넉하다. 이 사람 곁에서 유난히 마음이 놓였다면 그 때문이다.`
         : `<strong>${esc(A)}</strong>에게 모자란 <strong>${part.detail.els.map(el).join('·')}</strong> 기운을 상대가 넉넉히 품고 있다. 곁에 있기만 해도 기운이 채워진다.`;
       case 'fillB': {
@@ -208,9 +224,11 @@
       <div class="compat-person">
         <span class="compat-name">${esc(nm)}</span>
         <span class="compat-ilju">${esc(sj.iljuHanja)}</span>
-        <span class="compat-ilju-ko">${esc(sj.ilju)}일주 · ${EL_KO[sj.ps.dmEl]}</span>
+        <span class="compat-ilju-ko">태어난 날 ${esc(sj.ilju)} · ${EL_NAME[sj.ps.dmEl]} 기운</span>
       </div>`;
     const parts = r.parts.length ? r.parts : [{ key: 'none', points: 0 }];
+    const yearLine = parts.some(q => /^year/.test(q.key)) ? '' : '<li class="reason neutral">띠끼리는 서로 밀지도 당기지도 않는다. 집안·친구 일은 둘이 하기 나름이다.</li>';   // 띠 이야기가 없으면 한 줄 (2026-11-03)
+    const styleA = LOVE_STYLE[A.pillars.dStem.char] || '', styleB = LOVE_STYLE[B.pillars.dStem.char] || '';
     $('compatResult').innerHTML = `
       <div class="feature-card compat-card">
         <div class="compat-pair">${tile(A, nameA)}<span class="compat-knot" aria-hidden="true">結</span>${tile(B, nameB)}</div>
@@ -224,8 +242,11 @@
           <li class="reason neutral">${pairLine}</li>
           ${parts.map(p => p.key === 'none'
             ? `<li class="reason neutral">${seed % 2 ? '두 사람의 기운이 서로를 당기지도 밀지도 않는다. 정해진 것이 없는 사이라, 같이 쌓은 시간이 그대로 궁합이 된다.' : '두 사람의 기운이 크게 끌어당기지도 밀어내지도 않는다. 함께 보낸 시간이 곧 궁합이 되는 사이다.'}</li>`
-            : `<li class="reason ${p.points >= 0 ? 'plus' : 'minus'}">${compatPartText(p, nameA, nameB, seed)}</li>`).join('')}
+            : `<li class="reason ${p.points >= 0 ? 'plus' : 'minus'}">${compatPartText(p, nameA, nameB, seed)}</li>`).join('')}${yearLine}
         </ul>
+        <h3 class="feature-card-title">두 사람이 사랑하는 방식</h3>
+        <p class="feature-text"><strong>${esc(nameA)}</strong> — ${styleA}</p>
+        <p class="feature-text"><strong>${esc(nameB)}</strong> — ${styleB}</p>
         <p class="feature-note">궁합 점수는 전통 명리의 합·충·생극을 바탕으로 한 재미 풀이이며, 두 사람의 관계를 정해 주지 않는다.</p>
       </div>`;
     // 유료 '궁합 상세 리포트' 자리 (shop.js)
@@ -273,9 +294,9 @@
       const luckyNum = nums[f.stemIdx % 2] || nums[0], luckyColor = colors[f.branchIdx % colors.length] || colors[0];
       const myBranch = BRANCHES[sj.pillars.dBranchIdx].char, todayBranch = f.dayBranch.char;
       let relation = '';
-      if (f.relation.yukhap) relation = `오늘 일진의 지지(${todayBranch})가 네 일지(${myBranch})와 <strong>육합</strong>이다. 사람 사이의 일이 부드럽게 풀린다.`;
-      else if (f.relation.samhap) relation = `오늘 일진의 지지(${todayBranch})가 네 일지(${myBranch})와 <strong>삼합</strong>으로 이어진다. 함께하는 일에 힘이 붙는다.`;
-      else if (f.relation.chung) relation = `오늘 일진의 지지(${todayBranch})가 네 일지(${myBranch})와 <strong>충</strong>으로 부딪힌다. 이동과 결정은 한 박자 늦춰라.`;
+      if (f.relation.yukhap) relation = `오늘의 글자(${todayBranch})가 네가 태어난 날의 글자(${myBranch})와 <strong>손을 잡는 사이(육합)</strong>다. 사람 사이의 일이 부드럽게 풀린다.`;
+      else if (f.relation.samhap) relation = `오늘의 글자(${todayBranch})가 네가 태어난 날의 글자(${myBranch})와 <strong>한 패(삼합)</strong>로 이어진다. 함께하는 일에 힘이 붙는다.`;
+      else if (f.relation.chung) relation = `오늘의 글자(${todayBranch})가 네가 태어난 날의 글자(${myBranch})와 <strong>정면으로(충)</strong> 부딪힌다. 이동과 결정은 한 박자 늦춰라.`;
       body.innerHTML = `
         ${profileLine(p, sj)}
         <div class="feature-card">
@@ -285,7 +306,7 @@
             <span class="score-band">${band}</span>
           </div>
           <p class="feature-text">"${txt.head}"</p>
-          <p class="feature-note">오늘 일진의 천간이 네 일간에 <strong>${f.sipsin}</strong>${josa(f.sipsin, '으로')} 들어온다.</p>
+          <p class="feature-note">오늘의 기운이 네게 <strong>${sp(f.sipsin)}</strong>${josa(sp(f.sipsin), '으로')} 들어온다.</p>
           ${relation ? `<p class="feature-text relation-note">${relation}</p>` : ''}
           <div class="todo-grid">
             <div class="todo do"><h4>이렇게 하거라</h4><ul>${txt.do.map(x => `<li>${x}</li>`).join('')}</ul></div>
@@ -296,7 +317,7 @@
             <div><span>행운의 숫자</span><strong>${luckyNum}</strong></div>
             <div><span>좋은 방위</span><strong>${remedy.dir}</strong></div>
           </div>
-          <p class="feature-note">행운의 색·숫자·방위는 오늘 일진의 <strong>${f.sipsin}</strong> 기운이 막히지 않고 흘러가도록 <strong>${EL_KO[luckyEl]}</strong> 기운 쪽으로 골랐다. 내일은 일진이 바뀌니 색도 숫자도 바뀐다. 네 원국에 늘 모자란 <strong>${EL_KO[sj.ps.weakKey]}</strong> 기운은 리포트의 비방으로 채우거라.</p>
+          <p class="feature-note">행운의 색·숫자·방위는 오늘 들어온 <strong>${sp(f.sipsin)}</strong>이 막히지 않고 흘러가도록 <strong>${EL_NAME[luckyEl]} 기운</strong> 쪽으로 골랐다. 내일은 날의 기운이 바뀌니 색도 숫자도 바뀐다. 네 사주에 늘 모자란 <strong>${EL_NAME[sj.ps.weakKey]} 기운</strong>은 리포트의 비방으로 채우거라.</p>
         </div>`;
       bindProfileLinks(body, renderDaily);
     });

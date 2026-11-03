@@ -85,7 +85,19 @@ const {
   const EL_NAME = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };
   // 십신 이름 → 손님용 쉬운 말 (2026-11-02 쉬운 말 3단계): sipsinPlain('정관') = '책임과 자리가 무거워지는 운(정관)'
   const SIPSIN_PLAIN = { '비견': '내 편이자 경쟁자가 느는 운', '겁재': '내 몫을 노리는 손이 느는 운', '식신': '재주와 먹을 복이 열리는 운', '상관': '말과 재주가 밖으로 튀는 운', '편재': '큰돈이 오가는 운', '정재': '꾸준한 돈이 쌓이는 운', '편관': '압박과 시험이 닥치는 운', '정관': '책임과 자리가 무거워지는 운', '편인': '남다른 공부와 촉이 깨는 운', '정인': '배움과 보호를 받는 운' };
-  const sipsinPlain = n => (SIPSIN_PLAIN[n] ? `${SIPSIN_PLAIN[n]}(${n})` : n);   // 손님용 쉬운 이름 (2026-11-02 쉬운 말)
+  const sipsinPlain = n => (SIPSIN_PLAIN[n] ? `${SIPSIN_PLAIN[n]}(${n})` : n);
+  // 귀인 띠 고르기 (2026-11-03 대표님 점검 "띠가 같게 나온다"): 천을귀인 두 띠 중 첫째만 늘 나오던 것을, 태어난 날의 글자와 합이 되는 띠를 앞세우고(없으면 글자 홀짝으로) 사람마다 다르게
+  function noblesFor(dayStemIdx, dayBranchIdx) {
+    const pair = (NOBLE_PEOPLE[dayStemIdx] || ['소띠(축)', '양띠(미)']).slice();
+    if (dayBranchIdx == null || dayBranchIdx < 0 || !SajuCore.branchRelation) return pair;
+    const idxOf = s => BRANCHES.findIndex(b => s.includes('(' + b.char + ')'));
+    const score = s => { const i = idxOf(s); if (i < 0) return 0; const r = SajuCore.branchRelation(dayBranchIdx, i); return (r.yukhap ? 3 : 0) + (r.samhap ? 2 : 0) - (r.chung ? 3 : 0); };
+    const sa = score(pair[0]), sb = score(pair[1]);
+    if (sa === sb) return dayBranchIdx % 2 ? [pair[1], pair[0]] : pair;
+    return sa > sb ? pair : [pair[1], pair[0]];
+  }
+  // 멀리할 사람의 냄새 제목 (2026-11-03): 음간(을·정·신·계)은 phrases.js RUIN_YIN의 제목으로 — 같은 오행이라고 다섯 명 중 셋이 같은 제목을 받지 않게
+  function ruinTitleFor(ps, c) { const PH = window.BYEOKSA_PHRASES; const y = c && c.yin === 1 && PH && PH.RUIN_YIN && PH.RUIN_YIN[c.stemChar]; return (y && y.title) || RUIN_LOVERS[ps.dmEl].title; }   // 손님용 쉬운 이름 (2026-11-02 쉬운 말)
   // 원래 문장 보관함 — 각 화면이 그릴 때 채우고, phrases.js가 '한 갈래'로 그대로 쓴다
   const ORIG = {};
 
@@ -206,7 +218,7 @@ const {
     // 해시 뒷자리가 같은 꼬리글자에 끌려 겹치지 않도록 한 번 더 섞는다 (murmur3 마무리)
     const mix = h => { h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b) >>> 0; h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35) >>> 0; h ^= h >>> 16; return h >>> 0; };
     const seed = mix(SajuCore.hashSeed(`${pillars.dStemIdx}${pillars.dBranchIdx}|${u.y}-${u.m}-${u.d}-${u.hour}-${u.gender}`));
-    const nobles = NOBLE_PEOPLE[pillars.dStemIdx] || ['소띠', '양띠'];
+    const nobles = noblesFor(pillars.dStemIdx, pillars.dBranchIdx);
     return {
       stemIdx: pillars.dStemIdx, stemChar: pillars.dStem.char, stemEl: ps.dmEl, yin: pillars.dStemIdx % 2,
       stemImage: ({ '갑': '큰 나무(甲木)', '을': '담쟁이(乙木)', '병': '태양(丙火)', '정': '촛불(丁火)', '무': '큰 산(戊土)', '기': '기름진 땅(己土)', '경': '무쇠(庚金)', '신': '보석(辛金)', '임': '큰물(壬水)', '계': '안개비(癸水)' })[pillars.dStem.char],
@@ -1070,14 +1082,14 @@ let currentSajuData = null;
     const ul = document.getElementById('glanceList');
     if (!ul) return;
     const ps = getPersona(dStemIdx, BRANCHES.indexOf(dBranch), oheng);
-    const nobles = NOBLE_PEOPLE[dStemIdx] || ['소띠', '양띠'];
+    const nobles = noblesFor(dStemIdx, BRANCHES.indexOf(dBranch));
     const ghost = ghostFor(ps.weakKey);
     const dn = lastDaeun && lastDaeun.item;
     const safe = String(dream || '').replace(/[<>&]/g, '');
     const rows = [
       ['타고난 결', `<strong>${EL_NAME[ps.dmEl]} 기운 사람</strong>(태어난 날 ${dStem.char}${dBranch.char}) — 가장 모자란 기운은 <strong>${EL_NAME[ps.weakKey]}</strong>`],   // 쉬운 말 (2026-11-02): 일주·일간·오행 이름 대신
       ['지금 운', dn ? `<strong>${dn.ageStart}세부터의 10년 운(${dn.stemObj.char}${dn.branchObj.char})</strong> 한복판 · <strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)` : `<strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)`],
-      ['사람', `멀리할 자: <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 자 · 곁에 둘 귀인: <strong>${nobles[0]}</strong>`],
+      ['사람', `멀리할 자: <strong>${ruinTitleFor(ps, CUR)}</strong>를 풍기는 자 · 곁에 둘 귀인: <strong>${nobles[0]}</strong>`],
       ['돈', `재물 방어력 <strong>${kpi.wScore}점</strong> · 돈이 붙는 기운 <strong>${EL_NAME[ps.wealthEl]}</strong> · 방위 ${(ELEMENT_REMEDIES[ps.wealthEl] || {}).dir || ''}`],
       ['등 뒤', `벽사견이 본 것은 <strong>${ghost.name}(${ghost.hanja})</strong> — ${EL_NAME[ps.weakKey]} 기운이 모자란 틈으로 들어왔다`]
     ];
@@ -1309,7 +1321,8 @@ let currentSajuData = null;
     return pickC.map(i => base[i]);
   }
   function updateGhostWarningCard(dStem, dBranch, oheng, dayStemIdx) {
-    const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    const dayBranchIdxG = BRANCHES.findIndex(b => b.char === dBranch.char);
+    const nobles = noblesFor(dayStemIdx, dayBranchIdxG);
     const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
     const ghost = ghostFor(ps.weakKey);
     const PH = window.BYEOKSA_PHRASES, c = CUR;
@@ -1346,7 +1359,7 @@ let currentSajuData = null;
   }
 
   function updateSniffTeaser(dStem, dBranch, dayStemIdx, dream, oheng) {
-    const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    const nobles = noblesFor(dayStemIdx, BRANCHES.indexOf(dBranch));
     const ps = getPersona(dayStemIdx, BRANCHES.indexOf(dBranch), oheng);
     const careerSipsin = getSipsin(dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10);
     const loveScent = SOULMATE_SCENTS[ps.weakKey].short;
@@ -1361,7 +1374,7 @@ let currentSajuData = null;
     const wealthMain = c ? ph(PH.SNIFF_WEALTH, c.leakKey, c) : ORIG.sniffWealth;
     const careerMain = c ? ph(PH.SNIFF_CAREER, String(c.dreamRel), c, 47) : ORIG.sniffCareer;
     document.getElementById('sniffLoveText').innerHTML = 
-      loveMain + `<br><span class="sniff-personal">🐾 특히 ${EL_NAME[ps.dmEl]} 기운 사람인 네게 가장 해로운 건 <strong class="impact-red">[${RUIN_LOVERS[ps.dmEl].title}]</strong>를 풍기는 자다.</span>`;
+      loveMain + `<br><span class="sniff-personal">🐾 특히 ${EL_NAME[ps.dmEl]} 기운 사람인 네게 가장 해로운 건 <strong class="impact-red">[${ruinTitleFor(ps, c)}]</strong>를 풍기는 자다.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
       wealthMain + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps, 'teaser')}</span>`;
@@ -1375,7 +1388,7 @@ let currentSajuData = null;
       locks[1].innerHTML = `🔒 <span class="yr-roadmap">${Y_R0}~${Y_R2}년</span> ${EL_KO[ps.wealthEl]} 재물이 터지는 달(月) & 재물 풍수는 복채 결제 후 개봉`;
       locks[2].textContent = `🔒 ${Y_R1}년 성과 도둑 퇴치법 및 이직·독립에 가장 좋은 때는 복채 결제 후 개봉`;
     }
-    setKeyLine('sniffTeaserCard', `연애는 <strong>${RUIN_LOVERS[ps.dmEl].title}</strong>를 풍기는 사람을 피하고 · 돈은 <strong>새는 구멍(누재살)</strong>을 막고 · 일은 <strong>${Y_R0}~${Y_R1}년</strong>이 가장 좋은 때다.`, '.section-title');
+    setKeyLine('sniffTeaserCard', `연애는 <strong>${ruinTitleFor(ps, c)}</strong>를 풍기는 사람을 피하고 · 돈은 <strong>새는 구멍(누재살)</strong>을 막고 · 일은 <strong>${Y_R0}~${Y_R1}년</strong>이 가장 좋은 때다.`, '.section-title');
   }
 
   function renderTileHtml(item) {
@@ -1542,7 +1555,7 @@ let currentSajuData = null;
   // 📜 결제 후 대외비 영적 전략 포트폴리오 생성
       function updatePaywallContent(dStem, dBranch, oheng, dayStemIdx, dayBranchIdx, dream, job, birthYear, birthMonth, birthDay) {
     const iljuName = `${dStem.char}${dBranch.char}`;
-    const nobles = NOBLE_PEOPLE[dayStemIdx] || ['소띠', '양띠'];
+    const nobles = noblesFor(dayStemIdx, dayBranchIdx);
     const ps = getPersona(dayStemIdx, dayBranchIdx, oheng);
     const weakKey = ps.weakKey;   // 오행이 모두 있으면 가장 적은 오행 (예전엔 무조건 water)
     const remedy = ELEMENT_REMEDIES[weakKey] || ELEMENT_REMEDIES['water'];
@@ -1706,14 +1719,14 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <span class="portfolio-section-badge">第二章 · 후각 투시록</span>
         <div class="portfolio-section-title">🕯️ 인연과 사랑의 체취 감별 (벽사신견 후각 투시록)</div>
-        ${keyLineHtml(`피할 연인은 <strong>${ruin.title}</strong>, 만날 사람은 <strong>${soulmate.title}</strong>${josa(soulmate.title, '을')} 풍기는 <strong>${nobles[0]}</strong> — 시기는 ${Y_R0}년 하반기~${Y_R1}년 상반기.`)}
+        ${keyLineHtml(`피할 연인은 <strong>${(ruinYin && ruinYin.title) || ruin.title}</strong>, 만날 사람은 <strong>${soulmate.title}</strong>${josa(soulmate.title, '을')} 풍기는 <strong>${nobles[0]}</strong> — 시기는 ${Y_R0}년 하반기~${Y_R1}년 상반기.`)}
         <div class="portfolio-text">
           ${ch2Intro}<br><br>
           ${isYoung() ? `네 앞에 다가올 인연들의 냄새를 미리 맡아 두어라. <strong>처음엔 눈이 멀 것처럼 설레지만 결국 네 가슴에 생채기를 남기고 떠날 자들...</strong> 그 냄새를 알아 두면 비켜 갈 수 있다.` : lookback}
         </div>
 
         <div class="portfolio-highlight" style="border-left: 4.5px solid var(--cinnabar); background: rgba(168, 42, 32, 0.06);">
-          <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: ${ruin.title}</strong>
+          <strong class="impact-red" style="font-size:15.5px; display:block; margin-bottom:6px;">🩸 1. 피해야 할 파멸의 연인: ${(ruinYin && ruinYin.title) || ruin.title}</strong>
           • <strong>영적 체취</strong>: ${ruinScent}<br>
           • <strong>소름 돋는 특징</strong>: ${ruinTrait}<br>
           • <strong>경고</strong>: ${ruinWarn}
@@ -1888,25 +1901,22 @@ let currentSajuData = null;
       showToast('사주를 먼저 분석해야 요약문을 복사할 수 있다.');
       return;
     }
-    const { y, m, d, hourVal, genderVal, dStem, dBranch, yStem, yBranch, mStem, mBranch, hStem, hBranch, userDream, userJob } = currentSajuData;
-    const iljuName = `${dStem.char}${dBranch.char}`;
-    const timeText = hBranch ? `${hBranch.char}시(${hBranch.hanja}時)` : '시간 미선택';
-    const summaryText = `[벽사신견(辟邪神犬) 사주 요약 리포트]\n` +
-      `------------------------------------\n` +
-      `🐾 의뢰인 명식:\n` +
-      `• 생년월일: ${y}년 ${m}월 ${d}일 (${genderVal === 'M' ? '남성' : '여성'})\n` +
-      `• 출생시: ${timeText}\n` +
-      `• 사주 본원: ${iljuName}日柱 (${dStem.name}${dBranch.name})\n` +
-      `• 천명 목표: ${userDream}\n` +
-      `• 현재 신분: ${userJob}\n\n` +
-      `🔮 벽사견의 3대 핵심 액막이 비방:\n` +
-      `1. 내 기(氣)를 갉아먹는 흡기귀 악연 즉각 차단\n` +
-      `2. 밑 빠진 독 같은 누재살(漏財煞) 재물 방어\n` +
-      `3. ${Y_R0}~${Y_R2}년 대운 골든타임 도약\n` +
-      `------------------------------------\n` +
+    // 쉬운 말 (2026-11-03 대표님 점검): 카톡·메모장에 붙이는 글이라 이모지·명리 용어 없이, '한눈에' 카드의 줄을 그대로 담는다. 원래 문구는 git 기록(커밋 d92ff34)에.
+    const { y, m, d, genderVal, dStem, dBranch, hBranch, userDream, userJob } = currentSajuData;
+    const timeText = hBranch ? `${hBranch.char}시(${hBranch.hanja}時)` : '시간 모름';
+    const rows = [...document.querySelectorAll('#glanceList li')].map(li => {
+      const k = li.firstElementChild; const label = k ? k.innerText.trim() : '';
+      const value = li.innerText.replace(label, '').replace(/\s+/g, ' ').trim();
+      return label ? `- ${label}: ${value}` : `- ${value}`;
+    });
+    const summaryText = `[벽사신견 사주 요약]\n` +
+      `생년월일: ${y}년 ${m}월 ${d}일 (${genderVal === 'M' ? '남성' : '여성'}) · 태어난 시간: ${timeText} · 태어난 날: ${dStem.char}${dBranch.char}\n` +
+      `꿈: ${userDream || '-'} · 지금 하는 일: ${userJob || '-'}\n\n` +
+      `벽사견이 맡은 냄새, 한눈에\n${rows.join('\n')}\n\n` +
+      `풀이 전체 보기: https://byeoksa.com\n` +
       `밤의 대문 앞을 지키는 벽사견 · 벽사신견`;
 
-    copyText(summaryText, '📋 사주 핵심 요약문이 클립보드에 복사되었습니다! (카톡/메모장 공유 가능)');
+    copyText(summaryText, '요약문을 복사했다. 카톡이나 메모장에 붙여 넣거라.');
   }
 
   function printReport() {

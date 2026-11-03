@@ -73,7 +73,7 @@ test('결과: 대운수 9세(1990-03-10 남 오시), 요약문 출생시 "오시
   assert.match(await page.textContent('#daeunBadge'), /9세부터 10년마다 바뀜/);
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('termBoundaryNote')).display), 'none');
   const copied = await page.evaluate(async () => { let got = null; Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { got = t; return Promise.resolve(); } }, configurable: true }); copySummaryText(); await new Promise(r => setTimeout(r, 50)); return got; });
-  assert.match(copied, /출생시: 오시\(午時\)/);
+  assert.match(copied, /태어난 시간: 오시\(午時\)/);
   await ctx.close();
 });
 

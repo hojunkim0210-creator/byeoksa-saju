@@ -374,11 +374,11 @@ header {
 .gate-scene { position: relative; width: 100%; max-width: 420px; margin: auto; display: flex; flex-direction: column; align-items: center; color: var(--moon); transition: opacity 0.7s ease; }
 .gate-scene.is-leaving { opacity: 0; }
 /* 그림 비율을 항상 지켜(위아래가 잘리지 않게) 문틈·등불 위치를 %로 맞출 수 있게 한다 */
-.gate-photo { position: relative; width: min(100%, calc(62dvh * 446 / 598)); aspect-ratio: 446 / 598; overflow: hidden; background: #0A0A12; }
+.gate-photo { position: relative; width: min(100%, calc(62dvh * 446 / 598)); aspect-ratio: 446 / 598; overflow: hidden; background: #0A0A12; border-radius: 22px; }   /* 네모 상자 느낌 덜게: 모서리 둥글게 + 네 변을 어둠에 녹임 (2026-11-03 대표님 지적) */
 .gate-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .gate-img-open { transform: scale(1.05); transition: transform 2.6s ease-out; }
 .gate-photo > span { position: absolute; pointer-events: none; }
-.gate-photo-fade { inset: 0; box-shadow: inset 0 -70px 60px -30px #0A0A12, inset 0 40px 40px -30px #0A0A12, inset 40px 0 50px -40px #0A0A12, inset -40px 0 50px -40px #0A0A12; }
+.gate-photo-fade { inset: 0; box-shadow: inset 0 -110px 80px -40px #0A0A12, inset 0 70px 60px -30px #0A0A12, inset 90px 0 80px -50px #0A0A12, inset -90px 0 80px -50px #0A0A12; }
 /* 눈 깜빡임: 누르면 글이 가라앉고 → 잠깐 어두워지는 사이 열린 문으로 바뀌고 → 눈을 뜨면 벽사견 (2026-10-25, 안개 연출 제거) */
 .gate-blink { inset: 0; background: #0A0A12; opacity: 0; transition: opacity 0.7s ease; }
 .gate-scene.is-blink .gate-blink { opacity: 1; transition-duration: 0.25s; }
@@ -1640,6 +1640,7 @@ body.veil-on { overflow: hidden; }
 .btn-pay.btn-pay-single::after { border-color: rgba(168, 42, 32, 0.28); }
 
 @media print {
+  .share-fold { display: none !important; }   /* 인쇄·PDF에는 '저장 · 공유' 상자가 빈 칸으로 찍혔다 (2026-11-03) */
   body { background: #fff !important; color: #000 !important; padding: 0 !important; }
   .app-container { max-width: 100% !important; }
   header, .home-topbar, .slip-section, .event-strip, .site-footer, .action-bar, .btn-submit, .btn-nav-back, .btn-pay,
