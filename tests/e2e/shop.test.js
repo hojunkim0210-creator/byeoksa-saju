@@ -81,7 +81,7 @@ test('궁합 상세: 무료 결과 아래 봉인, 결제하면 두 사람 이름
   assert.ok(await page.isVisible('#compatBuy'));
   await page.click('#compatBuy'); await page.click('#productPayBtn'); await page.waitForTimeout(300);
   const t = await text(page, '#compatDetail');
-  assert.match(t, /싸우는 패턴/); assert.match(t, /함께하면 좋은 해/); assert.match(t, /민지/);
+  assert.match(t, /싸우는 패턴/); assert.match(t, /함께하기 좋아 보이는 해/); assert.match(t, /민지/);
   assert.ok(t.includes('<b>호준</b>'), '이름 속 꺾쇠는 글자로');
   assert.equal(await page.$$eval('#compatDetail b', e => e.filter(x => x.textContent === '호준').length), 0, 'HTML로 해석되면 안 됨');
   assert.ok(!BROKEN.test(t), t.match(/.{0,30}(undefined|NaN|null).{0,20}/));

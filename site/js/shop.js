@@ -324,24 +324,24 @@
   const EL_NAME2 = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };
   const MONEY_PAIR = (A, B, nameA, nameB) => {
     const a = A.ps.wealthCount || 0, b = B.ps.wealthCount || 0;
-    if (a === 0 && b === 0) return '돈 기운(재성)이 두 사람 다 드러나지 않았다. 둘 다 돈보다 사람을 먼저 보는 쪽이라 지갑이 같이 열린다. 한 달에 쓸 돈의 상한을 둘이 미리 정해 두어라.';
-    if (a === b) return `돈 기운(재성)이 두 사람 다 ${a}글자다. 돈 쓰는 눈높이가 비슷해 큰 다툼은 적지만, 둘 다 같은 구멍으로 샌다. 통장은 섞지 말고 목표만 같이 정하거라.`;
+    if (a === 0 && b === 0) return '돈 기운(재성)이 두 사람 다 드러나지 않았다. 둘 다 돈보다 사람을 먼저 보는 쪽이라 지갑이 같이 열리기 쉽다. 한 달에 쓸 돈의 상한을 둘이 미리 정해 두면 좋다.';
+    if (a === b) return `돈 기운(재성)이 두 사람 다 ${a}글자다. 돈 쓰는 눈높이가 비슷해 큰 다툼은 적은 편이지만, 둘 다 같은 구멍으로 새기 쉽다. 통장은 섞지 말고 목표만 같이 정하면 좋다.`;
     const more = a > b ? nameA : nameB, less = a > b ? nameB : nameA;
-    return `${esc(more)} 쪽이 돈 기운(재성)을 더 많이 타고났다. 돈을 부르는 손은 ${esc(more)}, 지키는 손은 ${esc(less)}${josa(less, '이')} 맡는 편이 맞다. 누가 더 버느냐로 다투지 말고 역할을 나누어라.`;
+    return `${esc(more)} 쪽이 돈 기운(재성)을 더 많이 타고났다. 돈을 부르는 손은 ${esc(more)}, 지키는 손은 ${esc(less)}${josa(less, '이')} 맡는 편이 잘 맞을 수 있다. 누가 더 버느냐로 다투기보다 역할을 나누면 좋다.`;
   };
   const QUARREL_WORDS = {
-    '자': '"넌 왜 그렇게 눈치를 보냐"는 말. 눈치가 아니라 살피는 것이니, 살펴 줘서 고맙다고 하라.',
-    '축': '"답답하다"는 말. 느린 게 아니라 끝까지 가는 것이니, 재촉 대신 기다려라.',
-    '인': '"네가 뭔데"라는 말. 자존심을 치면 물러서지 않으니, 먼저 존중을 말로 보여라.',
-    '묘': '"예민하게 굴지 마"라는 말. 작은 말에도 멍이 드니, 목소리를 낮추어라.',
-    '진': '"현실을 봐"라는 말. 꿈을 깎으면 마음을 닫으니, 꿈은 두고 순서만 같이 짜라.',
-    '사': '"왜 말을 안 하냐"는 말. 속을 늦게 보이는 사람이니, 캐묻지 말고 기다려라.',
-    '오': '"좀 가만히 있어"라는 말. 움직여야 풀리는 사람이니, 같이 걸으며 이야기하라.',
-    '미': '"넌 늘 참기만 하잖아"라는 말. 참는 게 사랑인 사람이니, 참아 준 것을 알아주어라.',
-    '신': '"장난치지 마"라는 말. 웃음이 방패인 사람이니, 웃음 뒤의 말을 들어라.',
-    '유': '"너무 따진다"는 말. 따지는 게 아니라 정리하는 것이니, 정리를 같이 하라.',
-    '술': '"의심하냐"는 말. 한번 믿으면 끝까지 가는 사람이니, 믿음을 흔드는 농담은 하지 마라.',
-    '해': '"넌 너무 퍼 줘"라는 말. 주는 게 기쁨인 사람이니, 받을 줄도 알게 고맙다고 하라.'
+    '자': '"넌 왜 그렇게 눈치를 보냐"는 말. 눈치가 아니라 살피는 것일 수 있으니, 살펴 줘서 고맙다고 하면 좋다.',
+    '축': '"답답하다"는 말. 느린 게 아니라 끝까지 가는 것일 수 있으니, 재촉 대신 기다려 주면 좋다.',
+    '인': '"네가 뭔데"라는 말. 자존심을 치면 물러서지 않기 쉬우니, 먼저 존중을 말로 보여 주면 좋다.',
+    '묘': '"예민하게 굴지 마"라는 말. 작은 말에도 멍이 들기 쉬우니, 목소리를 낮추면 좋다.',
+    '진': '"현실을 봐"라는 말. 꿈을 깎으면 마음을 닫기 쉬우니, 꿈은 두고 순서만 같이 짜면 좋다.',
+    '사': '"왜 말을 안 하냐"는 말. 속을 늦게 보이는 편일 수 있으니, 캐묻지 말고 기다려 주면 좋다.',
+    '오': '"좀 가만히 있어"라는 말. 움직여야 풀리는 편일 수 있으니, 같이 걸으며 이야기하면 좋다.',
+    '미': '"넌 늘 참기만 하잖아"라는 말. 참는 게 사랑인 사람일 수 있으니, 참아 준 것을 알아주면 좋다.',
+    '신': '"장난치지 마"라는 말. 웃음이 방패일 수 있으니, 웃음 뒤의 말을 들어 주면 좋다.',
+    '유': '"너무 따진다"는 말. 따지는 게 아니라 정리하는 것일 수 있으니, 정리를 같이 하면 좋다.',
+    '술': '"의심하냐"는 말. 한번 믿으면 끝까지 가는 편일 수 있으니, 믿음을 흔드는 농담은 피하면 좋다.',
+    '해': '"넌 너무 퍼 줘"라는 말. 주는 게 기쁨인 사람일 수 있으니, 고맙다는 말을 자주 하면 좋다.'
   };
   const TOGETHER = { wood: '같이 식물을 기르거나 숲길을 걷는 일', fire: '같이 운동하거나 햇볕 아래서 노는 일', earth: '같이 밥을 짓고 집을 꾸미는 일', metal: '같이 정리하고 계획표를 짜는 일', water: '같이 물가에 가고 책을 읽는 일' };
   const DATE_PLACE = { wood: '숲길·공원·식물원', fire: '공연장·햇볕 드는 테라스', earth: '시장 구경·도자기 공방', metal: '전시관·조용한 카페', water: '바닷가·강변 야경' };
@@ -371,9 +371,9 @@
     else last = `${esc(nameA)}에게는 ${EL_NAME2[weakA]} 기운, ${esc(nameB)}에게는 ${EL_NAME2[weakB]} 기운이 모자라다. 서로의 빈자리를 알아 두면 다툴 일이 줄어든다. 상대가 지쳐 보일 때 그 기운을 채워 주는 것(${REMEDY(weakA).food.split(',')[0]} / ${REMEDY(weakB).food.split(',')[0]})을 챙겨 주거라.`;
     const money = MONEY_PAIR(A, B, nameA, nameB);
     const quarrelA = QUARREL_WORDS[A.pillars.dBranch.char] || '', quarrelB = QUARREL_WORDS[B.pillars.dBranch.char] || '';
-    const together = weakA === weakB ? `둘 다 ${EL_NAME2[weakA]} 기운이 모자라니 ${TOGETHER[weakA]}을 같이 해 보거라. 빈자리가 같이 채워진다.` : `${esc(nameA)}에게는 ${TOGETHER[weakA]}, ${esc(nameB)}에게는 ${TOGETHER[weakB]}이 기운을 채운다. 번갈아 상대 것을 해 주면 그게 데이트다.`;
+    const together = weakA === weakB ? `둘 다 ${EL_NAME2[weakA]} 기운이 모자라니 ${TOGETHER[weakA]}을 같이 해 보면 좋다. 빈자리가 같이 채워질 수 있다.` : `${esc(nameA)}에게는 ${TOGETHER[weakA]}, ${esc(nameB)}에게는 ${TOGETHER[weakB]}이 기운을 채워 줄 수 있다. 번갈아 상대 것을 해 주면 그것만으로도 데이트가 된다.`;
     const best = years.find(y => y.good);
-    const promise = best ? `큰 약속(동거·결혼·같이 벌이는 일)을 하기엔 <strong>${best.y}년</strong>이 가장 좋다. 그해에 둘의 기운이 손을 잡는다.` : '앞으로 6년은 크게 흔들리지 않는 해들이다. 둘이 정한 때가 곧 좋은 때이니, 미루지 마라.';
+    const promise = best ? `큰 약속(동거·결혼·같이 벌이는 일)을 꺼내기엔 <strong>${best.y}년</strong>이 좋아 보인다. 그해에 둘의 기운이 손을 잡기 쉽다. 다만 때보다 둘의 마음이 먼저다.` : '앞으로 6년은 크게 흔들리지 않아 보이는 해들이다. 둘이 정한 때가 곧 좋은 때가 될 수 있으니, 미루지만 않으면 된다.';
     return { fight, years, last, money, quarrelA, quarrelB, together, promise, needA: NEED_WORDS[A.ps.dmEl], needB: NEED_WORDS[B.ps.dmEl], placeA: DATE_PLACE[weakA], placeB: DATE_PLACE[weakB], colorA: REMEDY(weakA).color.split(',')[0], colorB: REMEDY(weakB).color.split(',')[0] };
   }
 
@@ -392,7 +392,7 @@
         productId: 'compat', btnId: 'compatBuy',
         title: '두 사람의 상세 궁합',
         hook: `점수는 숫자일 뿐이다. ${firstSentence} 이 다툼이 어떻게 풀리는지, 언제 함께 움직여야 하는지는 따로 적어 두었다.`,
-        items: ['두 사람이 <strong>싸우는 패턴</strong>과 푸는 법', `${esc(nameA)}에게, ${esc(nameB)}에게 <strong>꼭 필요한 한마디</strong>`, `앞으로 6년 중 <strong>함께하면 좋은 해</strong>와 조심할 해`, '<strong>돈 궁합</strong>과 말다툼 때 서로 하지 말아야 할 말', '오래 가는 비결 · 두 사람에게 맞는 <strong>데이트 비방</strong>'],
+        items: ['두 사람이 <strong>싸우는 패턴</strong>과 푸는 법', `${esc(nameA)}에게, ${esc(nameB)}에게 <strong>꼭 필요한 한마디</strong>`, `앞으로 6년 중 <strong>함께하면 좋은 해</strong>와 조심할 해`, '<strong>돈을 대하는 결</strong>과 말다툼 때 서로 피하면 좋은 말', '오래 가는 비결 · 두 사람에게 맞는 <strong>데이트 비방</strong>'],
         buttonLabel: '💞 상세 궁합 봉인 풀기', bundleFrom: 'compat'
       });
       bindBundle(host, a, 'compat', { a, b, nameA, nameB });
@@ -407,7 +407,7 @@
       return;
     }
     const YT = {
-      good: ['두 사람의 기운이 손을 잡는 해. 여행·동거·큰 약속 같은 함께하는 결정에 좋다.', '함께 벌인 일이 순하게 굴러가는 해. 둘이 같이 모으는 돈이나 계획을 시작하거라.', '서로의 편이 되어 주기 쉬운 해. 가족·친구에게 두 사람을 소개하기 좋다.', '마음이 한곳으로 모이는 해. 오래 미뤄 둔 이야기를 꺼내 보거라.', '둘의 운이 서로를 끌어올리는 해. 한 사람의 좋은 일이 다른 사람에게도 번진다.', '손발이 척척 맞는 해. 같이 배우거나 같이 만드는 일을 하나 시작해 보거라.'],
+      good: ['두 사람의 기운이 손을 잡는 해. 여행·동거·큰 약속 같은 함께하는 결정을 꺼내기 좋아 보인다.', '함께 벌인 일이 순하게 굴러가는 해. 둘이 같이 모으는 돈이나 계획을 시작하거라.', '서로의 편이 되어 주기 쉬운 해. 가족·친구에게 두 사람을 소개하기 좋다.', '마음이 한곳으로 모이는 해. 오래 미뤄 둔 이야기를 꺼내 보거라.', '둘의 운이 서로를 끌어올리는 해. 한 사람의 좋은 일이 다른 사람에게도 번진다.', '손발이 척척 맞는 해. 같이 배우거나 같이 만드는 일을 하나 시작해 보거라.'],
       bad: [w => `${w}의 생활 자리가 흔들리는 해. 서로의 변화를 다그치지 말고 기다려 주거라.`, w => `${w}에게 이사·이직 같은 변화가 몰리는 해. 결정은 함께 상의하고 천천히 하거라.`, w => `${w}의 마음이 예민해지기 쉬운 해. 사소한 말에 서운함이 쌓이지 않게 자주 묻거라.`, w => `${w}에게 바깥일이 몰려 둘의 시간이 줄어드는 해. 짧아도 매일 연락하는 약속을 지키거라.`, w => `${w}의 기운이 들쑥날쑥한 해. 큰 다툼은 하룻밤 자고 나서 이야기하거라.`, w => `${w}에게 피로가 쌓이는 해. 서운함을 따지기 전에 먼저 쉬게 해 주거라.`],
       flat: ['크게 흔들리지도 붙지도 않는 해. 둘이 정한 대로 꾸준히 가면 된다.', '조용히 쌓이는 해. 작은 기념일을 챙기는 것만으로 충분하다.', '무난하게 흘러가는 해. 함께하는 습관 하나를 만들어 두거라.', '잔잔한 물처럼 고요한 해. 이럴 때 둘만의 계획을 차분히 세워 두거라.', '별일 없이 지나가는 해. 그 평범함을 지루함으로 오해하지 말거라.', '숨 고르기 좋은 해. 서로에게 고마웠던 일을 한 번씩 말로 꺼내 보거라.']
     };
@@ -422,20 +422,20 @@
         <h3 class="feature-card-title">💞 두 사람의 상세 궁합</h3>
         <h4 class="cd-h">싸우는 패턴과 푸는 법</h4>
         <p class="feature-text">${D.fight}</p>
-        <h4 class="cd-h">돈 궁합</h4>
+        <h4 class="cd-h">돈을 대하는 결</h4>
         <p class="feature-text">${D.money}</p>
         <h4 class="cd-h">서로에게 필요한 한마디</h4>
         <p class="feature-text"><strong>${esc(nameA)}에게</strong> ${D.needA.word} ${D.needA.why}</p>
         <p class="feature-text"><strong>${esc(nameB)}에게</strong> ${D.needB.word} ${D.needB.why}</p>
-        <h4 class="cd-h">말다툼 때 서로 하지 말 것</h4>
-        <p class="feature-text"><strong>${esc(nameA)}에게 하지 말 것</strong> — ${D.quarrelA}</p>
-        <p class="feature-text"><strong>${esc(nameB)}에게 하지 말 것</strong> — ${D.quarrelB}</p>
-        <h4 class="cd-h">함께하면 좋은 해 · 조심할 해</h4>
+        <h4 class="cd-h">말다툼 때 서로 피하면 좋은 말</h4>
+        <p class="feature-text"><strong>${esc(nameA)}에게 피하면 좋은 말</strong> — ${D.quarrelA}</p>
+        <p class="feature-text"><strong>${esc(nameB)}에게 피하면 좋은 말</strong> — ${D.quarrelB}</p>
+        <h4 class="cd-h">함께하기 좋아 보이는 해 · 조심할 해</h4>
         <ul class="cd-years">${yearLi}</ul>
         <p class="feature-text">${D.promise}</p>
         <h4 class="cd-h">오래 가는 비결</h4>
         <p class="feature-text">${D.last}</p>
-        <h4 class="cd-h">같이 하면 좋은 일</h4>
+        <h4 class="cd-h">같이 해 보면 좋은 일</h4>
         <p class="feature-text">${D.together}</p>
         <h4 class="cd-h">데이트 비방</h4>
         <p class="feature-text">${D.placeA === D.placeB
