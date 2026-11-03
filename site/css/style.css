@@ -1866,6 +1866,9 @@ body.buy-bar-on { padding-bottom: calc(96px + 68px + env(safe-area-inset-bottom)
 .section-title { font-size: 19px; }
 .feature-card-title { font-size: 18.5px; }
 .portfolio-section-title { font-size: 20px; }
+/* 리포트 장마다 사진 한 장 (2026-11-03, 벤치마킹 ⑦ — 사진은 Gemini Pro로 만든 사진풍, 사람·개 없이 장소만) */
+.chapter-photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; margin: 0 0 14px; box-shadow: 0 0 0 1px rgba(185, 138, 38, 0.45), 0 6px 18px rgba(0, 0, 0, 0.35); }
+@media print { .chapter-photo { aspect-ratio: auto; height: 55mm; box-shadow: none; } }
 /* 장 표식: 'CHAPTER 01 · 대외비 1급'을 붉은 도장처럼 */
 .portfolio-section-badge { padding: 3px 9px; border-radius: 2px; font-family: var(--font-display); font-weight: 400; font-size: 12px; letter-spacing: 0.08em; color: #F6DFA4; background: var(--cinnabar); border: 1px solid rgba(246, 223, 164, 0.55); box-shadow: 0 0 0 2px var(--cinnabar); }
 /* 한지 카드 오른쪽 아래 백구 낙관(辟邪) */

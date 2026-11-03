@@ -1699,6 +1699,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 01:<!-- CHAPTER 01: 영적 악연 차단 & 방어 매뉴얼 -->
       <div class="portfolio-section-card">
+        <img class="chapter-photo" src="img/report/ch1.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第一章 · 대외비 1급</span>
         <div class="portfolio-section-title">🗡️ 기(氣) 빨아먹는 악연 색출 및 즉각 처단 매뉴얼</div>
         ${keyLineHtml(`지금 손절할 <strong>${EL_NAME[ps.dmEl]} 기운 사람용 악연 3유형</strong>이 아래 1·2·3번이다 — 연락 빈도를 줄이는 처단 비방까지 읽어라.`)}
@@ -1717,6 +1718,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 02: 인연과 사랑의 체취 감별 (사랑의 냄새 대폭 확대) -->
       <div class="portfolio-section-card">
+        <img class="chapter-photo" src="img/report/ch2.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第二章 · 후각 투시록</span>
         <div class="portfolio-section-title">🕯️ 인연과 사랑의 체취 감별 (벽사신견 후각 투시록)</div>
         ${keyLineHtml(`피할 연인은 <strong>${(ruinYin && ruinYin.title) || ruin.title}</strong>, 만날 사람은 <strong>${soulmate.title}</strong>${josa(soulmate.title, '을')} 풍기는 <strong>${nobles[0]}</strong> — 시기는 ${Y_R0}년 하반기~${Y_R1}년 상반기.`)}
@@ -1743,6 +1745,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 03: 누재살 방어 및 재물 축적 비방 -->
       <div class="portfolio-section-card">
+        <img class="chapter-photo" src="img/report/ch3.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第三章 · 재물 결속 비기</span>
         <div class="portfolio-section-title">💰 피 같은 돈이 줄줄 새는 구멍(누재살) 봉인법</div>
         ${keyLineHtml(`네 돈이 새는 길은 <strong>${GROUP_PLAIN[leakKey]}</strong> 쪽 · 돈이 붙는 기운은 <strong>${EL_NAME[ps.wealthEl]}</strong>, 방위는 ${wealthRemedy.dir} — 아래 3대 비방이 그 구멍을 막는다.`)}
@@ -1761,6 +1764,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 04: 2026~2028년 대운 3개년 로드맵 -->
       <div class="portfolio-section-card">
+        <img class="chapter-photo" src="img/report/ch4.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第四章 · 시기 포획</span>
         <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 대운 3개년 로드맵</div>
         ${keyLineHtml(`<strong>${Y_R1}년이 가장 좋은 때</strong> — 그해의 기운이 네게 <strong>${sipsinPlain(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10))}</strong>${josa(sipsinPlain(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)), '으로')} 들어온다${((((Y_R1 - 4) % 12 + 12) % 12) - ps.dayBranchIdx + 12) % 12 === 6 ? ' (단, 일지와 <strong>충</strong>이라 큰 변동을 각오할 것)' : ''}. ${c ? ph(PH.ROAD_PHASE, null, c, 46) : `${Y_R0}년은 준비, ${Y_R1}년은 승부, ${Y_R2}년은 지키기.`}`)}
@@ -1791,6 +1795,7 @@ let currentSajuData = null;
 
       <!-- CHAPTER 05: 100일 작전 행동 수칙 -->
       <div class="portfolio-section-card">
+        <img class="chapter-photo" src="img/report/ch5.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第五章 · 실전 결행</span>
         <div class="portfolio-section-title">⚡ 내일부터 당장 결행할 [천명 100일 작전]</div>
         ${keyLineHtml(`내일부터 할 일은 딱 셋 — <strong>아침 의식 · 몰입 결계 · 정화 수칙</strong>, 그리고 <strong>${EL_KO[weakKey]}</strong> 기운을 채우는 소품 하나.`)}
@@ -1807,6 +1812,7 @@ let currentSajuData = null;
 
       <!-- SECTION 06: 궁서체 정통 괴황지 수호부적 쇼케이스 & 원형 다운로드 -->
       <div class="talisman-section-card">
+        <img class="chapter-photo" src="img/report/ch6.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第六章 · 종신 수호 비기</span>
         <div class="portfolio-section-title">🧧 《벽사신견 액막이 개운부 (辟邪神犬 開運符)》</div>
         
