@@ -75,6 +75,7 @@
 
   /** 상품 결제창: 상품·가격·제공·환불·미성년자 안내 → purchase() */
   function openProductModal(productId, { title, desc, provide, again, subjectKey, data }) {
+    if (window.track) window.track('payopen');
     const pr = priceFor(productId);
     const live = PAYMENT.mode === 'portone';
     $('productModalBody').innerHTML = `

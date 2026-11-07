@@ -594,6 +594,30 @@ let currentSajuData = null;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // 📊 이용 횟수 세기 (업데이트 38): 단계 이름 하나만 서버(/api/count)에 보낸다. 생년월일·이름·IP·쿠키 저장 없음.
+  //   브라우저에서 JS가 돌 때만 보내므로 로봇은 거의 빠진다. 내 컴퓨터(localhost)·자동 테스트·파일로 열기는 세지 않는다.
+  //   '방문'은 탭 하나(세션)에 한 번만. 결제 흐름·PAYMENT와는 상관없다.
+  // ─────────────────────────────────────────────────────────────────────────
+  const BOT_UA = /bot|crawl|spider|slurp|yeti|daumoa|headless|lighthouse|facebookexternalhit|kakaotalk-scrap/i;   // 검색 로봇·미리보기 수집기 (카카오톡 안 브라우저는 'KAKAOTALK'이라 걸리지 않는다)
+  function track(name) {
+    try {
+      if (window.__BYEOKSA_TEST__) { (window.__trackLog = window.__trackLog || []).push(name); return; }   // 자동 테스트: 보내지 않고 기록만
+      if (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\]|.*\.localhost)?$/.test(location.hostname)) return;
+      if (navigator.webdriver || BOT_UA.test(navigator.userAgent || '')) return;
+      const body = JSON.stringify({ e: name });   // 글자 그대로 보낸다(text/plain) — 어느 브라우저에서도 sendBeacon이 받아 준다
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/count', body)) return;
+      fetch('/api/count', { method: 'POST', body, keepalive: true }).catch(() => {});
+    } catch (e) { /* 숫자 세기 때문에 화면이 멈추면 안 된다 */ }
+  }
+  window.track = track;
+  // 궁합 링크에 붙는 보낸 사람 별명: 한글·영문·숫자·띄어쓰기·_.- 만, 10자까지 (보내는 쪽 extras.js 와 받는 쪽이 같은 규칙)
+  const NICK_RE = /^[0-9A-Za-z가-힣 _.\-]{1,10}$/;
+  function trackVisitOnce() {
+    try { if (sessionStorage.getItem('byeoksa.t.visit')) return; sessionStorage.setItem('byeoksa.t.visit', '1'); } catch (e) { /* 저장 못 하면 그냥 센다 */ }
+    track('visit');
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // 💬 사이트 공유: 개인정보 없이 첫 화면 주소만 보낸다 (휴대폰은 공유 창 → 카카오톡, 안 되면 문구 복사)
   // ─────────────────────────────────────────────────────────────────────────
   const SHARE_TITLE = '벽사신견 사주';
@@ -674,6 +698,7 @@ let currentSajuData = null;
     calculateSaju(y, m, d);
     _resultFoldsDirty = true;   // 새 풀이: 긴 단락을 다시 접는다 (showView에서)
     goToStep(3);
+    track('free');
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1865,6 +1890,7 @@ let currentSajuData = null;
       const slot = document.getElementById('reportPromo'); if (slot && !slot.innerHTML) slot.innerHTML = promoRowHtml();
       if (!m.dataset.promoBound) { m.addEventListener('promo', () => { renderPaymentMode(); renderCouponLines(); }); m.dataset.promoBound = '1'; }
       renderPaymentMode(); renderCouponLines(); m.style.display = 'flex';
+      track('payopen');
     }
   function closePaymentModal() { ['paymentModal', 'productModal'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); }
 
@@ -2590,9 +2616,19 @@ let currentSajuData = null;
   window.addEventListener('DOMContentLoaded', () => {
     applyFolds(document.getElementById('viewLanding'));   // 대문 설화 단락 '더 보기' 접기 (2026-11-01)
     const params = new URLSearchParams(window.location.search);
+    trackVisitOnce();
     if (resumePaymentFromRedirect(params)) return;
     const toHelp = window.location.hash === '#help';   // 약관 페이지 등에서 고객센터로 바로 들어옴
-    if (!params.get('y') && !toHelp) playOpening();
+    const compatInvite = params.get('compat') === '1' && !params.get('y');   // 친구가 보낸 궁합 링크 (업데이트 38)
+    if (!params.get('y') && !toHelp && !compatInvite) playOpening();
+    if (compatInvite) {   // 序·대문 없이 바로 궁합 입력으로. 링크에는 생일이 없고, 보낸 사람 별명만 선택으로 온다
+      const nick = (params.get('n') || '').trim();
+      window.__compatInviteFrom = NICK_RE.test(nick) ? nick : '';
+      try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* 무시 */ }
+      track('invited');
+      hideGate();
+      if (typeof openFeature === 'function') openFeature('compat');
+    }
     if (params.get('from') === 'share') {   // 친구가 공유한 링크로 들어옴 → 할인 1건
       try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* 무시 */ }
       if (grantCoupon('invite')) setTimeout(() => showToast(`🎁 친구가 보낸 문으로 들어왔구나. 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인을 걸어 두었다.`), 600);

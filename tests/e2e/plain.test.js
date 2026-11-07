@@ -49,3 +49,31 @@ test('조화율 카드: 꿈을 못 알아들을 때는 손님 탓이 아니라 �
   for (const w of JARGON) assert.ok(!t.includes(w) && !key.includes(w), '명리 용어: ' + w);
   await ctx.close();
 });
+
+// 업데이트 38 (2026-11-07 대표님 당부 "말 풀이 쉽게 하는 규칙 지키고"): 새로 넣은 글 — 궁합 '상대에게 보내기'·받은 사람 안내 한 줄·대표님용 숫자 페이지에도 명리 용어가 없어야 한다
+const NEW_JARGON = [...JARGON, '일주', '일진', '천간', '지지', '명식', '대운', '흉살', '사주팔자', '日柱', '木', '火', '土', '金', '水'];
+const { SITE } = require('./helpers');
+
+test('새 글(업데이트 38): 궁합 공유 상자·받은 사람 안내·숫자 페이지에 명리 용어가 없다', async () => {
+  const { ctx, page } = await openPage(browser);
+  await page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; openFeature('compat'); });
+  await page.fill('#caName', '민지');
+  await page.fill('#caY', '1994'); await page.fill('#caM', '1'); await page.fill('#caD', '23');
+  await page.fill('#cbY', '1990'); await page.fill('#cbM', '3'); await page.fill('#cbD', '10');
+  await page.click('#compatGo'); await page.waitForTimeout(300);
+  const share = await page.textContent('.compat-share');
+  assert.ok(share.includes('상대에게 보내기'), share);
+  for (const w of NEW_JARGON) assert.ok(!share.includes(w), '공유 상자에 명리 용어: ' + w);
+  await ctx.close();
+
+  const r = await openPage(browser, { url: 'file://' + SITE + '?compat=1&n=' + encodeURIComponent('민지') });
+  const invite = await r.page.textContent('.compat-invite');
+  for (const w of NEW_JARGON) assert.ok(!invite.includes(w), '받은 사람 안내에 명리 용어: ' + w);
+  await r.ctx.close();
+
+  const path = require('path'); const { pathToFileURL } = require('url');
+  const { renderPage } = await import(pathToFileURL(path.resolve(__dirname, '../../functions/numbers.js')).href);
+  const pageText = renderPage([{ day: '2026-11-07', visit: 10, free: 5, payopen: 2, paid: 1, compat: 3, compatsend: 1, invited: 1 }])
+    .replace(/<style>[\s\S]*?<\/style>/, '').replace(/<[^>]+>/g, ' ');
+  for (const w of NEW_JARGON) assert.ok(!pageText.includes(w), '숫자 페이지에 명리 용어: ' + w);
+});

@@ -8,8 +8,9 @@ const FIXED_NOW = new Date('2026-10-12T10:00:00+09:00'); // 결과 재현성을 
 async function openPage(browser, { width = 390, height = 844, url = 'file://' + SITE, now = FIXED_NOW } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
-  page._errors = []; page._alerts = [];
+  page._errors = []; page._alerts = []; page._console = [];
   page.on('pageerror', e => page._errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error') page._console.push(m.text()); });   // 콘솔 오류 (외부 주소 차단으로 생기는 'Failed to load resource'는 각 테스트가 걸러 본다)
   page.on('dialog', async d => { page._alerts.push(d.message()); await d.accept(); });
   await page.addInitScript(() => {
     window.__BYEOKSA_TEST__ = true;

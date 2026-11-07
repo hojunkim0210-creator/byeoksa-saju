@@ -190,12 +190,20 @@
   function renderCompat() {
     const me = loadProfile();
     const form = $('compatForm');
+    // 친구가 보낸 링크로 들어왔으면 벽사견 한 줄 (업데이트 38). 별명은 보낸 사람이 선택으로 넣은 것만, 글자 종류·길이를 app.js에서 걸러 온다
+    const from = window.__compatInviteFrom;
+    // 별명이 한글로 끝나면 '민지가'처럼 조사를 붙이고, 영문·숫자로 끝나면 조사가 틀릴 수 있어 조사 없는 문장으로
+    const fromSubj = !from ? '' : /[가-힣]$/.test(from) ? `<strong>${esc(from)}</strong>${josa(from, '이')}` : `<strong>${esc(from)}</strong>, 이 사람이`;
+    const inviteLine = from === undefined ? '' : (from
+      ? `<p class="compat-invite">${fromSubj} 너랑 궁합을 보고 싶다는구나. 위에는 네 생일, 아래에는 ${esc(from)}의 생일을 넣어 보거라.</p>`
+      : `<p class="compat-invite">누군가 너랑 궁합을 보고 싶다는구나. 위에는 네 생일, 아래에는 그 사람의 생일을 넣어 보거라.</p>`);
     form.innerHTML = `
+      ${inviteLine}
       <h3 class="feature-card-title">나</h3>
       <input type="text" id="caName" maxlength="10" placeholder="내 이름 (선택, 저장하지 않음)" aria-label="내 이름">
       ${birthFieldsHtml('ca', me || {})}
       <h3 class="feature-card-title">상대</h3>
-      <input type="text" id="cbName" maxlength="10" placeholder="부를 이름 (선택, 저장하지 않음)" aria-label="상대를 부를 이름">
+      <input type="text" id="cbName" maxlength="10" placeholder="부를 이름 (선택, 저장하지 않음)" aria-label="상대를 부를 이름" value="${esc(from || '')}">
       ${birthFieldsHtml('cb', {})}
       <p class="form-error" id="compatErr" role="alert"></p>
       <button class="btn-submit" id="compatGo">두 사람의 궁합 냄새 맡기</button>
@@ -211,6 +219,29 @@
       const nameB = ($('cbName').value || '').trim() || '상대';
       showCompatResult(a, b, nameA, nameB === nameA ? nameB + '(상대)' : nameB);
     };
+  }
+
+  // 궁합 '상대에게 보내기' (업데이트 38): 공유 창(휴대폰은 카카오톡 등)을 열고, 안 되면 링크 복사. 링크에는 생일·이름이 없고, 내가 이름을 적었다면 그 별명만 선택으로 붙는다.
+  const COMPAT_SHARE_TEXT = '너랑 나 궁합 공짜로 봐 준대. 생일만 넣어 봐';
+  function compatShareUrl(nameA) {
+    const nick = (nameA && nameA !== '나') ? nameA.trim().slice(0, 10) : '';
+    if (nick && !NICK_RE.test(nick)) return siteHomeUrl() + '?compat=1';   // 받는 쪽이 못 읽는 글자(이모지 등)면 별명 없이
+    return siteHomeUrl() + '?compat=1' + (nick ? '&n=' + encodeURIComponent(nick) : '');
+  }
+  function bindCompatShare(nameA) {
+    const url = compatShareUrl(nameA);
+    const sent = () => { if (window.track) window.track('compatsend'); };
+    $('compatShare').onclick = async () => {
+      sent();
+      if (navigator.share) {
+        try { await navigator.share({ title: '벽사신견 궁합', text: COMPAT_SHARE_TEXT, url }); return; }
+        catch (e) { if (e && e.name === 'AbortError') return; /* 그 밖의 실패는 복사로 */ }
+      }
+      copyText(`${COMPAT_SHARE_TEXT}\n${url}`, '링크를 복사했다. 카카오톡이나 문자에 붙여 넣거라.');
+    };
+    $('compatCopy').onclick = () => { sent(); copyText(`${COMPAT_SHARE_TEXT}\n${url}`, '링크를 복사했다. 카카오톡이나 문자에 붙여 넣거라.'); };
+    $('compatSms').href = 'sms:?&body=' + encodeURIComponent(`${COMPAT_SHARE_TEXT}\n${url}`);
+    $('compatSms').onclick = sent;
   }
 
   function showCompatResult(a, b, nameA, nameB) {
@@ -247,8 +278,15 @@
         <h3 class="feature-card-title">두 사람이 사랑하는 방식</h3>
         <p class="feature-text"><strong>${esc(nameA)}</strong> — ${styleA}</p>
         <p class="feature-text"><strong>${esc(nameB)}</strong> — ${styleB}</p>
+        <div class="compat-share">
+          <button class="btn-submit" id="compatShare" type="button">상대에게 보내기</button>
+          <p class="compat-share-sub">카카오톡이나 문자로 궁합 보는 문을 보낸다. 링크에는 생일이 들어가지 않고, 내 이름을 적었다면 별명으로만 붙는다.
+            <a class="link-btn" id="compatSms" href="#">문자로 보내기</a> · <button class="link-btn" id="compatCopy" type="button">링크만 복사</button></p>
+        </div>
         <p class="feature-note">궁합 점수는 전통 명리의 합·충·생극을 바탕으로 한 재미 풀이이며, 두 사람의 관계를 정해 주지 않는다.</p>
       </div>`;
+    bindCompatShare(nameA);
+    if (window.track) window.track('compat');
     // 유료 '궁합 상세 리포트' 자리 (shop.js)
     if (window.BYEOKSA_SHOP) window.BYEOKSA_SHOP.afterCompat(a, b, nameA, nameB, A, B, r);
     $('compatResult').scrollIntoView({ behavior: 'smooth', block: 'start' });

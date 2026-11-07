@@ -1187,6 +1187,12 @@ option:disabled { color: #9C8E7C; }
 
 /* 궁합 결과 카드는 점수와 항목 사이를 조금 더 띄우고, 패 풀이는 뒤집을 때 천천히 드러난다 */
 .compat-card { gap: 16px; }
+.compat-share { display: flex; flex-direction: column; gap: 8px; }
+.compat-share .btn-submit { margin: 0; }
+.compat-share-sub { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); margin: 0; }
+.compat-share .link-btn { color: var(--cinnabar); font-weight: 700; }   /* 한지 바탕에서 노란 글씨는 안 보여 붉은색으로 */
+.compat-invite { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--night-line); border-left: 3px solid var(--yellow); line-height: 1.7; }
+@media print { .compat-share { display: none; } }
 .tarot-reading { animation: fadeIn 0.45s ease; }
 
 /* ── 하단 메뉴 (모든 화면) ─────────────────────────────────────────── */
