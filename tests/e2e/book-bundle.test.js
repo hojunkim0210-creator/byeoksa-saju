@@ -90,8 +90,8 @@ test('묶음 결제 한 번이면 리포트·신년운세·궁합 상세가 모�
   for (const w of ['천명 리포트', '신년운세', '궁합 상세', '13,700원', '10,900원', '만 19세 미만', '청약철회']) assert.ok(modal.includes(w), w);
   assert.ok(!modal.includes('부적'), '묶음 결제창에 부적 없음 (2026-10-19 카드사 심사)');
   await page.click('#productPayBtn'); await page.waitForTimeout(300);
-  assert.match(await page.textContent('#toastMsg'), /보따리가 풀렸다/);
-  assert.match(await page.textContent('[data-shop-price="bundle"]'), /다 풀었다/);
+  assert.match(await page.textContent('#toastMsg'), /보따리가 풀렸소/);
+  assert.match(await page.textContent('[data-shop-price="bundle"]'), /다 풀었소/);
 
   // 신년운세
   await page.evaluate(() => openFeature('newyear')); await page.waitForTimeout(200);
@@ -152,7 +152,7 @@ test('묶음 실결제(포트원 흉내): 10,900원·묶음 상품명으로 요�
   const [c] = await page.evaluate(() => window.__calls);
   assert.equal(c.totalAmount, 10900);
   assert.equal(c.orderName, '벽사신견 전부 묶음 보따리');
-  assert.match(await page.textContent('#toastMsg'), /보따리가 풀렸다/);
+  assert.match(await page.textContent('#toastMsg'), /보따리가 풀렸소/);
   await ctx.close();
 });
 

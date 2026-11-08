@@ -22,7 +22,7 @@ test('기본: 후기 칸·결제 수는 숨겨져 있고(실제 값이 없으니
   assert.match(await page.evaluate(() => document.getElementById('reviewAskLink').href), /^https:\/\/docs\.google\.com\/forms\/d\/e\/[\w-]+\/viewform$/, '구글 폼 응답 주소(쿼리 없이)');
   await page.evaluate(() => BYEOKSA_SHOP.setReviewFormUrl(''));
   assert.ok(await hidden(page, 'reviewAsk'), '폼 주소를 비우면 후기 남기기 없음');
-  assert.ok(!/명이 봉인을 풀었다/.test(await page.evaluate(() => document.body.innerText)), '결제 수 문구 없음');
+  assert.ok(!/명이 봉인을 풀었소/.test(await page.evaluate(() => document.body.innerText)), '결제 수 문구 없음');
   assert.deepEqual(page._errors, []);
   await ctx.close();
 });
@@ -50,7 +50,7 @@ test('결제 수: 서버가 센 수가 100 미만이면 숨기고, 100 이상이
     await BYEOKSA_SHOP.renderStats(); const el = document.getElementById('shopCount'); return { hidden: el.hidden, text: el.textContent };
   }, n);
   assert.equal((await show(7)).hidden, true, '7명은 숨김');
-  const many = await show(120); assert.equal(many.hidden, false); assert.match(many.text, /120명이 봉인을 풀었다/);
+  const many = await show(120); assert.equal(many.hidden, false); assert.match(many.text, /120명이 봉인을 풀었소/);
   const bad = await page.evaluate(async () => { window.fetch = () => Promise.resolve(new Response('oops', { status: 502 })); await BYEOKSA_SHOP.renderStats(); return document.getElementById('shopCount').hidden; });
   assert.equal(bad, true, '서버 오류면 숨김');
   await ctx.close();

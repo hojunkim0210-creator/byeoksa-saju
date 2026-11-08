@@ -32,7 +32,7 @@ test('오늘의 운세: 생년월일이 없으면 입력을 받고, 넣으면 �
   await page.fill('#pfD', '4'); await page.fill('#pfM', '10'); await page.click('#pfGo');
   const t = await page.textContent('#dailyBody');
   assert.match(t, /2026년 10월 12일 · 기미\(己未\)일/);
-  assert.match(t, /이렇게 하거라/); assert.doesNotMatch(t, BROKEN); assert.doesNotMatch(t, BAD_JOSA);
+  assert.match(t, /이렇게 하시오/); assert.doesNotMatch(t, BROKEN); assert.doesNotMatch(t, BAD_JOSA);
   await ctx.close();
 });
 

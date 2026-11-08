@@ -21,6 +21,9 @@ const norm = s => s
 
 // 의도적으로 바꾼 문구 (기능 변경에 따른 안내문) — 여기 없는 손실은 실패
 const ALLOWED_REMOVED = [
+  // 업데이트 40 (2026-11-08 대표님 정중한 말투 결정 — 인스타·영상은 하오체+'그대'): 화면에 보이는 거친 말 '네놈' 2곳만 '그대'로. 나머지 반말 풀이는 하오체 샘플을 대표님이 보신 뒤 정한다
+  '네놈의 뼈대는',
+  '지금 네놈의 명줄(만',
   // 업데이트 39 (2026-11-08, 디자인 검수 1차·대표님 OK): 남은 외래어·용어를 쉬운 말로('골든타임' → '가장 좋은 때', '포트폴리오' → '실전 전략', '대운' → '10년 운').
   //   결제 뒤 알림은 카드사 관점(액막이를 파는 것처럼 읽히지 않게)으로 바꿈 — 원래 문장은 app.js·index.html 주석에 남아 있다.
   '2026~2028년 구체적 월별 골든타임, 나를 파멸시킬 인간의 구체적 인상착의와 대처법을 낱낱이 밝힌다.',
@@ -28,6 +31,10 @@ const ALLOWED_REMOVED = [
   '추상적인 뜬구름 잡기 없는 실전 전략 포트폴리오',
   '🔒 직장 성과 도둑 퇴치법 및 이직·독립 골든타임은 복채 결제 후 개봉',
   '🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제 🐾',
+  // 업데이트 43 (하오체): '끊어내라'를 '끊어 내시오'로 띄어 써서 끝 낱말 비교에 안 잡히는 문장 (내용은 그대로)
+  ': 변명할 기회를 주지 마라. 서서히 연락 빈도를 줄이고 카톡 답장을 3시간 이상 늦추며 영적 연결고리를 완전히 끊어내라.',
+  // 업데이트 41 (하오체): '알아둬라'를 '알아 두시오'로 띄어 써서 끝 낱말 비교에 안 잡히는 문장 (내용은 그대로)
+  '라는 억울함이 가슴에 맺혀 목구멍까지 피가 거꾸로 솟았을 것이다. 똑똑히 알아둬라. 네 탓이 아니다. 네 넓은 품에 기생해 피를 빤 파렴치한 흡기귀였다.',
   // 전체 점검 (2026-11-03 대표님): 요약 복사문을 이모지·용어 없이 한눈에 카드 줄로 다시 씀, 시간 모름 안내의 '시주(時柱)'를 쉬운 말로. 원래 문장은 git 기록(커밋 d92ff34)에 남아 있다
   '1. 내 기(氣)를 갉아먹는 흡기귀 악연 즉각 차단',
   '2. 밑 빠진 독 같은 누재살(漏財煞) 재물 방어',
@@ -193,6 +200,17 @@ const ALLOWED_REMOVED = [
   '🕯️ 지박령의 은밀한 후각 감별 (초기 감지)',
 ].map(norm);
 
+// 업데이트 41 (2026-11-08 대표님 결정): 벽사견 말투를 반말에서 하오체+'그대'로 바꿨다. 말끝·부르는 말만 바뀐 문장은 보존된 것으로 본다 —
+//   부르는 말(네·너·네가·널 ↔ 그대)을 같은 표시로 맞추고, 문장 끝(마침표·따옴표·괄호·태그 앞)의 낱말 하나씩을 양쪽에서 걷어낸 뒤 비교한다.
+//   문장이 통째로 빠지거나 앞부분이 줄면 여전히 잡힌다.
+const PRON = [
+  [/그대에게|(?<![가-힣])네게(?![가-힣])/g, 'X에게'], [/그대에겐|(?<![가-힣])네겐(?![가-힣])/g, 'X에겐'],
+  [/그대를|(?<![가-힣])너를(?![가-힣])|(?<![가-힣])널(?![가-힣])/g, 'X를'], [/그대는|(?<![가-힣])너는(?![가-힣])|(?<![가-힣])넌(?![가-힣])/g, 'X는'],
+  [/그대가|(?<![가-힣])네가(?![가-힣])/g, 'X가'],
+  [/그대|(?<![가-힣])너(?=만|도|와|랑|밖에|니까|의|조차|보다)|(?<![가-힣])너(?![가-힣])|(?<![가-힣])네놈|(?<![가-힣])네(?= )/g, 'X']
+];
+const tone = s => { let t = s; for (const [re, r] of PRON) t = t.replace(re, r); return t.replace(/[가-힣]+(?=\s*(?:[.!?…"'`)\]<]|$))/g, '').replace(/\s+/g, ' ').trim(); };
+
 function currentFragments() {
   const files = ['site/index.html', 'site/js/app.js', 'site/js/phrases.js', 'site/js/saju-core.js', 'site/css/style.css'].map(f => path.join(ROOT, f));
   const out = execFileSync('python3', ['-I', path.join(ROOT, 'tools/extract_texts.py'), ...files], { encoding: 'utf8' });
@@ -204,6 +222,7 @@ test('기준 문구가 모두 남아 있다 (연도·간지 차이, 허용 목�
   const cur = currentFragments();
   const curNorm = new Set(cur.map(norm));
   const curJoined = cur.map(norm).join('\n');
+  const curTone = cur.map(x => tone(norm(x))).join('\n');   // 하오체로 바뀐 문장 비교용 (업데이트 41)
   const isDevComment = s => /^(\/\/|\*|\/\*)/.test(s.trim()); // 화면에 나오지 않는 코드 주석은 보존 대상 아님
   // "2. 문장", "제목: 내용"처럼 번호·제목과 문장이 데이터로 분리 저장된 경우를 위해, 번호를 떼고 ': ' 기준으로 나눈 각 문장이 모두 있는지 본다
   const parts = s => s.split(/:\s+/).map(x => norm(x.replace(/^[\s:•·\-]*(\d+\.\s*)?/, ''))).filter(x => /[가-힣].*[가-힣]/.test(x));
@@ -211,7 +230,10 @@ test('기준 문구가 모두 남아 있다 (연도·간지 차이, 허용 목�
     if (isDevComment(s)) return false;
     const n = norm(s);
     if (curNorm.has(n) || curJoined.includes(n) || ALLOWED_REMOVED.includes(n)) return false;
-    return !parts(s).every(x => curJoined.includes(x));
+    if (parts(s).every(x => curJoined.includes(x))) return false;
+    const t = tone(n);
+    if (/[가-힣].*[가-힣]/.test(t) && curTone.includes(t)) return false;   // 말끝·부르는 말만 하오체로 바뀜
+    return !parts(s).every(x => { const tx = tone(x); return !/[가-힣]/.test(tx) || curTone.includes(tx); });
   });
   assert.deepEqual(lost, [], `사라진 문구 ${lost.length}개:\n` + lost.join('\n'));
 });

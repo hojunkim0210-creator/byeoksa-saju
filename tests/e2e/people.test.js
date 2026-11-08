@@ -82,7 +82,7 @@ test('사주 6명: 무료 결과·결제창·오늘의 운세·묻기·신년운
     assert.deepEqual(brokenBits(table), [], `${p.label}: 사주 표 깨진 값`);
     const first = await page.evaluate(() => document.getElementById('animalDesc').textContent);
     assert.ok(!/지닌으로/.test(first), `${p.label}: '지닌으로' 깨짐 — "${first.slice(0, 90)}"`);
-    if (p.label.includes('토끼날')) assert.ok(/매력을 지닌 토끼의 기질로 빚어졌다/.test(first), `${p.label}: 첫 카드 "${first.slice(0, 90)}"`);
+    if (p.label.includes('토끼날')) assert.ok(/매력을 지닌 토끼의 기질로 빚어졌소/.test(first), `${p.label}: 첫 카드 "${first.slice(0, 90)}"`);
     await page.evaluate(() => openPaymentModal()); await page.waitForTimeout(150);
     const modal = await page.evaluate(() => document.getElementById('paymentModal').innerText);
     assert.deepEqual(brokenBits(modal), [], `${p.label}: 결제창 깨진 값`);
@@ -146,7 +146,7 @@ test('궁합 3쌍(남녀·여여·남남): 결과·보내기·받은 링크 열�
     // 받은 사람이 링크를 연다 (파일로 여는 테스트라 주소의 꼬리표만 옮긴다)
     const r = await openPage(browser, { url: 'file://' + SITE + url.slice(url.indexOf('?')) });
     const invite = await r.page.textContent('.compat-invite');
-    assert.ok(invite.startsWith(`${a.name}${/[가-힣]/.test(a.name.slice(-1)) && (a.name.slice(-1).charCodeAt(0) - 0xAC00) % 28 ? '이' : '가'} 너랑 궁합을 보고 싶다는구나.`), `${label}: 받은 사람 안내 "${invite}"`);
+    assert.ok(invite.startsWith(`${a.name}${/[가-힣]/.test(a.name.slice(-1)) && (a.name.slice(-1).charCodeAt(0) - 0xAC00) % 28 ? '이' : '가'} 그대와 궁합을 보고 싶다는구려.`), `${label}: 받은 사람 안내 "${invite}"`);
     assert.equal(await r.page.inputValue('#cbName'), a.name);
     assert.deepEqual(brokenBits(invite), []);
     assert.deepEqual(await r.page.evaluate(() => window.__trackLog), ['visit', 'invited']);

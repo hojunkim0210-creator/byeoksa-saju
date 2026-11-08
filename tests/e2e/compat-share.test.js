@@ -63,7 +63,7 @@ test('받은 사람: 링크로 들어오면 대문·序 없이 바로 궁합 입
   await page.waitForTimeout(300);
   const view = await page.evaluate(() => [...document.querySelectorAll('.app-container > .view-step')].find(v => v.style.display !== 'none').id);
   assert.equal(view, 'viewCompat');
-  assert.match(await page.textContent('.compat-invite'), /^민지가 너랑 궁합을 보고 싶다는구나\. 위에는 네 생일, 아래에는 민지의 생일을 넣어 보거라\.$/);
+  assert.match(await page.textContent('.compat-invite'), /^민지가 그대와 궁합을 보고 싶다는구려\. 위에는 그대 생일, 아래에는 민지의 생일을 넣어 보시오\.$/);
   assert.equal(await page.inputValue('#cbName'), '민지');
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('introGateModal')).display), 'none');
   assert.deepEqual(await log(page), ['visit', 'invited']);
@@ -72,7 +72,7 @@ test('받은 사람: 링크로 들어오면 대문·序 없이 바로 궁합 입
 });
 
 test('받은 사람: 별명의 끝 글자에 맞는 조사 — 받침 있으면 \'이\', 영문으로 끝나면 조사 없는 문장', async () => {
-  for (const [nick, expect] of [['준석', /^준석이 너랑 궁합을/], ['Tom', /^Tom, 이 사람이 너랑 궁합을/]]) {
+  for (const [nick, expect] of [['준석', /^준석이 그대와 궁합을/], ['Tom', /^Tom, 이 사람이 그대와 궁합을/]]) {
     const { ctx, page } = await openPage(browser, { url: 'file://' + SITE + '?compat=1&n=' + encodeURIComponent(nick) });
     await page.waitForTimeout(200);
     assert.match(await page.textContent('.compat-invite'), expect);
@@ -84,7 +84,7 @@ test('받은 사람: 별명이 없거나 이상한 글자(태그 등)면 별명 
   for (const q of ['?compat=1', '?compat=1&n=' + encodeURIComponent('<img src=x onerror=alert(1)>')]) {
     const { ctx, page } = await openPage(browser, { url: 'file://' + SITE + q });
     await page.waitForTimeout(200);
-    assert.match(await page.textContent('.compat-invite'), /^누군가 너랑 궁합을 보고 싶다는구나/);
+    assert.match(await page.textContent('.compat-invite'), /^누군가 그대와 궁합을 보고 싶다는구려/);
     assert.equal(await page.inputValue('#cbName'), '');
     assert.ok(!(await page.evaluate(() => location.search)), '주소의 ?compat 꼬리표는 지워야 한다');
     assert.deepEqual(page._alerts, []);

@@ -77,7 +77,7 @@ test('포트원 결제 실패·취소: 잠긴 채로 남고 안내가 뜬다', a
   await page.click('#payButton'); await page.waitForTimeout(400);
   assert.ok(await locked(page));
   assert.notEqual(await viewOf(page), 'viewReport');
-  assert.match(await page.textContent('#toastMsg'), /결제가 완료되지 않았다/);
+  assert.match(await page.textContent('#toastMsg'), /결제가 완료되지 않았소/);
   await ctx.close();
 });
 

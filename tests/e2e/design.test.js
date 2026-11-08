@@ -97,3 +97,44 @@ test('긴 단락 접기: 결과의 긴 풀이는 접히고 짧은 글은 안 접
   assert.deepEqual(page._errors, []);
   await ctx.close();
 });
+
+// 업데이트 39 (2026-11-08 디자인 검수 1·2번): 대문 시작 버튼은 제목 바로 아래, 짧은 폰(높이 760px 이하)은 초상 사진을 4:5 그대로 줄여 첫 화면 안에.
+//   보이는 끝 = 화면 높이와 하단 메뉴 위 중 작은 쪽. (테스트는 웹 글꼴을 막아 대체 글꼴로 재므로 실제와 몇 px 다를 수 있다)
+test('대문: 시작 버튼이 320×568부터 데스크톱까지 첫 화면 안에 있고, 초상 사진은 4:5 아치 모양을 지킨다', async () => {
+  for (const [width, height] of [[320, 568], [360, 640], [375, 667], [414, 736], [375, 812], [430, 932], [1440, 900]]) {
+    const { ctx, page } = await openPage(browser, { width, height });
+    await page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; });
+    const r = await page.evaluate(() => {
+      const b = document.querySelector('#viewLanding .btn-main').getBoundingClientRect();
+      const ph = document.querySelector('.spirit-portrait-box').getBoundingClientRect();
+      const tab = document.getElementById('tabBar');
+      const order = [...document.querySelector('#viewLanding header').children].map(e => e.className.split(' ')[0]);
+      return { bottom: b.bottom, end: Math.min(innerHeight, tab ? tab.getBoundingClientRect().top : innerHeight), ratio: ph.width / ph.height, photoH: ph.height, order };
+    });
+    assert.ok(r.bottom <= r.end, `${width}×${height}: 버튼 아래끝 ${Math.round(r.bottom)} > 보이는 끝 ${Math.round(r.end)}`);
+    assert.ok(Math.abs(r.ratio - 0.8) < 0.01, `${width}×${height}: 사진 비율 ${r.ratio.toFixed(3)}`);
+    assert.ok(r.photoH >= 150, `${width}×${height}: 사진이 너무 작다 (${Math.round(r.photoH)}px)`);
+    assert.ok(r.order.indexOf('btn-main') < r.order.indexOf('lore-strip') && r.order.indexOf('btn-main') > r.order.indexOf('spirit-title-box'), `순서: ${r.order.join(' > ')}`);
+    await ctx.close();
+  }
+});
+
+test('序: \'화면을 누르면 다음 줄\'은 15px·달빛으로 책 바로 아래, 다 읽은 뒤 숨어도 책은 움직이지 않는다', async () => {
+  // helpers.openPage 는 序를 건너뛰므로 테스트 표시 없이 연다 (opening.test.js 와 같은 방식)
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1, reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.route('**/*', r => { const u = r.request().url(); (u.startsWith('file:') || u.startsWith('data:')) ? r.continue() : r.abort(); });
+  await page.goto('file://' + require('./helpers').SITE); await page.waitForTimeout(800);
+  const pos = () => page.evaluate(() => {
+    const h = document.getElementById('openingHint'), bk = document.querySelector('.opening-book'), cs = getComputedStyle(h);
+    return { gap: h.getBoundingClientRect().top - bk.getBoundingClientRect().bottom, size: cs.fontSize, color: cs.color, opacity: cs.opacity, bookTop: bk.getBoundingClientRect().top };
+  });
+  const a = await pos();
+  assert.ok(a.gap >= 0 && a.gap <= 30, `책과 안내 사이 ${a.gap}px`);
+  assert.deepEqual([a.size, a.color, a.opacity], ['15px', 'rgb(244, 238, 226)', '1']);
+  for (let i = 0; i < 7; i++) { await page.mouse.click(187, 406); await page.waitForTimeout(120); }
+  const b = await pos();
+  assert.equal(await page.evaluate(() => document.getElementById('openingHint').hidden), true);
+  assert.equal(Math.round(b.bookTop - a.bookTop), 0, '다 읽은 뒤 책이 움직였다');
+  await ctx.close();
+});
