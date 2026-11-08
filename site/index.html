@@ -19,13 +19,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=43">
+  <link rel="manifest" href="manifest.json?v=44">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=43">
+    <link rel="stylesheet" href="css/style.css?v=44">
 </head>
 <body>
 
@@ -196,13 +196,13 @@
       <div class="lore-strip" data-fold="6" data-fold-tone="dark">   <!-- 2026-11-01: 여섯 줄까지만 보이고 '더 보기' (글은 그대로) -->
         <p class="lore-line">예로부터 <strong>개는 귀신을 보고 짖어 쫓는다</strong> 했다.</p>
         <p class="lore-sub">개를 대문 앞에 두어 삿된 것을 막던 우리 옛 풍습, 그 개를 <strong>벽사견(辟邪犬)</strong>이라 불렀다. 벽사견은 지금도 대문 앞에서 지나가는 사람의 등 뒤를 본다.</p>
-        <p class="lore-hook">벽사견이 짖는 것은 둘 중 하나요. <em>그대 등 뒤에 붙은 것</em>, 혹은 <em>그대를 지키고 있는 것</em>. 어느 쪽인지는 생년월일을 대야 아오.</p>
+        <p class="lore-hook">벽사견이 짖는 것은 둘 중 하나뿐이오. <em>그대 등 뒤에 붙은 것</em>, 혹은 <em>그대를 지키고 있는 것</em>. 어느 쪽인지는 생년월일을 대야 아오.</p>
       </div>
 
       <!-- 신비로운 영적 분위기 티저 카드 (설화 전문은 한지 족자 버튼으로 열람) -->
       <div class="landing-teaser-box">
         <div class="landing-teaser-quote">
-          "그대 등 뒤에 붙은 차가운 그림자가 내 눈엔 훤히 보이오.<br>
+          "그대 등 뒤에 붙은 차가운 그림자가 내 눈엔 훤히 보이고 있소.<br>
           사주에 숨은 흉살과 기를 빨아먹는 악연을 모조리 털어낼 테니, 들어오시오."
         </div>
         <div class="landing-teaser-sub">
@@ -328,7 +328,7 @@
       <span class="form-label">태어난 시간 (모르면 '시간 모름')</span>
       <select id="hourSelect">
         <option value="-1" selected>시간 모름 / 선택 안 함</option>
-        <option value="0">자시 (23:30 ~ 01:29)</option>
+        <option value="0">자시 (밤 12:00 ~ 01:29)</option>   <!-- 업데이트 44: 원래 '자시 (23:30 ~ 01:29)' — 밤 11:30~12:00은 아래 '밤 자시'로 -->
         <option value="1">축시 (01:30 ~ 03:29)</option>
         <option value="2">인시 (03:30 ~ 05:29)</option>
         <option value="3">묘시 (05:30 ~ 07:29)</option>
@@ -340,13 +340,15 @@
         <option value="9">유시 (17:30 ~ 19:29)</option>
         <option value="10">술시 (19:30 ~ 21:29)</option>
         <option value="11">해시 (21:30 ~ 23:29)</option>
+        <option value="12">밤 자시 (23:30 ~ 24:00 · 다음 날로 셈)</option>   <!-- 업데이트 44 (더블체크 2-1): 날짜에 하루를 더해 자시로 계산 -->
       </select>
     </div>
 
     <div class="input-row">
       <select id="gender" style="flex:1;"><option value="M">남성</option><option value="F">여성</option></select>
-      <select id="calendarType" style="flex:1;"><option value="solar">양력</option><option value="lunar" disabled>음력 (준비 중)</option></select>
+      <select id="calendarType" data-cal="leapWrap" style="flex:1;" aria-label="양력·음력"><option value="solar">양력</option><option value="lunar">음력</option></select>   <!-- 음력은 업데이트 44에서 엶 (전엔 '음력 (준비 중)'으로 막혀 있었다) -->
     </div>
+    <label class="leap-check" id="leapWrap" hidden><input type="checkbox" id="leapMonth"> <span>윤달 <span class="form-optional">(음력 생일이 윤달일 때만)</span></span></label>
 
     <div class="form-group">
       <span class="form-label">지금 하는 일 <span class="form-optional">(선택)</span></span>   <!-- 비워도 풀이는 나온다 (업데이트 39, 검수 5번) -->
@@ -390,6 +392,9 @@
       <button class="btn-action btn-action-wide" onclick="shareSite()">💬 카톡으로 사이트 공유하기</button>
       </div>
     </details>
+
+    <p class="birth-note" id="lunarNote" hidden></p>   <!-- 음력으로 받은 생일·밤 자시를 어느 날로 보았는지 (업데이트 44) -->
+    <p class="birth-note" id="childNote" hidden>어린 사주는 큰 흐름만 보시오. 돈·일 이야기는 자란 뒤의 결로 읽으면 되오.</p>   <!-- 만 10세 미만 (업데이트 44, 더블체크 3-1) -->
 
     <!-- 1. 영안 개안 동물 캐릭터 카드 -->
     <div class="character-card">
@@ -482,7 +487,7 @@
       </div>
       <div class="ghost-portrait-wrap" id="ghostPortrait"></div>
       <div class="ghost-desc" id="ghostDesc">
-        그대 등 뒤에 끈적하게 달라붙은 악운 냄새가 보이오. 그대가 대운을 맞이해 솟구치려 할 때마다 발목을 잡아채는 인간의 냄새요.
+        그대 등 뒤에 끈적하게 달라붙은 악운 냄새가 보이고 있소. 그대가 10년 운을 맞이해 솟구치려 할 때마다 발목을 잡아채는 인간의 냄새요.
       </div>
       <div class="ghost-lore-wrap" id="ghostLore"></div>
     </div>
@@ -511,7 +516,7 @@
       <div class="sniff-item">
         <h4>💼 직장과 성과의 냄새</h4>
         <p id="sniffCareerText">
-          "올해와 내년 사이, 직장에서 그대 공든 탑을 무너뜨리고 성과를 가로챌 자의 그림자가 보이오..."
+          "올해와 내년 사이, 직장에서 그대 공든 탑을 무너뜨리고 성과를 가로챌 자의 그림자가 보이고 있소..."
         </p>
         <span class="sniff-lock-badge">🔒 직장 성과 도둑 퇴치법 및 이직·독립하기 가장 좋은 때는 복채 결제 후 개봉</span>
       </div>
@@ -520,9 +525,8 @@
     <!-- 8. 🔒 티저 페이월 (결제 전환율 극대화 빌드업) -->
     <div class="paywall-container" id="paywallContainer">
       <div class="paywall-overlay" id="paywallOverlay">
-        <div class="paywall-trust-banner">
+        <div class="paywall-trust-banner sale-event-badge">   <!-- 이벤트(SALE.eventName)가 있을 때만 보인다. 업데이트 44: 혜택·기간이 없던 '⚡ 1인 청년·개발자 응원 이벤트' 줄을 내림 -->
           <span class="sale-event-badge">🎉 <span class="sale-event-name">오픈 기념 이벤트</span> 진행 중</span>
-          <span>⚡ 1인 청년·개발자 응원 이벤트</span>
         </div>
 
         <div class="paywall-hook-title">
@@ -535,7 +539,7 @@
           <em>'내가 이러려고 지금까지 버텼나...'</em> 하는 서글픔에 숨이 턱 끝까지 찼을 것이오.<br>
           <div class="paywall-divider"></div>
           <strong>여기까지 온 건 결코 우연이 아니오.</strong><br>
-          그대 노력의 문제가 아니라, <strong>[그대 명줄에 낀 살(煞)]</strong>과 <strong>[대운이 터질 때(時)]</strong>를 모르기 때문이오.<br>
+          그대 노력의 문제가 아니라, <strong>[그대 명줄에 낀 살(煞)]</strong>과 <strong>[10년 운이 터질 때(時)]</strong>를 모르기 때문이오.<br>
           지금 이 문턱을 그냥 넘어가면, 또 똑같은 쳇바퀴와 배신의 늪에서 3년을 허비하게 되오.
         </div>
 
@@ -841,10 +845,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=43"></script>
-  <script src="js/phrases.js?v=43"></script>
-  <script src="js/app.js?v=43"></script>
-  <script src="js/extras.js?v=43"></script>
-  <script src="js/shop.js?v=43"></script>
+  <script src="js/saju-core.js?v=44"></script>
+  <script src="js/phrases.js?v=44"></script>
+  <script src="js/app.js?v=44"></script>
+  <script src="js/extras.js?v=44"></script>
+  <script src="js/shop.js?v=44"></script>
 </body>
 </html>

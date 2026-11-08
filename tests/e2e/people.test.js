@@ -18,7 +18,11 @@ const PEOPLE = [
   { label: '2002 남 시간 모름 (꿈 빈칸)', y: '2002', m: '10', d: '4', hour: '-1', gender: 'M', job: '학생', dream: '' },
   { label: '1985 여 자시', y: '1985', m: '12', d: '25', hour: '0', gender: 'F', job: '간호사', dream: '건물주' },
   { label: '1972 남 해시 (직업 빈칸)', y: '1972', m: '7', d: '15', hour: '11', gender: 'M', job: '', dream: '세계 여행' },
-  { label: '1994 여 시간 모름 (토끼날 계묘)', y: '1994', m: '5', d: '17', hour: '-1', gender: 'F', job: '회사원', dream: '내 가게 열기' }
+  { label: '1994 여 시간 모름 (토끼날 계묘)', y: '1994', m: '5', d: '17', hour: '-1', gender: 'F', job: '회사원', dream: '내 가게 열기' },
+  // 업데이트 44 (2026-11-09 더블체크 1-3): 첫 10년 운 전인 어린이 2명과 여덟 칸을 다 지난 90대 1명
+  { label: '2020 남 시간 모름 (만 6세, 첫 10년 운 전)', y: '2020', m: '6', d: '15', hour: '-1', gender: 'M', job: '', dream: '' },
+  { label: '2024 여 시간 모름 (만 2세, 첫 10년 운 전)', y: '2024', m: '6', d: '15', hour: '-1', gender: 'F', job: '', dream: '' },
+  { label: '1935 남 시간 모름 (만 91세, 여덟 칸 뒤)', y: '1935', m: '6', d: '15', hour: '-1', gender: 'M', job: '', dream: '' }
 ];
 const PAIRS = [
   { label: '남녀', a: { name: '준석', y: '1990', m: '3', d: '10', h: '6', g: 'M' }, b: { name: '민지', y: '1994', m: '1', d: '23', h: '-1', g: 'F' } },
@@ -111,6 +115,53 @@ test('사주 6명: 무료 결과·결제창·오늘의 운세·묻기·신년운
     await ctx.close();
   }
   assert.equal(new Set(seen).size, PEOPLE.length, '사람마다 결과 첫머리가 달라야 한다');
+});
+
+test("'지금 운'은 지금 나이에 맞는 칸 — 어린이는 '첫 10년 운이 열리기 전', 90대는 늘린 칸 중 '현재' 칸 (업데이트 44, 더블체크 1-3·3-1)", async () => {
+  for (const p of PEOPLE.filter(x => /첫 10년 운 전|여덟 칸 뒤/.test(x.label))) {
+    const { ctx, page } = await openPage(browser);
+    await page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; goToStep(2); });
+    await page.fill('#year', p.y); await page.fill('#month', p.m); await page.fill('#day', p.d);
+    await page.selectOption('#hourSelect', p.hour); await page.selectOption('#gender', p.gender);
+    await page.evaluate(() => submitAndGoToResult()); await page.waitForTimeout(300);
+    const r = await page.evaluate(() => {
+      const t = id => document.getElementById(id).innerText;
+      unlockContent();
+      return { comment: t('daeunComment'), key: document.querySelector('#daeunCard .key-line-text') ? document.querySelector('#daeunCard .key-line-text').innerText : '',
+        glance: t('glanceList'), summary: (document.querySelector('.rs-card') || {}).innerText || '', current: document.querySelectorAll('#daeunScroll .current-daeun').length,
+        cols: document.querySelectorAll('#daeunScroll .daeun-item').length, child: !document.getElementById('childNote').hidden };
+    });
+    if (/첫 10년 운 전/.test(p.label)) {
+      assert.match(r.comment, /아직 첫 10년 운이 열리기 전이오\./, p.label);
+      assert.match(r.key, /^지금은 첫 10년 운이 열리기 전, 만 \d세 · \d+세에 첫 10년 운\([가-힣]{2}\)이 열리오\.$/, p.label);
+      assert.match(r.glance, /첫 10년 운은 \d+세에 열리오\(지금은 그 전\)/, p.label);
+      assert.match(r.summary, /첫 10년 운 [가-힣]{2} · \d+세에 열림 \(지금 만 \d세\)/, p.label);
+      assert.equal(r.current, 0); assert.equal(r.child, true, '어린이 한 줄');
+      assert.ok(!/한복판/.test(r.comment + r.key + r.glance), p.label);
+    } else {
+      assert.equal(r.current, 1, '늘린 칸 중 현재 칸 하나'); assert.ok(r.cols > 8);
+      const m = r.key.match(/^지금은 (\d+)세부터의 10년 운\([가-힣]{2}\) 한복판, 만 (\d+)세/);
+      assert.ok(m && +m[1] <= +m[2] && +m[2] <= +m[1] + 9, `${p.label}: ${r.key}`);
+      assert.equal(r.child, false);
+    }
+    assert.deepEqual(page._errors, []);
+    await ctx.close();
+  }
+});
+
+test('아직 오지 않은 날짜(2028-01-01)는 입력 화면·궁합 모두 하오체 안내로 막는다 (업데이트 44, 더블체크 1-4)', async () => {
+  const { ctx, page } = await openPage(browser);   // 테스트 시계는 2026-10-12
+  await page.evaluate(() => { document.getElementById('introGateModal').style.display = 'none'; goToStep(2); });
+  await page.fill('#year', '2028'); await page.fill('#month', '1'); await page.fill('#day', '1');
+  await page.evaluate(() => submitAndGoToResult()); await page.waitForTimeout(200);
+  assert.deepEqual(page._alerts, ['아직 오지 않은 날이오. 태어난 날을 다시 확인하시오.']);
+  assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById('viewInput')).display), 'none');
+  await page.evaluate(() => openFeature('compat'));
+  await page.fill('#caY', '1990'); await page.fill('#caM', '3'); await page.fill('#caD', '10');
+  await page.fill('#cbY', '2028'); await page.fill('#cbM', '1'); await page.fill('#cbD', '1');
+  await page.click('#compatGo'); await page.waitForTimeout(200);
+  assert.equal(await page.textContent('#compatErr'), '상대: 아직 오지 않은 날이오. 태어난 날을 다시 확인하시오.');
+  await ctx.close();
 });
 
 test('궁합 3쌍(남녀·여여·남남): 결과·보내기·받은 링크 열기까지 깨진 값·조사 오류·콘솔 오류가 없다', async () => {

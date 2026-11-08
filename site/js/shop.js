@@ -269,7 +269,7 @@
       const say = k % 2 === 1 ? t.say : NY_SAY2[m.sipsin];
       return `
         <article class="ny-month">
-          <header><span class="ny-month-m">${mLabel(m)}</span><span class="ny-month-g">${m.ganji}(${m.ganjiHanja})월 · ${m.sipsin}</span><span class="ny-month-s">${m.score}점 · ${bandOf(m.score)}</span></header>
+          <header><span class="ny-month-m">${mLabel(m)}</span><span class="ny-month-g">${m.ganji}(${m.ganjiHanja})월 · ${SIPSIN_SHORT[m.sipsin] || m.sipsin}(${m.sipsin})</span><span class="ny-month-s">${m.score}점 · ${bandOf(m.score)}</span></header>
           <p><span class="ny-tag do">할 일</span>${good}</p>
           <p><span class="ny-tag avoid">조심</span>${caution}</p>
           ${extra ? `<p><span class="ny-tag rel">인연</span>${extra}</p>` : ''}
@@ -501,7 +501,7 @@
     if (d.from === 'report' && d.extra) {
       const sj = d.extra;
       const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
-      set('year', sj.y); set('month', sj.m); set('day', sj.d); set('hourSelect', String(sj.hourVal)); set('gender', sj.genderVal);
+      fillBirthInput(sj, sj.lunar, sj.late, sj.hourVal); set('gender', sj.genderVal);   // 음력·밤 자시로 넣었으면 그대로 (업데이트 44)
       set('userJob', sj.userJob); set('userMajor', sj.userMajor); set('userHobby', sj.userHobby); set('userDream', sj.userDream);
       submitAndGoToResult();
     } else if (d.from === 'compat' && d.extra) { openFeature('compat'); X.showCompatResult(d.extra.a, d.extra.b, d.extra.nameA, d.extra.nameB); }

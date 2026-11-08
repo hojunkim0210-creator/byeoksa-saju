@@ -1973,3 +1973,14 @@ body.buy-bar-on { padding-bottom: calc(96px + 68px + env(safe-area-inset-bottom)
 .label-col { background: rgba(168, 42, 32, 0.08); }
 /* 결과 화면 사이사이 밤 바탕이 더 보이게 카드 간격을 조금 넓힘 */
 #viewResult { gap: 22px; }
+
+/* 🌙 음력 생일 (업데이트 44): '윤달' 표시칸(전역 input 모양을 풀고 문의 동의 칸과 같은 체크칸) · 바꾼 날짜 확인 줄·어린이 한 줄 */
+.leap-check { display: flex; align-items: center; gap: 8px; margin: 10px 2px 0; font-size: 15px; color: var(--ink); cursor: pointer; }
+.input-row > .leap-check { flex: 0 0 auto; margin: 0; padding: 0 6px; white-space: nowrap; }
+.leap-check input {
+  -webkit-appearance: auto; appearance: auto; width: 20px; height: 20px; flex: 0 0 20px; padding: 0; margin: 0;
+  accent-color: var(--cinnabar); box-shadow: none;
+}
+.birth-note { margin: 12px 4px 10px; font-size: 13.5px; line-height: 1.55; text-align: center; color: var(--moon-soft); }
+.birth-note + .birth-note { margin-top: -4px; }
+.compat-card .birth-note { margin: 4px 0 8px; color: var(--ink-soft); }

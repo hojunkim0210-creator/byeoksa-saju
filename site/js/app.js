@@ -22,7 +22,7 @@ const {
   // ─────────────────────────────────────────────────────────────────────────
   const SALE = {
     price: 4900,                  // 원
-    eventName: '오픈 기념 이벤트',  // 이벤트가 없으면 '' (배지 숨김)
+    eventName: '',  // 이벤트가 없으면 '' (배지 숨김). 2026-11-09 업데이트 44: 실제 혜택·기간이 없던 '오픈 기념 이벤트' 띠를 내림(더블체크 3-3, 대표님 OK)
     eventEndsOn: null             // 종료일이 정해지면 'YYYY-MM-DD'. 지나면 이벤트 표시가 자동으로 꺼진다
   };
 
@@ -136,27 +136,27 @@ const {
   const RUIN_LOVERS = {
     wood: {
       title: '피비린내와 눅눅한 곰팡이 냄새',
-      scent: '겉으로는 비싼 향수나 매력적인 언변으로 포장하지만, 조금만 깊이 교류해보면 바닥에 고인 썩은 물과 쇠비린내가 진동하는 자요.',
+      scent: '겉으로는 비싼 향수나 매력적인 언변으로 포장하지만, 조금만 깊이 교류해보면 바닥에 고인 썩은 물과 쇠비린내가 진동하는 자라오.',
       trait: `그대 자존감을 은근히 갉아먹으며 '너는 나 없으면 아무것도 아니야'라는 불안을 주입하오. 그대가 잘나갈 땐 질투로 눈빛이 싸늘해지고, 그대가 주저앉을 때만 우월감을 느끼며 동정하는 척하오.`
     },
     fire: {
       title: '차갑게 고인 물비린내와 꺼진 촛농 냄새',
-      scent: '처음엔 서늘하고 신비로운 분위기로 끌어당기지만, 가까이 갈수록 축축한 냉기가 스며들어 그대 안의 불씨를 하나씩 꺼뜨리는 자요.',
+      scent: '처음엔 서늘하고 신비로운 분위기로 끌어당기지만, 가까이 갈수록 축축한 냉기가 스며들어 그대 안의 불씨를 하나씩 꺼뜨리는 자라오.',
       trait: `그대 들뜬 열정에 '현실을 봐'라며 찬물을 끼얹고, 그대가 웃을수록 무심한 침묵으로 벌을 주오. 결국 그대는 그 사람의 기분을 살피느라 그대 빛을 스스로 끄게 되오.`
     },
     earth: {
       title: '풋내 뒤에 숨은 썩은 나무뿌리 냄새',
-      scent: '싱그럽고 활기찬 첫인상으로 다가오지만, 뿌리를 내리는 순간 그대 땅의 양분을 빨아올리며 제 키만 키우는 자요.',
+      scent: '싱그럽고 활기찬 첫인상으로 다가오지만, 뿌리를 내리는 순간 그대 땅의 양분을 빨아올리며 제 키만 키우는 자라오.',
       trait: `그대 시간과 돈, 인맥을 제 성장의 거름으로 쓰면서 '우리 둘을 위한 것'이라 포장하오. 그대가 지쳐 메말라 갈 때쯤 더 기름진 땅을 찾아 떠나오.`
     },
     metal: {
       title: '달콤한 향 뒤에 숨은 매캐한 탄내',
-      scent: '뜨겁고 강렬한 매력으로 단숨에 마음을 녹이지만, 곁에 오래 있을수록 옷깃에 그을음이 배듯 그대 원칙과 자존심이 녹아내리는 자요.',
+      scent: '뜨겁고 강렬한 매력으로 단숨에 마음을 녹이지만, 곁에 오래 있을수록 옷깃에 그을음이 배듯 그대 원칙과 자존심이 녹아내리는 자라오.',
       trait: `불같이 사랑하다가도 제 뜻대로 안 되면 화염처럼 분노를 쏟아내 그대를 길들이오. 그대가 지켜온 기준과 선을 '사랑이면 이 정도는'이라며 하나씩 태워 없애오.`
     },
     water: {
       title: '흙탕물처럼 텁텁한 진흙 비린내',
-      scent: '듬직하고 안정적인 척 다가오지만, 함께할수록 맑던 그대 생각이 흙탕물처럼 탁해지고 발이 진창에 빠진 듯 무거워지는 자요.',
+      scent: '듬직하고 안정적인 척 다가오지만, 함께할수록 맑던 그대 생각이 흙탕물처럼 탁해지고 발이 진창에 빠진 듯 무거워지는 자라오.',
       trait: `'다 너를 지켜주려고'라며 그대 선택과 동선을 하나하나 막아세우오. 그대 흐름을 둑처럼 가로막아, 결국 그대는 어디로도 흘러가지 못한 채 고여 썩어가오.`
     }
   };
@@ -279,25 +279,25 @@ const {
 
   // 그해 천간이 일간에게 들어오는 십신 10가지별 해설 (같은 계열이 연달아 와도 문장이 겹치지 않게)
   const YEAR_SIPSIN_TEXT_10 = {
-    '비견': '어깨를 나란히 할 동료와 경쟁자가 한꺼번에 몰려드는 해요. 손잡을 자와 경계할 자를 칼같이 가리시오.',
-    '겁재': '그대 몫을 노리는 손이 가까이 다가오는 해요. 동업과 보증, 돈거래만은 두 번 세 번 따져보시오.',
-    '식신': '타고난 재주가 자연스럽게 밥이 되는 해요. 즐겨 하던 일을 꾸준히 쌓으면 그것이 곧 그대 밥그릇이 되오.',
-    '상관': '말과 재능이 밖으로 터져 나오는 해요. 만들고 드러내되, 윗사람과의 말다툼과 규칙 어김만은 삼가시오.',
-    '편재': '뜻밖의 큰돈이 움직이는 해요. 들어오는 판은 크지만 나가는 길도 넓으니 계약서와 통장을 그대 손으로 직접 챙기시오.',
-    '정재': '꼬박꼬박 쌓이는 재물의 해요. 한 방을 노리기보다 월급과 고정 수입의 그릇을 키우는 데 힘을 쏟으시오.',
-    '편관': '거센 압박과 시험이 몰아치는 해요. 그 무게를 버텨내면 감투와 권한이 따라오니 피하지 말고 맞서시오.',
-    '정관': '자리와 명예가 바로 서는 해요. 승진·합격·계약처럼 공식적인 인정을 받을 일에 정면으로 도전하시오.',
-    '편인': '남다른 감각과 촉이 깨어나는 해요. 낯선 공부와 기술에 파고들되, 생각만 많아져 실행을 미루지는 마시오.',
-    '정인': '배움과 귀인의 도움이 깃드는 해요. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 되오.'
+    '비견': '어깨를 나란히 할 동료와 경쟁자가 한꺼번에 몰려드는 해라오. 손잡을 자와 경계할 자를 칼같이 가리시오.',
+    '겁재': '그대 몫을 노리는 손이 가까이 다가오는 해라오. 동업과 보증, 돈거래만은 두 번 세 번 따져보시오.',
+    '식신': '타고난 재주가 자연스럽게 밥이 되는 해라오. 즐겨 하던 일을 꾸준히 쌓으면 그것이 곧 그대 밥그릇이 되오.',
+    '상관': '말과 재능이 밖으로 터져 나오는 해라오. 만들고 드러내되, 윗사람과의 말다툼과 규칙 어김만은 삼가시오.',
+    '편재': '뜻밖의 큰돈이 움직이는 해라오. 들어오는 판은 크지만 나가는 길도 넓으니 계약서와 통장을 그대 손으로 직접 챙기시오.',
+    '정재': '꼬박꼬박 쌓이는 재물의 해라오. 한 방을 노리기보다 월급과 고정 수입의 그릇을 키우는 데 힘을 쏟으시오.',
+    '편관': '거센 압박과 시험이 몰아치는 해라오. 그 무게를 버텨내면 감투와 권한이 따라오니 피하지 말고 맞서시오.',
+    '정관': '자리와 명예가 바로 서는 해라오. 승진·합격·계약처럼 공식적인 인정을 받을 일에 정면으로 도전하시오.',
+    '편인': '남다른 감각과 촉이 깨어나는 해라오. 낯선 공부와 기술에 파고들되, 생각만 많아져 실행을 미루지는 마시오.',
+    '정인': '배움과 귀인의 도움이 깃드는 해라오. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 되오.'
   };
 
   // 그해 천간이 일간에게 어떤 십신으로 들어오는지에 따른 해설 (계열별 요약 — 직장운 한 줄 등에 사용)
   const YEAR_SIPSIN_TEXT = {
-    bi: '경쟁자와 동료가 한꺼번에 몰려드는 해요. 손잡을 자와 경계할 자를 칼같이 가리시오.',
-    sik: '그대 재능과 말이 밖으로 터져 나오는 해요. 만들고 드러내되, 윗사람과의 말다툼만은 삼가시오.',
-    jae: '재물의 기운이 크게 움직이는 해요. 들어오는 돈은 크지만 나가는 길도 넓으니 계약서와 통장을 그대 손으로 직접 챙기시오.',
-    gwan: '책임과 압박이 어깨를 짓누르는 해요. 그 무게를 버텨내면 직함과 명예가 따라오니 피하지 말고 맞서시오.',
-    in: '배움과 귀인의 도움이 깃드는 해요. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 되오.'
+    bi: '경쟁자와 동료가 한꺼번에 몰려드는 해라오. 손잡을 자와 경계할 자를 칼같이 가리시오.',
+    sik: '그대 재능과 말이 밖으로 터져 나오는 해라오. 만들고 드러내되, 윗사람과의 말다툼만은 삼가시오.',
+    jae: '재물의 기운이 크게 움직이는 해라오. 들어오는 돈은 크지만 나가는 길도 넓으니 계약서와 통장을 그대 손으로 직접 챙기시오.',
+    gwan: '책임과 압박이 어깨를 짓누르는 해라오. 그 무게를 버텨내면 직함과 명예가 따라오니 피하지 말고 맞서시오.',
+    in: '배움과 귀인의 도움이 깃드는 해라오. 자격과 공부, 문서로 기반을 다져두면 다음 도약의 발판이 되오.'
   };
   // 결과 화면 '일의 냄새'용 짧은 한마디 (리포트 로드맵의 연도 해설과 겹치지 않게)
   const CAREER_SIPSIN_HINT = {
@@ -367,7 +367,7 @@ const {
   };
   // ── 쉬운 말 표 (2026-11-02, 손님 평 "뭔 소린지 모르겠다"): 풀이 문장 앞에 사실을 평어로 한 줄 먼저 말할 때 쓴다 ──
   const EL_PLAIN = { wood: '나무 기운(뻗어 나가는 힘)', fire: '불 기운(의욕과 열기)', earth: '흙 기운(중심과 안정)', metal: '쇠 기운(맺고 끊는 힘)', water: '물 기운(쉬어 가는 힘)' };
-  const REL_PLAIN = ['그대 성격과 같은 결이라 남이 시키지 않아도 혼자 밀고 가오', '그대 재주를 밖으로 꺼내 보이는 일이라 잘 맞소', '손댄 만큼 돈으로 돌아오는 일이라 결과가 바로 보이오', '그대 어깨를 누르는 일이라 버겁지만, 해내면 이름이 서오', '배울수록 힘이 붙는 일이라 서두르지 않으면 되오'];
+  const REL_PLAIN = ['그대 성격과 같은 결이라 남이 시키지 않아도 혼자 밀고 가오', '그대 재주를 밖으로 꺼내 보이는 일이라 잘 맞소', '손댄 만큼 돈으로 돌아오는 일이라 결과가 바로 드러나오', '그대 어깨를 누르는 일이라 버겁지만, 해내면 이름이 서오', '배울수록 힘이 붙는 일이라 서두르지 않으면 되오'];
   const UNSUNG_PLAIN = { '장생': '힘이 돋아나는 자리', '목욕': '멋을 알고 흔들리기 쉬운 자리', '관대': '어깨에 힘이 들어가는 자리', '건록': '제 힘으로 서는 자리', '제왕': '힘이 가장 센 자리', '쇠': '힘이 조금 꺾이는 자리', '병': '지치기 쉬운 자리', '사': '멈춰 서는 자리', '묘': '안으로 갈무리하는 자리', '절': '끊겼다 다시 잇는 자리', '태': '새로 품는 자리', '양': '길러지는 자리' };
   // 대운 칸처럼 좁은 자리용 짧은 쉬운 말 (업데이트 39, 검수 7번): 칸에는 '힘 돋는 때(장생)'처럼
   const UNSUNG_SHORT = { '장생': '힘 돋는 때', '목욕': '흔들리는 때', '관대': '힘 붙는 때', '건록': '홀로 서는 때', '제왕': '가장 센 때', '쇠': '꺾이는 때', '병': '지치는 때', '사': '멈추는 때', '묘': '거두는 때', '절': '끊고 잇는 때', '태': '새로 품는 때', '양': '길러지는 때' };
@@ -590,10 +590,7 @@ let currentSajuData = null;
     if (currentSajuData) { showView(reportUnlocked ? 'viewReport' : 'viewResult'); return; }
     const p = loadProfile();
     if (p) {
-      document.getElementById('year').value = p.y;
-      document.getElementById('month').value = p.m;
-      document.getElementById('day').value = p.d;
-      if (p.hour !== undefined) document.getElementById('hourSelect').value = String(p.hour);
+      fillBirthInput(p, p.lunar, p.late, p.hour);   // 음력·밤 자시로 넣었으면 그대로 (업데이트 44)
       if (p.gender) document.getElementById('gender').value = p.gender;
     }
     goToStep(2);
@@ -663,6 +660,59 @@ let currentSajuData = null;
   }
   function clearProfile() { try { localStorage.removeItem(PROFILE_KEY); } catch (e) { /* 무시 */ } }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🌙 음력 생일 (업데이트 44): 입력 화면과 궁합·운세 입력 조각(extras.js)이 같이 쓴다.
+  //   양력·음력 칸(select[data-cal])에서 음력을 고르면 '윤달' 표시칸이 보인다. 바꾼 양력 날짜로 계산·저장하므로 결제 표시도 그대로 맞는다.
+  // ─────────────────────────────────────────────────────────────────────────
+  const LATE_ZI = 12;   // 시간 칸의 '밤 자시'(23:30~24:00) — 다음 날 자시로 셈한다 (업데이트 44, 더블체크 2-1)
+  const FUTURE_TEXT = '아직 오지 않은 날이오. 태어난 날을 다시 확인하시오.';   // 오늘 뒤의 날짜 (업데이트 44, 더블체크 1-4)
+  /** 양력 날짜에 n일 더하기 (달·해 넘김 포함) */
+  function addDaysYmd(s, n) { const t = new Date(Date.UTC(s.y, s.m - 1, s.d) + n * 86400000); return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() }; }
+  /** 이 기기의 오늘보다 뒤의 날짜인가 */
+  function isFutureDate(s) { const n = new Date(); return Date.UTC(s.y, s.m - 1, s.d) > Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()); }
+  /** 손님이 확인할 한 줄 — info = { lunar: 음력 { y, m, d, leap }, late: 밤 자시 }, s = 계산에 쓴 양력 날짜. 둘 다 없으면 '' */
+  function birthNoteText(info, s) {
+    const l = info && info.lunar, late = !!(info && info.late);
+    const base = late ? addDaysYmd(s, -1) : s;   // 손님이 적은 날(양력)
+    const lunarPart = l ? `음력 ${l.y}년 ${l.leap ? '윤' : ''}${l.m}월 ${l.d}일을 양력 ${base.y}년 ${base.m}월 ${base.d}일로 보았` : '';
+    if (!late) return l ? lunarPart + '소.' : '';
+    const day = l ? `${s.y !== base.y ? `${s.y}년 ` : ''}${s.m}월 ${s.d}일` : `양력 ${s.y}년 ${s.m}월 ${s.d}일`;
+    const latePart = `밤 11시 30분 넘어 태어나 다음 날(${day}) 자시로 셈하였소.`;
+    return l ? `${lunarPart}고, ${latePart}` : latePart;
+  }
+  /** 음력 날짜가 맞지 않을 때 안내 (SajuCore.lunarToSolar의 error) */
+  function lunarErrorText(r, y, m, leap) {
+    if (r.error === 'range') return `음력 생년은 ${SajuCore.LUNAR_FIRST_YEAR}년부터 ${SajuCore.LUNAR_LAST_YEAR}년 사이로 고하시오.`;
+    if (r.error === 'month') return '음력 생월은 1월부터 12월 사이로 고하시오.';
+    if (r.error === 'leap') return r.leapMonth
+      ? `음력 ${y}년에는 윤${m}월이 없소. 그해 윤달은 ${r.leapMonth}월이오. '윤달' 표시를 다시 확인하시오.`
+      : `음력 ${y}년에는 윤달이 없소. '윤달' 표시를 빼고 다시 고하시오.`;
+    return `음력 ${y}년 ${leap ? '윤' : ''}${m}월은 ${r.days}일까지만 있소. 날짜를 다시 확인하시오.`;
+  }
+  /** 양력·음력 칸에 맞춰 '윤달' 표시칸을 보이거나 감춘다 (감추면 표시도 지운다) */
+  function syncLeapBox(sel) {
+    const box = sel && sel.dataset && document.getElementById(sel.dataset.cal);
+    if (!box) return;
+    box.hidden = sel.value !== 'lunar';
+    if (box.hidden) { const c = box.querySelector('input[type="checkbox"]'); if (c) c.checked = false; }
+  }
+  document.addEventListener('change', e => { if (e.target && e.target.matches && e.target.matches('select[data-cal]')) syncLeapBox(e.target); });
+  /** 입력 화면의 양력·음력·윤달 칸 맞추기 — l(음력 { leap })이 있으면 음력, 없으면 양력 */
+  function setCalendarInput(l) {
+    const sel = document.getElementById('calendarType'), leap = document.getElementById('leapMonth');
+    if (sel) sel.value = l ? 'lunar' : 'solar';
+    if (leap) leap.checked = !!(l && l.leap);
+    syncLeapBox(sel);
+  }
+  /** 입력 화면에 생년월일·시간을 다시 채운다 — 음력으로 넣었던 손님(l)은 음력 그대로, 밤 자시(late)는 적은 날짜와 '밤 자시' 그대로 */
+  function fillBirthInput(s, l, late, hour) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.value = v; };
+    const typed = l || (late ? addDaysYmd(s, -1) : s);
+    set('year', typed.y); set('month', typed.m); set('day', typed.d);
+    setCalendarInput(l);
+    if (hour !== undefined && hour !== null) set('hourSelect', String(late ? LATE_ZI : hour));
+  }
+
   function submitAndGoToResult() {
     const yVal = document.getElementById('year').value.trim();
     const mVal = document.getElementById('month').value.trim();
@@ -688,20 +738,30 @@ let currentSajuData = null;
       return;
     }
 
-    // 날짜 유효성 검증 (2월 30일 등 날짜 롤오버 방지)
-    const testDate = new Date(Date.UTC(y, m - 1, d));
-    if (testDate.getUTCFullYear() !== y || (testDate.getUTCMonth() + 1) !== m || testDate.getUTCDate() !== d) {
-      alert('존재하지 않는 날짜(예: 2월 30일 등)요. 올바른 생년월일을 확인하고 다시 적으시오!');
-      return;
+    // 음력 생일은 한국천문연구원 음력 표로 양력으로 바꿔 그대로 계산한다 (업데이트 44, 2026-11-09).
+    //   전에는 막았다 — 원래 알림: '⚠️ 음력 생일 변환은 아직 준비 중이오. 양력 생년월일로 다시 고하시오!'
+    let sy = y, sm = m, sd = d, lunar = null;
+    if (calType === 'lunar') {
+      const leap = document.getElementById('leapMonth').checked;
+      const r = SajuCore.lunarToSolar(y, m, d, leap);
+      if (r.error) { alert(lunarErrorText(r, y, m, leap)); return; }
+      ({ y: sy, m: sm, d: sd } = r);
+      lunar = { y, m, d, leap };
+    } else {
+      // 날짜 유효성 검증 (2월 30일 등 날짜 롤오버 방지)
+      const testDate = new Date(Date.UTC(y, m - 1, d));
+      if (testDate.getUTCFullYear() !== y || (testDate.getUTCMonth() + 1) !== m || testDate.getUTCDate() !== d) {
+        alert('존재하지 않는 날짜(예: 2월 30일 등)요. 올바른 생년월일을 확인하고 다시 적으시오!');
+        return;
+      }
     }
 
-    if (calType === 'lunar') {
-      alert('⚠️ 음력 생일 변환은 아직 준비 중이오. 양력 생년월일로 다시 고하시오!');
-      return;
-    }
+    if (isFutureDate({ y: sy, m: sm, d: sd })) { alert(FUTURE_TEXT); return; }   // 업데이트 44 (더블체크 1-4)
+    const late = parseInt(document.getElementById('hourSelect').value, 10) === LATE_ZI;   // 밤 자시 → 다음 날 자시 (더블체크 2-1)
+    if (late) ({ y: sy, m: sm, d: sd } = addDaysYmd({ y: sy, m: sm, d: sd }, 1));
 
     playRitual();          // 막을 먼저 내리고 (결과가 뒤로 비치지 않게)
-    calculateSaju(y, m, d);
+    calculateSaju(sy, sm, sd, { lunar, late });
     _resultFoldsDirty = true;   // 새 풀이: 긴 단락을 다시 접는다 (showView에서)
     goToStep(3);
     track('free');
@@ -811,8 +871,10 @@ let currentSajuData = null;
     at(4000, finish);
   }
 
-  function calculateSaju(y, m, d) {
-    const hourVal = parseInt(document.getElementById('hourSelect').value);
+  function calculateSaju(y, m, d, info) {   // info = { lunar: 음력으로 받았을 때 { y, m, d, leap }, late: 밤 자시 } (업데이트 44). y·m·d는 늘 계산에 쓰는 양력
+    const lunar = (info && info.lunar) || null, late = !!(info && info.late);
+    let hourVal = parseInt(document.getElementById('hourSelect').value);
+    if (hourVal === LATE_ZI) hourVal = 0;   // 밤 자시는 (하루 넘긴 날의) 자시
     const genderVal = document.getElementById('gender').value;
 
     const userJob = document.getElementById('userJob').value.trim() || '현재의 신분';
@@ -830,6 +892,10 @@ let currentSajuData = null;
     } = pillars;
 
     // 렌더링 파이프라인
+    const lunarNote = document.getElementById('lunarNote');   // 음력으로 받았으면 바꾼 양력 날짜를 첫 카드 위에 한 줄로 (업데이트 44)
+    if (lunarNote) { lunarNote.textContent = birthNoteText({ lunar, late }, { y, m, d }); lunarNote.hidden = !(lunar || late); }
+    const childNote = document.getElementById('childNote');   // 만 10세 미만이면 한 줄 (업데이트 44, 더블체크 3-1)
+    if (childNote) childNote.hidden = getManAge(y, m, d) >= 10;
     CUR_AGE = NOW_Y - y;   // 만 19세 미만이면 연애 문장을 '앞으로 올 인연' 쪽으로 순하게
     const uInfo = { y, m, d, hour: hourVal, gender: genderVal, job: userJob, major: userMajor, hobby: userHobby, dream: userDream };
     CUR = buildProfile(pillars, null, uInfo);
@@ -857,9 +923,10 @@ let currentSajuData = null;
       y, m, d, hourVal, genderVal,
       userJob, userMajor, userHobby, userDream,
       dStem, dBranch, yStem, yBranch, mStem, mBranch, hStem, hBranch,
-      dStemIdx, dBranchIdx, ohengResult, pillars
+      dStemIdx, dBranchIdx, ohengResult, pillars,
+      lunar, late
     };
-    saveProfile({ y, m, d, hour: hourVal, gender: genderVal });
+    saveProfile({ y, m, d, hour: hourVal, gender: genderVal, ...(lunar ? { lunar } : {}), ...(late ? { late: true } : {}) });
     applyPaidState();
     tidyTitles(document.getElementById('viewResult'));
   }
@@ -876,7 +943,7 @@ let currentSajuData = null;
     // 큰 이모지 대신 일지 한자를 붉은 도장처럼 (이모지 표는 공유 카드 등에서 계속 쓴다)
     const ae = document.getElementById('animalEmoji');
     ae.textContent = dBranch.hanja; ae.classList.add('animal-seal'); ae.setAttribute('data-emoji', animalEmojis[dBranch.char] || '✨');
-    document.getElementById('animalTitle').innerText = `${elColors[dStem.el]} ${dBranch.animal}의 살기(殺氣)가 보이오.`;
+    document.getElementById('animalTitle').innerText = `${elColors[dStem.el]} ${dBranch.animal}의 살기(殺氣)가 보이고 있소.`;   // 업데이트 44 (대표님 2026-11-09 '보이오 보다는 보이고 있소'): 원래 '…살기(殺氣)가 보이오.'
     // 일지 특성이 '~하는'처럼 꾸미는 말로 끝나면 '쥐의 기질'을 붙여 명사로 맺고, 조사는 받침에 맞춘다 ('맹수으로', '신뢰과' 방지)
     //   토끼(卯)의 '~매력을 지닌'도 꾸미는 말 — '닌'이 빠져 '지닌으로 빚어졌다'로 깨지던 것 (업데이트 39, 검수 3번)
     const bTrait = /[는은진닌]$/.test(dBranch.trait) ? `${dBranch.trait} ${dBranch.animal}의 기질` : dBranch.trait;
@@ -1122,7 +1189,9 @@ let currentSajuData = null;
     const safe = String(dream || '').replace(/[<>&]/g, '');
     const rows = [
       ['타고난 결', `<strong>${EL_NAME[ps.dmEl]} 기운 사람</strong>(태어난 날 ${dStem.char}${dBranch.char}) — 가장 모자란 기운은 <strong>${EL_NAME[ps.weakKey]}</strong>`],   // 쉬운 말 (2026-11-02): 일주·일간·오행 이름 대신
-      ['지금 운', dn ? `<strong>${dn.ageStart}세부터의 10년 운(${dn.stemObj.char}${dn.branchObj.char})</strong> 한복판 · <strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)` : `<strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)`],
+      ['지금 운', lastDaeun && lastDaeun.before   // 첫 10년 운 전인 어린이 (업데이트 44, 더블체크 1-3)
+        ? `첫 10년 운은 <strong>${lastDaeun.first.ageStart}세</strong>에 열리오(지금은 그 전) · <strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)`
+        : dn ? `<strong>${dn.ageStart}세부터의 10년 운(${dn.stemObj.char}${dn.branchObj.char})</strong> 한복판 · <strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)` : `<strong>${Y_R1}년</strong>이 가장 좋은 때(${kpi.timScore}점)`],
       ['사람', `멀리할 자: <strong>${ruinTitleFor(ps, CUR)}</strong>를 풍기는 자 · 곁에 둘 귀인: <strong>${nobles[0]}</strong>`],
       ['돈', `재물 방어력 <strong>${kpi.wScore}점</strong> · 돈이 붙는 기운 <strong>${EL_NAME[ps.wealthEl]}</strong> · 방위 ${(ELEMENT_REMEDIES[ps.wealthEl] || {}).dir || ''}`],
       ['등 뒤', `벽사견이 본 것은 <strong>${ghost.name}(${ghost.hanja})</strong> — ${EL_NAME[ps.weakKey]} 기운이 모자란 틈으로 들어왔소`]
@@ -1404,14 +1473,14 @@ let currentSajuData = null;
     const youngLove = `"아직 여물지 않은 인연의 냄새가 잡히오. 앞으로 그대 곁을 스쳐 갈 사람들 가운데에는 그대 마음을 갉아먹으려 드는 <strong class="impact-red">악연</strong>도 섞여 있을 것이오. 달콤한 말 뒤에 숨은 곰팡이 냄새를 가려낼 줄 알아야 하오. 하지만 그대를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."`;
     ORIG.sniffLove = `"코끝을 찌르는 지독한 사랑의 체취가 잡히오. 그대를 거쳐간 인연들을 돌아보시오. 10명 중 8명은 그대 영혼을 갉아먹고 떠난 <strong class="impact-red">핏빛 악연</strong>이었을 것이오. 달콤한 향수 뒤에 숨겨진 곰팡이 냄새... 하지만 그대를 평생 지켜줄 ${loveScent}${josa(loveScent, '을')} 풍기는 [<strong class="impact-green">${nobles[0]}</strong>] <strong class="impact-green">천생연분</strong>이 운명선 뒤편에서 다가오고 있으니..."`;
     ORIG.sniffWealth = `"아무리 열심히 일하고 아껴 써도 밑 빠진 독처럼 통장이 텅 비어버리는 <strong class="impact-red">돈 새는 구멍(누재살)의 비린내</strong>가 나오. 통장에 돈이 모일 만하면 꼭 예상치 못한 사건사고로 돈이 털려나갔소? 그 구멍을 땜질할 재물의 비방이 포착되었소."`;
-    ORIG.sniffCareer = `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 그대 성과를 낚아채고 혓바닥으로 그대 칼을 갈던 인간들의 썩은 내가 보이오. 그대 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립에 가장 좋은 때</strong>의 냄새가 짙게 풍기오..."`;
+    ORIG.sniffCareer = `"[<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향해 갈 때 그대 성과를 낚아채고 혓바닥으로 그대 칼을 갈던 인간들의 썩은 내가 보이고 있소. 그대 칼날을 갈아 판을 뒤엎을 <strong class="impact-gold">${Y_R0}~${Y_R1}년 이직·독립에 가장 좋은 때</strong>의 냄새가 짙게 풍기오..."`;
     // 사랑: 미성년은 순한 문장 하나, 성인은 일지 삼합 그룹별(세 번째 변형마다 원래 문장)
     const loveMain = isYoung() ? youngLove
       : (c ? ((c.seed >>> 5) % 5 === 0 ? ORIG.sniffLove : ((c.seed >>> 6) & 1 ? PH.SNIFF_LOVE2 : PH.SNIFF_LOVE)[c.branchGroup](c)) : ORIG.sniffLove);
     const wealthMain = c ? ph(PH.SNIFF_WEALTH, c.leakKey, c) : ORIG.sniffWealth;
     const careerMain = c ? ph(PH.SNIFF_CAREER, String(c.dreamRel), c, 47) : ORIG.sniffCareer;
     document.getElementById('sniffLoveText').innerHTML = 
-      loveMain + `<br><span class="sniff-personal">🐾 특히 ${EL_NAME[ps.dmEl]} 기운 사람인 그대에게 가장 해로운 건 <strong class="impact-red">[${ruinTitleFor(ps, c)}]</strong>를 풍기는 자요.</span>`;
+      loveMain + `<br><span class="sniff-personal">🐾 특히 ${EL_NAME[ps.dmEl]} 기운 사람인 그대에게 가장 해로운 건 <strong class="impact-red">[${ruinTitleFor(ps, c)}]</strong>를 풍기는 자라오.</span>`;
 
     document.getElementById('sniffWealthText').innerHTML = 
       wealthMain + `<br><span class="sniff-personal">🐾 ${wealthDiagnosis(ps, 'teaser')}</span>`;
@@ -1525,14 +1594,25 @@ let currentSajuData = null;
       </div>
     `).join('');
 
-    const activeItem = (curActiveIndex >= 0) ? daeunItems[curActiveIndex] : daeunItems[2];
-    lastDaeun = { item: activeItem, age: currentAge };   // 리포트 요약용
+    // 지금 나이가 첫 10년 운 전(어린이)이면 '지금' 칸이 없다 → 따로 쓴다. 전엔 3번째 칸을 '지금'으로 썼다 (업데이트 44, 더블체크 1-3)
+    const first = daeunItems[0];
+    const before = curActiveIndex < 0 && currentAge < first.ageStart;
+    const activeItem = curActiveIndex >= 0 ? daeunItems[curActiveIndex] : (before ? null : daeunItems[daeunItems.length - 1]);
+    lastDaeun = { item: activeItem, age: currentAge, first, before };   // 한눈에·리포트 요약용 (item이 없으면 '지금 10년 운'을 견주는 문장은 빠진다)
+    if (before) {
+      const fg = `${first.stemObj.char}${first.branchObj.char}`;
+      document.getElementById('daeunComment').innerHTML =
+        `🕯️ <strong>"지금 그대의 명줄(만 ${currentAge}세)은 아직 첫 10년 운이 열리기 전이오."</strong><br>` +
+        `첫 10년 운(${fg})은 ${first.ageStart}세에 열리고, 그 전까지는 태어난 달의 기운이 그 몫을 하오.`;
+      setKeyLine('daeunCard', `지금은 첫 10년 운이 열리기 전, 만 ${currentAge}세 · <strong>${first.ageStart}세</strong>에 첫 10년 운(${fg})이 열리오.`, '.daeun-header');
+      return;
+    }
     document.getElementById('daeunComment').innerHTML = 
       // '네놈' → '그대' (업데이트 40, 대표님 2026-11-08). 원래: '지금 네놈의 명줄(만 …세)은'
       `🕯️ <strong>"지금 그대의 명줄(만 ${currentAge}세)은 [${activeItem.ageStart}세부터의 10년 운 ${activeItem.stemObj.char}${activeItem.branchObj.char}]의 격랑 한복판에 서 있소."</strong><br>` +
       `이 시기는 <strong>${sipsinPlain(activeItem.sipsin)}</strong>과 <strong>${UNSUNG_PLAIN[activeItem.unsung] || activeItem.unsung}(${activeItem.unsung})</strong>의 기운이 엇갈리며 인생의 판을 통째로 엎어버리는 때요. 머뭇거리다간 기회를 통째로 뜯어먹히니, 이를 악물고 그대 칼을 쥐시오.` +
       (window.BYEOKSA_PHRASES.DAEUN_NOW[activeItem.sipsin] ? '<br>' + window.BYEOKSA_PHRASES.DAEUN_NOW[activeItem.sipsin](CUR || {}) : '');
-    const nextItem = daeunItems[(curActiveIndex >= 0 ? curActiveIndex : 2) + 1];
+    const nextItem = daeunItems[daeunItems.indexOf(activeItem) + 1];
     setKeyLine('daeunCard', `지금은 <strong>${activeItem.ageStart}세부터의 10년 운(${activeItem.stemObj.char}${activeItem.branchObj.char})</strong> 한복판, 만 ${currentAge}세${nextItem ? ` · <strong>${nextItem.ageStart}세</strong>에 다음 10년 운(${nextItem.stemObj.char}${nextItem.branchObj.char})으로 바뀌오` : ''}.`, '.daeun-header');   // 제목이 .daeun-header 안에 있어 그 뒤에 (업데이트 39, 검수 11번 — 전엔 카드 맨 위에 붙었다)
   }
 
@@ -1624,9 +1704,9 @@ let currentSajuData = null;
     ORIG.guard2 = WEALTH_LEAK_BY_GROUP;
     ORIG.roadIntro = `인생의 모든 성공은 실력 30%와 타이밍 70%로 결정되오. 그대 사주에서 ${Y_R0}년부터 ${Y_R2}년까지는 10년에 한 번 올까 말까 한 격변의 파도가 밀려오는 시기요.`;
     ORIG.road = {
-      R0: `그대를 옭아매던 구시대의 썩은 인연과 미련을 태워 없애는 해요. [<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향한 핵심 기술과 역량을 칼처럼 벼려 내시오. 상반기엔 조용히 내실을 다지고 하반기부터 판을 벌이시오.`,
-      R1: `그대 인생의 대운이 정점에 달하는 시기요. 그대가 준비한 결과물이 세상의 인정을 받고, 귀인의 조력으로 통장에 목돈이 꽂히며 신분이 급상승하오. 이때 주저하지 말고 인생의 승부수를 던지시오!`,
-      R2: `폭발적인 성공을 바탕으로 단단한 성벽을 쌓는 해요. 흔들리지 않는 자산 파이프라인을 구축하고, 그대를 따르는 세력을 형성하여 평생의 부(富)를 안정화하시오.`
+      R0: `그대를 옭아매던 구시대의 썩은 인연과 미련을 태워 없애는 해라오. [<strong class="impact-gold">${dream}</strong>]${josa(dream, '을')} 향한 핵심 기술과 역량을 칼처럼 벼려 내시오. 상반기엔 조용히 내실을 다지고 하반기부터 판을 벌이시오.`,
+      R1: `그대 인생의 10년 운이 정점에 달하는 시기요. 그대가 준비한 결과물이 세상의 인정을 받고, 귀인의 조력으로 통장에 목돈이 꽂히며 신분이 급상승하오. 이때 주저하지 말고 인생의 승부수를 던지시오!`,
+      R2: `폭발적인 성공을 바탕으로 단단한 성벽을 쌓는 해라오. 흔들리지 않는 자산 파이프라인을 구축하고, 그대를 따르는 세력을 형성하여 평생의 부(富)를 안정화하시오.`
     };
     ORIG.ch5Intro = `운명은 가만히 앉아 있는 자에게 찾아오지 않소. 벽사견의 기운을 받아 내일부터 당장 실천할 3가지 행동 수칙이오:`;
     ORIG.ch2Intro = `벽사신견의 코는 거짓말을 하지 않소. 사람이 입으로는 온갖 달콤한 사랑을 맹세해도, 그 영혼에서 뿜어져 나오는 냄새는 숨길 수 없는 법이오.`;
@@ -1664,13 +1744,17 @@ let currentSajuData = null;
     const rule3 = PH.CLEANSE_BY_BRANCH[dayBranchChar] || CLEANSE_RULE_BY_DAY_BRANCH[dayBranchEl] || CLEANSE_RULE_BY_DAY_BRANCH.water;
     const talismanMine = c ? PH.TALISMAN_MINE(c) : '';
     // 6장 효능·사용법: 원래 문장은 ORIG에 두고, 사람별(짙은 십신·재성 글자 수·골든타임 십신·일간 오행)로 고른다 (2026-10-24)
-    ORIG.talismanEffect1 = `내 기를 빨아먹고 성과를 가로채려는 자들의 살기를 튕겨냅니다.`;
-    ORIG.talismanEffect2 = `피 같은 돈이 줄줄 새어나가지 않도록 재물의 문을 단단히 걸어 잠급니다.`;
-    ORIG.talismanEffect3 = `${Y_R0}~${Y_R2}년 가장 좋은 때에 폭발적 기회를 온전히 틀어쥐도록 기운을 틔웁니다.`;
+    // 업데이트 44 (2026-11-09 더블체크 1-1·2-7, 대표님 OK): 효과를 단정하던 말을 '~하자는 뜻을 담았소'로 낮추고 6장도 하오체로. 원래 문장:
+    //   '내 기를 빨아먹고 성과를 가로채려는 자들의 살기를 튕겨냅니다.' / '피 같은 돈이 줄줄 새어나가지 않도록 재물의 문을 단단히 걸어 잠급니다.'
+    //   '…가장 좋은 때에 폭발적 기회를 온전히 틀어쥐도록 기운을 틔웁니다.' / '…배경화면으로 설정해 두면 매일 첫 순간 액살을 털어냅니다.'
+    //   '…넣어두셔도 좋습니다.' / '…축문을 나지막이 읊으십시오.' / 사주 맞춤 끝 '…넣어 지니십시오. 효험이 배가됩니다.' / 제목 '3대 영적 수호 효능'
+    ORIG.talismanEffect1 = `내 기를 빨아먹고 성과를 가로채려는 자들의 살기를 튕겨내자는 뜻을 담았소.`;
+    ORIG.talismanEffect2 = `피 같은 돈이 줄줄 새어나가지 않도록 재물의 문을 단단히 걸어 잠그자는 뜻을 담았소.`;
+    ORIG.talismanEffect3 = `${Y_R0}~${Y_R2}년 가장 좋은 때에 폭발적 기회를 온전히 틀어쥐도록 기운을 틔우자는 뜻을 담았소.`;
     ORIG.talismanUse = [
-      `• 다운로드한 부적 이미지를 <strong>스마트폰 잠금화면이나 배경화면</strong>으로 설정해 두면 매일 첫 순간 액살을 털어냅니다.`,
-      `• 출력하여 지갑 속이나 작업 공간(모니터 뒤편, 책상 서랍)에 넣어두셔도 좋습니다.`,
-      `• 마음이 흔들리거나 중요한 결정을 내릴 때 꺼내보며 벽사견의 축문을 나지막이 읊으십시오.`
+      `• 다운로드한 부적 이미지를 <strong>스마트폰 잠금화면이나 배경화면</strong>으로 두시오. 매일 첫 순간 액살을 털어 내자는 뜻이오.`,
+      `• 출력하여 지갑 속이나 작업 공간(모니터 뒤편, 책상 서랍)에 넣어 두어도 좋소.`,
+      `• 마음이 흔들리거나 중요한 결정을 내릴 때 꺼내보며 벽사견의 축문을 나지막이 읊으시오.`
     ];
     const talismanEffect1 = c ? PH.TALISMAN_EFFECT1[c.domGroup](c) : ORIG.talismanEffect1;
     const talismanEffect2 = c ? PH.TALISMAN_EFFECT2[String(Math.min(c.wealthCount, 2))](c) : ORIG.talismanEffect2;
@@ -1804,7 +1888,7 @@ let currentSajuData = null;
       <div class="portfolio-section-card">
         <img class="chapter-photo" src="img/report/ch4.jpg" alt="" loading="lazy" decoding="async">
         <span class="portfolio-section-badge">第四章 · 시기 포획</span>
-        <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 대운 3개년 로드맵</div>
+        <div class="portfolio-section-title">🌊 ${Y_R0}~${Y_R2}년 인생 역전 3개년 로드맵</div>   <!-- 업데이트 44 (더블체크 2-4): 원래 '인생 역전 대운 3개년 로드맵' -->
         ${keyLineHtml(`<strong>${Y_R1}년이 가장 좋은 때</strong> — 그해의 기운이 그대에게 <strong>${sipsinPlain(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10))}</strong>${josa(sipsinPlain(getSipsin(ps.dayStemIdx, ((Y_R1 - 4) % 10 + 10) % 10)), '으로')} 들어오오${((((Y_R1 - 4) % 12 + 12) % 12) - ps.dayBranchIdx + 12) % 12 === 6 ? ' (단, 일지와 <strong>충</strong>이라 큰 변동을 각오할 것)' : ''}. ${c ? ph(PH.ROAD_PHASE, null, c, 46) : `${Y_R0}년은 준비, ${Y_R1}년은 승부, ${Y_R2}년은 지키기.`}`)}
         <div class="portfolio-text">
           ${roadIntro}
@@ -1860,13 +1944,13 @@ let currentSajuData = null;
             <strong>📜 부적의 유래와 원리</strong>
             <p>
               동양 오행에서 삿된 음기(陰氣)와 잡귀를 누르는 <strong>괴황지(槐黃紙, 황금 한지)</strong>에 
-              강력한 양기(陽氣)를 뿜어내는 <strong>경면주사(鏡面朱砂)</strong>의 붉은 붓글씨로 새겨진 정통 벽사부(辟邪符)입니다. 
-              대문 앞에서 귀신을 보고 짖는 벽사견의 기운이 깃들어 있습니다.
+              강력한 양기(陽氣)를 뿜어내는 <strong>경면주사(鏡面朱砂)</strong>의 붉은 붓글씨로 새겨진 정통 벽사부(辟邪符)요. 
+              대문 앞에서 귀신을 보고 짖는 벽사견의 기운이 깃들어 있소.
             </p>
           </div>
 
           <div class="talisman-info-item">
-            <strong>🛡️ 3대 영적 수호 효능</strong>
+            <strong>🛡️ 3대 수호의 뜻</strong>
             <ul>
               <li><strong>1. 흡기귀(吸氣鬼, 기운을 빨아먹는 귀신) 및 악연 차단</strong>: ${talismanEffect1}</li>
               <li><strong>2. 돈 새는 구멍(누재살) 방어</strong>: ${talismanEffect2}</li>
@@ -1878,7 +1962,7 @@ let currentSajuData = null;
             <strong>📱 소장 및 사용 비방</strong>
             <p>
               ${talismanUse.join('<br>\n              ')}<br>
-              • <strong>그대 사주 맞춤</strong>: 그대 사주에 모자란 <strong>${EL_NAME[weakKey]}</strong> 기운을 채우려면, 출력한 부적을 <strong>${remedy.dir}</strong> 벽에 붙이거나 <strong>${remedy.color}</strong> 계열 지갑에 넣어 지니십시오. 효험이 배가됩니다.
+              • <strong>그대 사주 맞춤</strong>: 그대 사주에 모자란 <strong>${EL_NAME[weakKey]}</strong> 기운을 채우려면, 출력한 부적을 <strong>${remedy.dir}</strong> 벽에 붙이거나 <strong>${remedy.color}</strong> 계열 지갑에 넣어 지니시오.
             </p>
           </div>
         </div>
@@ -1928,7 +2012,7 @@ let currentSajuData = null;
     url.searchParams.set('g', genderVal);
     // 직업·전공·취미·꿈은 개인적인 내용이라 링크에 싣지 않는다 (받는 사람은 생년월일 풀이만 본다)
     ['job', 'major', 'hobby', 'dream'].forEach(k => url.searchParams.delete(k));
-    copyText(url.href, '🔗 사주 명식 공유 링크가 복사되었습니다!');
+    copyText(url.href, '결과 링크를 복사했소.');   // 업데이트 44: 원래 '🔗 사주 명식 공유 링크가 복사되었습니다!' (존댓말·'명식'이 남아 있었다)
   }
 
   /** 클립보드 복사. 안 되는 환경이면 직접 복사할 수 있게 보여준다 */
@@ -2262,7 +2346,7 @@ let currentSajuData = null;
   /** 천명 리포트 결제창 버튼 (method 'kakaopay' = 카카오페이 버튼) */
   function startPayment(method) {
     if (!currentSajuData) return;
-    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream });
+    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream, lunar, late }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream, lunar, late });
     const btn = document.getElementById(method === 'kakaopay' ? 'payKakaoButton' : 'payButton');
     return purchase('report', sajuKey(currentSajuData), pick(currentSajuData), btn, method);
   }
@@ -2270,7 +2354,7 @@ let currentSajuData = null;
     onPaid: () => unlockContent(),
     resume: sj => {
       const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.value = v; };
-      set('year', sj.y); set('month', sj.m); set('day', sj.d); set('hourSelect', String(sj.hourVal)); set('gender', sj.genderVal);
+      fillBirthInput(sj, sj.lunar, sj.late, sj.hourVal); set('gender', sj.genderVal);   // 음력·밤 자시로 넣었으면 그대로 (업데이트 44)
       set('userJob', sj.userJob); set('userMajor', sj.userMajor); set('userHobby', sj.userHobby); set('userDream', sj.userDream);
       submitAndGoToResult();
     }
@@ -2436,9 +2520,9 @@ let currentSajuData = null;
   function openBundleForReport() {
     if (!currentSajuData || !window.BYEOKSA_SHOP) return;
     const sd = currentSajuData;
-    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream });
+    const pick = ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream, lunar, late }) => ({ y, m, d, hourVal, genderVal, userJob, userMajor, userHobby, userDream, lunar, late });
     closePaymentModal();
-    window.BYEOKSA_SHOP.openBundle({ y: sd.y, m: sd.m, d: sd.d, hour: sd.hourVal, gender: sd.genderVal }, 'report', pick(sd));
+    window.BYEOKSA_SHOP.openBundle({ y: sd.y, m: sd.m, d: sd.d, hour: sd.hourVal, gender: sd.genderVal, ...(sd.lunar ? { lunar: sd.lunar } : {}), ...(sd.late ? { late: true } : {}) }, 'report', pick(sd));
   }
 
   /** 리포트 첫머리: 무료 풀이에서 본 내용을 한눈에 정리 */
@@ -2469,7 +2553,10 @@ let currentSajuData = null;
     const counts = (sd.ohengResult && sd.ohengResult.counts) || {};
     const ps = getPersona(sd.dStemIdx, sd.dBranchIdx, sd.ohengResult);
     const dn = lastDaeun && lastDaeun.item;
-    const daeunLine = dn
+    const fd = lastDaeun && lastDaeun.before ? lastDaeun.first : null;   // 첫 10년 운 전인 어린이 (업데이트 44)
+    const daeunLine = fd
+      ? `첫 10년 운 ${fd.stemObj.char}${fd.branchObj.char} · ${fd.ageStart}세에 열림 (지금 만 ${lastDaeun.age}세)`
+      : dn
       ? `${dn.ageStart}세부터의 10년 운 ${dn.stemObj.char}${dn.branchObj.char} · ${sipsinPlain(dn.sipsin)} · ${UNSUNG_PLAIN[dn.unsung] || dn.unsung}(${dn.unsung}) (지금 만 ${lastDaeun.age}세)`
       : txt('daeunBadge');
     box.innerHTML = `
@@ -2486,7 +2573,7 @@ let currentSajuData = null;
           <dt>타고난 본성</dt><dd>${esc(txt('animalTitle'))}</dd>
           <dt>꿈과 팔자</dt><dd>${esc(txt('fitScore'))} · ${esc(sd.userDream)}</dd>
           <dt>모자란 기운</dt><dd>${EL_KO[ps.weakKey]} — 이 리포트의 맞춤 비방은 이 기운을 채우는 쪽으로 짜였소</dd>
-          <dt>지금 대운</dt><dd>${esc(daeunLine || '대운 정보 없음')}</dd>
+          <dt>지금 10년 운</dt><dd>${esc(daeunLine || '10년 운 정보 없음')}</dd>
           <dt>심리 투시</dt><dd>${esc(txt('mindBadge'))} · ${esc(firstSentence(txt('mindItem2').replace(/^⚠️[^\n]*\n?/, '')))}</dd>
           <dt>연애의 냄새</dt><dd>${esc(firstSentence(txt('sniffLoveText').replace(/^"/, '')))}</dd>
           <dt>재물의 냄새</dt><dd>${esc(firstSentence(txt('sniffWealthText').replace(/^"/, '')))}</dd>
@@ -2635,6 +2722,7 @@ let currentSajuData = null;
 
   window.addEventListener('DOMContentLoaded', () => {
     applyFolds(document.getElementById('viewLanding'));   // 대문 설화 단락 '더 보기' 접기 (2026-11-01)
+    syncLeapBox(document.getElementById('calendarType'));   // 뒤로 가기 등으로 '음력'이 되살아난 경우 윤달 칸도 맞춘다 (업데이트 44)
     const params = new URLSearchParams(window.location.search);
     trackVisitOnce();
     if (resumePaymentFromRedirect(params)) return;
@@ -2664,6 +2752,7 @@ let currentSajuData = null;
       if (params.get('major')) document.getElementById('userMajor').value = params.get('major');
       if (params.get('hobby')) document.getElementById('userHobby').value = params.get('hobby');
       if (params.get('dream')) document.getElementById('userDream').value = params.get('dream');
+      setCalendarInput(null);   // 결과 링크의 날짜는 늘 양력 (업데이트 44)
       submitAndGoToResult();
     }
     if (toHelp && typeof openFeature === 'function') {

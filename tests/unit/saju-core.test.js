@@ -77,6 +77,18 @@ test('대운수: 순행=다음 절기까지, 역행=직전 절기부터 (÷3, �
   assert.ok(Math.abs(male.daeunDays + female.daeunDays - gap) < 1e-6);
 });
 
+test('대운 칸: 여덟 칸이 기본이고, 지금 나이가 여덟 칸 뒤면 칸을 늘려 \'지금\' 칸이 생긴다 (업데이트 44, 더블체크 1-3)', () => {
+  const dae = (y, m, d, g) => { const p = four(y, m, d, null); return C.calculateDaeun(y, m, d, g, p.yStemIdx, p.mStemIdx, p.mBranchIdx, p.dStemIdx, p); };
+  const young = dae(1990, 3, 10, 'M');
+  assert.equal(young.daeunItems.length, 8);
+  const old = dae(1920, 6, 15, 'M');   // 만 105세 이상 — 전엔 여덟 칸 밖이라 화면이 3번째 칸을 '지금'으로 썼다
+  assert.ok(old.daeunItems.length > 8 && old.daeunItems.length <= 12);
+  assert.ok(old.curActiveIndex >= 0, '지금 나이가 든 칸이 있어야 한다');
+  const cur = old.daeunItems[old.curActiveIndex];
+  assert.ok(cur.ageStart <= old.currentAge && old.currentAge <= cur.ageEnd);
+  old.daeunItems.forEach((it, i) => assert.equal(it.ageStart, old.daeunNum + i * 10));
+});
+
 test('서울 역사 표준시: 1958년 UTC+8:30(+서머타임), 1988년 서머타임, 현행 UTC+9', () => {
   assert.equal(C.seoulOffsetMinutes(C.seoulLocalToUtc(1958, 1, 15, 12, 0)), 510);
   assert.equal(C.seoulOffsetMinutes(C.seoulLocalToUtc(1958, 6, 15, 12, 0)), 570);

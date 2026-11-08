@@ -429,7 +429,10 @@
     const daeunItems = [];
     let curActiveIndex = -1;
 
-    for (let i = 1; i <= 8; i++) {
+    // 여덟 칸이 기본. 지금 나이가 여덟 칸 뒤면 '지금' 칸과 그다음 칸이 보이도록 늘린다(최대 12칸) — 업데이트 44, 더블체크 1-3
+    //   (전엔 여덟 칸 밖이면 화면이 3번째 칸을 '지금'으로 썼다. 첫 칸 전인 어린이는 curActiveIndex -1 그대로 두고 화면이 따로 쓴다)
+    const count = Math.max(8, Math.min(12, Math.floor((currentAge - daeunNum) / 10) + 2));
+    for (let i = 1; i <= count; i++) {
       const ageStart = daeunNum + (i - 1) * 10;
       const ageEnd = ageStart + 9;
       const sIdx = (mStemIdx + direction * i + 20) % 10;
@@ -632,6 +635,97 @@
     return { index: h % deckSize, reversed: (Math.floor(h / deckSize) % 10) < 3 };
   }
 
+  // ─────────────────────────────────────────────────────────────────────
+  // 🌙 음력 → 양력 (업데이트 44, 2026-11-09 대표님 "음력도 추가했으면 좋겠어")
+  //   한국천문연구원(KASI) 기준 음력 표, 1920~2030년(사이트가 받는 생년 범위). 해마다 한 칸(32비트):
+  //     0~11비트 = 1~12월이 큰달(30일)이면 1 (1월이 11번 비트, 12월이 0번 비트), 12~15비트 = 윤달이 드는 달(0 = 그해 윤달 없음),
+  //     16비트 = 윤달이 큰달이면 1, 17~25비트 = 그해 날수. 윤달은 같은 이름의 평달 바로 뒤에 온다.
+  //   표 출처: korean-lunar-calendar 0.3.6 (https://github.com/usingsky/korean_lunar_calendar_js)의 KOREAN_LUNAR_DATA에서 1920~2030년만 옮김.
+  //     Copyright (c) 2022 Jinil Lee — MIT License (허가문 전문은 아래 주석). 한국과 중국 음력이 다른 달(예: 2017년 한국 윤5월·중국 윤6월)은 한국 기준.
+  //   한국천문연구원 누리집 '음양력 변환'(astro.kasi.re.kr)에서 받은 1920~2030년 모든 달의 첫날·날수와 맞춰 봤다 — tests/unit/lunar.test.js
+  //   손님 생일은 이 표로 브라우저 안에서만 바꾼다(밖으로 보내지 않음).
+  // ─────────────────────────────────────────────────────────────────────
+  const LUNAR_FIRST_YEAR = 1920;
+  const LUNAR_LAST_YEAR = 2030;
+  const LUNAR_DATA = [
+    0xc2c4049b, 0x82c40a4b, 0x83005b4b, 0x82c406a9, 0xc2c40ad4, 0x83024bb5, 0x82c402b6, 0x82c6095b, 0xc3002537, 0x82c40497,   // 1920~1929
+    0x82fe6656, 0x82c40e4a, 0xc2c60ea5, 0x830156a9, 0x82c605b5, 0x82c402b6, 0xc30138ae, 0x82c4092e, 0x83017c8d, 0x82c40c95,   // 1930~1939
+    0xc2c40d4a, 0x83016d8a, 0x82c60b69, 0x82c6056d, 0xc301425b, 0x82c4025d, 0x82c4092d, 0x83002d2b, 0xc2c40a95, 0x83007d55,   // 1940~1949
+    0x82c40b4a, 0x82c60b55, 0xc3015555, 0x82c604db, 0x82c4025b, 0x83013857, 0xc2c4052b, 0x83008a9b, 0x82c40695, 0x82c406aa,   // 1950~1959
+    0xc3006aea, 0x82c60ab5, 0x82c404b6, 0x83004aae, 0xc2c60a57, 0x82c40527, 0x82fe3726, 0x82c60d95, 0xc30076b5, 0x82c4056a,   // 1960~1969
+    0x82c609ad, 0x830054dd, 0xc2c404ae, 0x82c40a4e, 0x83004d4d, 0x82c40d25, 0xc3008d59, 0x82c40b54, 0x82c60d6a, 0x8301695a,   // 1970~1979
+    0xc2c6095b, 0x82c4049b, 0x83004a9b, 0x82c40a4b, 0xc300ab27, 0x82c406a5, 0x82c406d4, 0x83026b75, 0xc2c402b6, 0x82c6095b,   // 1980~1989
+    0x830054b7, 0x82c40497, 0xc2c4064b, 0x82fe374a, 0x82c60ea5, 0x830086d9, 0xc2c605ad, 0x82c402b6, 0x8300596e, 0x82c4092e,   // 1990~1999
+    0xc2c40c96, 0x83004e95, 0x82c40d4a, 0x82c60da5, 0xc3002755, 0x82c4056c, 0x83027abb, 0x82c4025d, 0xc2c4092d, 0x83005cab,   // 2000~2009
+    0x82c40a95, 0x82c40b4a, 0xc3013b4a, 0x82c60b55, 0x8300955d, 0x82c404ba, 0xc2c60a5b, 0x83005557, 0x82c4052b, 0x82c40a95,   // 2010~2019
+    0xc3004b95, 0x82c406aa, 0x82c60ad5, 0x830026b5, 0xc2c404b6, 0x83006a6e, 0x82c60a57, 0x82c40527, 0xc2fe56a6, 0x82c60d93,   // 2020~2029
+    0x82c405aa   // 2030~2030
+  ];
+  const LUNAR_EPOCH_UTC = Date.UTC(1920, 1, 20);   // 음력 1920년 1월 1일 = 양력 1920년 2월 20일 (한국천문연구원)
+  /* korean-lunar-calendar 허가문 (MIT License)
+     Copyright (c) 2022 Jinil Lee
+
+     Permission is hereby granted, free of charge, to any person obtaining a copy
+     of this software and associated documentation files (the "Software"), to deal
+     in the Software without restriction, including without limitation the rights
+     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+     copies of the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be included in all
+     copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+     SOFTWARE. */
+
+  function lunarRow(y) {
+    return (Number.isInteger(y) && y >= LUNAR_FIRST_YEAR && y <= LUNAR_LAST_YEAR) ? LUNAR_DATA[y - LUNAR_FIRST_YEAR] : null;
+  }
+  /** 그해 윤달이 드는 달 (없으면 0, 표 밖의 해도 0) */
+  function lunarLeapMonth(y) {
+    const v = lunarRow(y);
+    return v === null ? 0 : (v >>> 12) & 0xF;
+  }
+  /** 음력 그달의 날수(29·30). 그런 달이 없으면(표 밖·윤달 없음) 0 */
+  function lunarMonthDays(y, m, leap) {
+    const v = lunarRow(y);
+    if (v === null || !Number.isInteger(m) || m < 1 || m > 12) return 0;
+    if (leap) return lunarLeapMonth(y) === m ? (((v >>> 16) & 1) ? 30 : 29) : 0;
+    return ((v >>> (12 - m)) & 1) ? 30 : 29;
+  }
+  /** 음력 그해의 날수 */
+  function lunarYearDays(y) {
+    const v = lunarRow(y);
+    return v === null ? 0 : (v >>> 17) & 0x1FF;
+  }
+  /**
+   * 음력 날짜 → 양력 날짜 { y, m, d }.
+   * 바꿀 수 없으면 { error }: 'range'(1920~2030년 밖) · 'month'(1~12월 밖) · 'leap'(그해 그달에 윤달 없음, leapMonth = 그해 윤달) · 'day'(그달에 없는 날, days = 그달 날수)
+   */
+  function lunarToSolar(y, m, d, leap) {
+    if (lunarRow(y) === null) return { error: 'range' };
+    if (!Number.isInteger(m) || m < 1 || m > 12) return { error: 'month' };
+    if (leap && lunarLeapMonth(y) !== m) return { error: 'leap', leapMonth: lunarLeapMonth(y) };
+    const days = lunarMonthDays(y, m, !!leap);
+    if (!Number.isInteger(d) || d < 1 || d > days) return { error: 'day', days };
+    let offset = 0;
+    for (let yy = LUNAR_FIRST_YEAR; yy < y; yy++) offset += lunarYearDays(yy);
+    const lm = lunarLeapMonth(y);
+    for (let mm = 1; mm < m; mm++) {
+      offset += lunarMonthDays(y, mm, false);
+      if (lm === mm) offset += lunarMonthDays(y, mm, true);
+    }
+    if (leap) offset += lunarMonthDays(y, m, false);   // 윤달은 같은 이름의 평달 뒤
+    offset += d - 1;
+    const t = new Date(LUNAR_EPOCH_UTC + offset * 86400000);
+    return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
+  }
+
   return {
     STEMS,
     BRANCHES,
@@ -665,6 +759,11 @@
     branchRelation,
     calculateCompatibility,
     calculateDailyFortune,
-    drawDailyTarot
+    drawDailyTarot,
+    LUNAR_FIRST_YEAR,
+    LUNAR_LAST_YEAR,
+    lunarLeapMonth,
+    lunarMonthDays,
+    lunarToSolar
   };
 });

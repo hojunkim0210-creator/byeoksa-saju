@@ -58,12 +58,12 @@ for (const [w, h] of [[320, 568], [360, 640], [390, 844]]) {
   });
 }
 
-test('입력 검증: 2월 30일 거부, 음력 선택 불가', async () => {
+test('입력 검증: 양력 2월 30일 거부, 음력은 고를 수 있다 (업데이트 44)', async () => {
   const { ctx, page } = await openPage(browser);
   await fillAndSubmit(page, { m: '2', d: '30' });
   assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById('viewInput')).display), 'none');
   assert.ok(page._alerts.some(a => a.includes('존재하지 않는 날짜')));
-  assert.equal(await page.evaluate(() => document.querySelector('#calendarType option[value=lunar]').disabled), true);
+  assert.equal(await page.evaluate(() => document.querySelector('#calendarType option[value=lunar]').disabled), false);
   await ctx.close();
 });
 

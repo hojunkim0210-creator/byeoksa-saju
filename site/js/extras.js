@@ -31,15 +31,29 @@
   // ─────────────────────────────────────────────────────────────────────
   // 생년월일 입력 조각 (궁합 상대, 저장된 정보가 없을 때)
   // ─────────────────────────────────────────────────────────────────────
+  // 시간 칸 글: 첫 입력 화면과 같게 시각을 붙인다 (업데이트 44, 더블체크 2-5). 12 = 밤 자시(다음 날 자시로 셈, 2-1)
+  const HOUR_TIMES = ['밤 12:00 ~ 01:29', '01:30 ~ 03:29', '03:30 ~ 05:29', '05:30 ~ 07:29', '07:30 ~ 09:29', '09:30 ~ 11:29',
+    '11:30 ~ 13:29', '13:30 ~ 15:29', '15:30 ~ 17:29', '17:30 ~ 19:29', '19:30 ~ 21:29', '21:30 ~ 23:29'];
   function birthFieldsHtml(prefix, v) {
     v = v || {};
+    const L = v.lunar && v.lunar.y ? v.lunar : null;   // 음력으로 넣었던 사람은 음력 그대로 채운다 (업데이트 44)
+    const D = L || (v.late && v.y ? addDaysYmd(v, -1) : v);   // 밤 자시로 넣었던 사람은 적은 날짜 그대로
+    const hourSel = v.late ? LATE_ZI : v.hour;
     const hourOpts = ['<option value="-1">시간 모름</option>']
-      .concat(HOUR_NAMES.map((n, i) => `<option value="${i}" ${v.hour === i ? 'selected' : ''}>${n}</option>`)).join('');
+      .concat(HOUR_NAMES.map((n, i) => `<option value="${i}" ${hourSel === i ? 'selected' : ''}>${n} (${HOUR_TIMES[i]})</option>`))
+      .concat(`<option value="${LATE_ZI}" ${hourSel === LATE_ZI ? 'selected' : ''}>밤 자시 (23:30 ~ 24:00 · 다음 날로 셈)</option>`).join('');
     return `
       <div class="input-row">
-        <input type="number" inputmode="numeric" id="${prefix}Y" placeholder="년 (1990)" value="${v.y || ''}" aria-label="태어난 해">
-        <input type="number" inputmode="numeric" id="${prefix}M" placeholder="월" value="${v.m || ''}" aria-label="태어난 달">
-        <input type="number" inputmode="numeric" id="${prefix}D" placeholder="일" value="${v.d || ''}" aria-label="태어난 날">
+        <input type="number" inputmode="numeric" id="${prefix}Y" placeholder="년 (1990)" value="${D.y || ''}" aria-label="태어난 해">
+        <input type="number" inputmode="numeric" id="${prefix}M" placeholder="월" value="${D.m || ''}" aria-label="태어난 달">
+        <input type="number" inputmode="numeric" id="${prefix}D" placeholder="일" value="${D.d || ''}" aria-label="태어난 날">
+      </div>
+      <div class="input-row">
+        <select id="${prefix}C" data-cal="${prefix}LWrap" aria-label="양력·음력">
+          <option value="solar">양력</option>
+          <option value="lunar" ${L ? 'selected' : ''}>음력</option>
+        </select>
+        <label class="leap-check" id="${prefix}LWrap" ${L ? '' : 'hidden'}><input type="checkbox" id="${prefix}L" ${L && L.leap ? 'checked' : ''}> 윤달</label>
       </div>
       <div class="input-row">
         <select id="${prefix}H" aria-label="태어난 시간">${hourOpts}</select>
@@ -55,9 +69,22 @@
     const y = parseInt($(prefix + 'Y').value, 10), m = parseInt($(prefix + 'M').value, 10), d = parseInt($(prefix + 'D').value, 10);
     if (!y || !m || !d) return { error: '생년월일을 온전히 적어 내시오.' };
     if (y < 1920 || y > 2030) return { error: '생년은 1920년부터 2030년 사이로 적으시오.' };
-    const t = new Date(Date.UTC(y, m - 1, d));
-    if (t.getUTCFullYear() !== y || t.getUTCMonth() + 1 !== m || t.getUTCDate() !== d) return { error: '존재하지 않는 날짜요. 다시 확인하시오.' };
-    return { y, m, d, hour: parseInt($(prefix + 'H').value, 10), gender: $(prefix + 'G').value };
+    const cal = $(prefix + 'C'), leapBox = $(prefix + 'L');
+    let s = { y, m, d }, lunar = null;
+    if (cal && cal.value === 'lunar') {   // 음력 → 양력 (업데이트 44): 바꾼 양력 날짜로 계산하고, 음력은 확인용으로 곁에 둔다
+      const leap = !!(leapBox && leapBox.checked);
+      const r = SajuCore.lunarToSolar(y, m, d, leap);
+      if (r.error) return { error: lunarErrorText(r, y, m, leap) };
+      s = r; lunar = { y, m, d, leap };
+    } else {
+      const t = new Date(Date.UTC(y, m - 1, d));
+      if (t.getUTCFullYear() !== y || t.getUTCMonth() + 1 !== m || t.getUTCDate() !== d) return { error: '존재하지 않는 날짜요. 다시 확인하시오.' };
+    }
+    if (isFutureDate(s)) return { error: FUTURE_TEXT };   // 오늘 뒤의 날짜 (업데이트 44, 더블체크 1-4)
+    let hour = parseInt($(prefix + 'H').value, 10);
+    const late = hour === LATE_ZI;   // 밤 자시 → 다음 날 자시 (더블체크 2-1)
+    if (late) { s = addDaysYmd(s, 1); hour = 0; }
+    return { y: s.y, m: s.m, d: s.d, hour, gender: $(prefix + 'G').value, ...(lunar ? { lunar } : {}), ...(late ? { late: true } : {}) };
   }
 
   /** 저장된 내 생년월일이 없으면 짧은 입력 칸을 보여주고, 있으면 바로 진행 */
@@ -82,7 +109,10 @@
 
   function profileLine(p, sj) {
     const hour = p.hour >= 0 ? ` ${HOUR_NAMES[p.hour]}` : '';
-    return `<p class="profile-line">${p.y}. ${p.m}. ${p.d}.${hour} · 태어난 날 ${esc(sj.ilju)}
+    const lunar = p.lunar && p.lunar.y ? ` (음력 ${p.lunar.y}. ${p.lunar.leap ? '윤' : ''}${p.lunar.m}. ${p.lunar.d}.)` : '';   // 업데이트 44
+    const prev = p.late ? addDaysYmd(p, -1) : null;   // 밤 자시로 넣었으면 적은 날도 보인다
+    const late = prev ? ` (${prev.m}월 ${prev.d}일 밤생, 다음 날로 셈)` : '';
+    return `<p class="profile-line">${p.y}. ${p.m}. ${p.d}.${lunar}${hour}${late} · 태어난 날 ${esc(sj.ilju)}
       <button class="link-btn" data-act="change">다른 생년월일로</button>
       <button class="link-btn" data-act="forget">이 기기에서 지우기</button></p>`;
   }
@@ -260,9 +290,12 @@
     const parts = r.parts.length ? r.parts : [{ key: 'none', points: 0 }];
     const yearLine = parts.some(q => /^year/.test(q.key)) ? '' : '<li class="reason neutral">띠끼리는 서로 밀지도 당기지도 않소. 집안·친구 일은 둘이 하기 나름이오.</li>';   // 띠 이야기가 없으면 한 줄 (2026-11-03)
     const styleA = LOVE_STYLE[A.pillars.dStem.char] || '', styleB = LOVE_STYLE[B.pillars.dStem.char] || '';
+    const lunarNotes = [[a, nameA], [b, nameB]].filter(([p]) => (p.lunar && p.lunar.y) || p.late)   // 음력·밤 자시로 넣은 사람은 어느 날로 보았는지 (업데이트 44)
+      .map(([p, nm]) => `<p class="birth-note">${esc(nm)} — ${birthNoteText(p, p)}</p>`).join('');
     $('compatResult').innerHTML = `
       <div class="feature-card compat-card">
         <div class="compat-pair">${tile(A, nameA)}<span class="compat-knot" aria-hidden="true">結</span>${tile(B, nameB)}</div>
+        ${lunarNotes}
         <div class="score-block">
           <span class="score-num">${r.score}</span><span class="score-unit">점</span>
           <span class="score-band">${band.name}</span>
@@ -378,11 +411,11 @@
     { name: '쇠방울', hanja: '鈴', key: '경고 · 깨움', up: '방울이 울리오. 놓치고 있던 것을 일깨워 주는 신호가 오오. 귀를 열어 두시오.', rev: '경고를 듣고도 모른 척하고 있소. 같은 실수를 되풀이하기 전에 멈춰 서시오.' },
     { name: '짚신', hanja: '履', key: '여정 · 발걸음', up: '길을 나설 때요. 이동·여행·이직처럼 발을 옮기는 일에 좋은 기운이 붙소.', rev: '짚신 바닥이 닳았소. 쉬지 않고 달리기만 했다면 오늘은 발을 쉬게 하시오.' },
     { name: '매듭', hanja: '結', key: '인연 · 약속', up: '단단한 매듭이 지어지오. 약속과 계약, 새로운 인연이 오래 갈 기운이오.', rev: '엉킨 매듭은 당길수록 조이오. 억지로 풀려 하지 말고 한 발 물러서 실마리를 찾으시오.' },
-    { name: '거울', hanja: '鏡', key: '성찰 · 진실', up: '거울 속 그대 모습을 똑바로 볼 때요. 스스로에게 솔직해지면 답이 보이오.', rev: '거울이 흐리오. 남의 눈에 비친 모습만 신경 쓰다 진짜 그대를 잃고 있지는 않은지 보시오.' },
+    { name: '거울', hanja: '鏡', key: '성찰 · 진실', up: '거울 속 그대 모습을 똑바로 볼 때요. 스스로에게 솔직해지면 답이 보일 것이오.', rev: '거울이 흐리오. 남의 눈에 비친 모습만 신경 쓰다 진짜 그대를 잃고 있지는 않은지 보시오.' },
     { name: '칼', hanja: '劍', key: '결단 · 끊어냄', up: '끊어낼 것을 단칼에 베어낼 때요. 미련 없는 결단이 새 길을 여오.', rev: '칼끝이 그대를 향하오. 날 선 말이 결국 그대를 다치게 하니, 오늘은 칼을 칼집에 넣어 두시오.' },
     { name: '그물', hanja: '網', key: '얽매임 · 집착', up: '그물에 걸린 것을 알아차렸다면 반은 풀려난 것이오. 무엇이 그대를 붙잡는지 이름을 붙여 보시오.', rev: '스스로 친 그물에 갇혀 있소. 해야 한다는 생각을 하나만 내려놓아도 숨통이 트이오.' },
     { name: '까치', hanja: '鵲', key: '반가운 소식', up: '까치가 대문 위에서 울고 있소. 기다리던 연락이나 반가운 손님이 찾아오오.', rev: '좋은 소식이 조금 늦어지오. 조급해하지 말고 문을 열어 둔 채 기다리시오.' },
-    { name: '여우', hanja: '狐', key: '속임수 · 경계', up: '영리함이 필요한 때요. 정면 돌파보다 꾀를 내어 돌아가는 길이 이기오.', rev: '달콤한 말 뒤에 꼬리가 보이오. 너무 좋은 조건은 한 번 더 의심하시오.' },
+    { name: '여우', hanja: '狐', key: '속임수 · 경계', up: '영리함이 필요한 때요. 정면 돌파보다 꾀를 내어 돌아가는 길이 이기오.', rev: '달콤한 말 뒤에 꼬리가 보이고 있소. 너무 좋은 조건은 한 번 더 의심하시오.' },
     { name: '소나무', hanja: '松', key: '변치 않음 · 절개', up: '사계절 푸른 소나무처럼, 흔들림 없는 마음이 결국 인정받소.', rev: '변하지 않는 것과 변하지 못하는 것은 다르오. 낡은 방식을 고집하고 있지는 않은지 보시오.' },
     { name: '우물', hanja: '井', key: '근원 · 내면', up: '깊은 우물에서 맑은 물을 길어 올리오. 처음 마음과 뿌리로 돌아가면 힘이 솟소.', rev: '우물이 말랐소. 남에게 주기만 하다 바닥난 기운을 오늘은 그대를 위해 채우시오.' },
     { name: '아궁이', hanja: '竈', key: '집 · 생계', up: '아궁이에 불이 지펴지오. 집안과 생계가 따뜻해지고, 식구와 함께하는 일이 잘 풀리오.', rev: '아궁이 불이 꺼져 가오. 바깥일에 쫓겨 집과 가까운 사람을 소홀히 하고 있지는 않은지 보시오.' },
@@ -452,11 +485,11 @@
   };
   // 돈 질문 전용: 올해 천간이 어떤 자리로 들어오느냐에 따른 돈 이야기 (일 질문의 연도 문장과 겹치지 않게)
   const MONEY_YEAR = {
-    bi: '올해는 돈을 나눠 가질 사람이 붙는 해요. 공동 지출·더치페이·동업 이야기는 처음부터 몫을 글로 정해 두시오.',
-    sik: '올해는 재주가 돈으로 바뀌는 해요. 취미나 특기로 작은 부수입을 시험해 보기 좋소.',
-    jae: '올해는 돈이 직접 들어오는 해요. 들어온 만큼 바로 떼어 두는 통장 하나를 만드시오.',
-    gwan: '올해는 책임과 함께 돈이 오는 해요. 급여·직책이 오르는 만큼 체면 지출도 늘어나니 상한을 정해 두시오.',
-    in: '올해는 돈보다 배움과 문서가 먼저 오는 해요. 자격·계약에 쓰는 돈은 아끼지 말되, 충동적인 강의 결제는 삼가시오.'
+    bi: '올해는 돈을 나눠 가질 사람이 붙는 해라오. 공동 지출·더치페이·동업 이야기는 처음부터 몫을 글로 정해 두시오.',
+    sik: '올해는 재주가 돈으로 바뀌는 해라오. 취미나 특기로 작은 부수입을 시험해 보기 좋소.',
+    jae: '올해는 돈이 직접 들어오는 해라오. 들어온 만큼 바로 떼어 두는 통장 하나를 만드시오.',
+    gwan: '올해는 책임과 함께 돈이 오는 해라오. 급여·직책이 오르는 만큼 체면 지출도 늘어나니 상한을 정해 두시오.',
+    in: '올해는 돈보다 배움과 문서가 먼저 오는 해라오. 자격·계약에 쓰는 돈은 아끼지 말되, 충동적인 강의 결제는 삼가시오.'
   };
   const TOPICS = [
     { id: 'love', label: '💘 연애운이 궁금해' },
@@ -478,7 +511,7 @@
       case 'love': {
         const group = SIPSIN_GROUP[yearSipsin];
         const loveYear = (p.gender === 'M' && group === 'jae') || (p.gender === 'F' && group === 'gwan');
-        return `그대에게 가장 해로운 건 <strong>[${ruin.title}]</strong>${josa(ruin.title, '을')} 풍기는 자요. ${ruin.trait}<br><br>`
+        return `그대에게 가장 해로운 건 <strong>[${ruin.title}]</strong>${josa(ruin.title, '을')} 풍기는 자라오. ${ruin.trait}<br><br>`
           + `대신 <strong>[${soul.title}]</strong>${josa(soul.title, '을')} 풍기는 사람을 곁에 두시오. 띠로는 <strong>${nobles.join(', ')}</strong> 쪽에서 귀한 인연이 오오.`
           + (loveYear ? `<br><br>올해(${NOW_Y}년)는 그대에게 <strong>${sp(yearSipsin)}</strong>의 해라, 인연의 문이 활짝 열리는 시기요. 소개와 모임을 마다하지 마시오.` : '');
       }
@@ -486,7 +519,7 @@
         // 쉬운 말 (업데이트 39, 검수 7번): '천간은 네게 정재로' → '기운은 네게 꾸준한 돈이 쌓이는 운(정재)으로'
         return `${wealthDiagnosis(ps, 'chat')}<br><br>올해(${NOW_Y}년)의 기운은 그대에게 <strong>${sp(yearSipsin)}</strong>${josa(sp(yearSipsin), '으로')} 들어오오. ${MONEY_YEAR[SIPSIN_GROUP[yearSipsin]]}`;
       case 'work':
-        return `${CAREER_BY_EL[ps.dmEl]}<br><br>그리고 올해는 <strong>${sp(yearSipsin)}</strong>의 해요. ${YEAR_SIPSIN_TEXT_10[yearSipsin]}`;
+        return `${CAREER_BY_EL[ps.dmEl]}<br><br>그리고 올해는 <strong>${sp(yearSipsin)}</strong>의 해라오. ${YEAR_SIPSIN_TEXT_10[yearSipsin]}`;
       case 'body':
         return `${BODY_BY_WEAK[ps.weakKey]}<br><br><strong>다만 이건 다섯 기운(오행)으로 보는 재미 풀이일 뿐이오. 아픈 곳이 있으면 내 말 말고 의원(병원)부터 찾으시오.</strong>`;
       case 'warn': {
