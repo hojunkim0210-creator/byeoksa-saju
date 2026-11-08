@@ -86,6 +86,8 @@ const {
   // 십신 이름 → 손님용 쉬운 말 (2026-11-02 쉬운 말 3단계): sipsinPlain('정관') = '책임과 자리가 무거워지는 운(정관)'
   const SIPSIN_PLAIN = { '비견': '내 편이자 경쟁자가 느는 운', '겁재': '내 몫을 노리는 손이 느는 운', '식신': '재주와 먹을 복이 열리는 운', '상관': '말과 재주가 밖으로 튀는 운', '편재': '큰돈이 오가는 운', '정재': '꾸준한 돈이 쌓이는 운', '편관': '압박과 시험이 닥치는 운', '정관': '책임과 자리가 무거워지는 운', '편인': '남다른 공부와 촉이 깨는 운', '정인': '배움과 보호를 받는 운' };
   const sipsinPlain = n => (SIPSIN_PLAIN[n] ? `${SIPSIN_PLAIN[n]}(${n})` : n);
+  // 대운 칸처럼 좁은 자리용 짧은 쉬운 말 (업데이트 39, 검수 7번): 칸에는 '책임 운(정관)'처럼
+  const SIPSIN_SHORT = { '비견': '동료 운', '겁재': '경쟁 운', '식신': '재주 운', '상관': '말재주 운', '편재': '큰돈 운', '정재': '꾸준한 돈 운', '편관': '시험 운', '정관': '책임 운', '편인': '촉 운', '정인': '배움 운' };
   // 귀인 띠 고르기 (2026-11-03 대표님 점검 "띠가 같게 나온다"): 천을귀인 두 띠 중 첫째만 늘 나오던 것을, 태어난 날의 글자와 합이 되는 띠를 앞세우고(없으면 글자 홀짝으로) 사람마다 다르게
   function noblesFor(dayStemIdx, dayBranchIdx) {
     const pair = (NOBLE_PEOPLE[dayStemIdx] || ['소띠(축)', '양띠(미)']).slice();
@@ -257,9 +259,11 @@ const {
     return typeof v === 'function' ? v(c) : v;
   }
 
-  /** 한국어 조사: 마지막 한글 글자의 받침에 따라 고른다. josa('정재','으로') → '로' */
+  /** 한국어 조사: 마지막 한글 글자의 받침에 따라 고른다. josa('정재','으로') → '로'
+   *  끝의 괄호 풀이는 건너뛰고 괄호 앞 낱말에 맞춘다: josa('운(정재)','으로') → '으로', josa('소띠(축)','을') → '를' (업데이트 39, 검수 12번) */
   function josa(word, kind) {
-    const m = String(word).replace(/[^가-힣]+$/g, '').match(/[가-힣](?=[^가-힣]*$)/);
+    const base = String(word).replace(/(\s*\([^()]*\))+\s*$/, '');
+    const m = (/[가-힣]/.test(base) ? base : String(word)).replace(/[^가-힣]+$/g, '').match(/[가-힣](?=[^가-힣]*$)/);
     const ch = m ? m[0].charCodeAt(0) - 0xAC00 : -1;
     const jong = ch >= 0 ? ch % 28 : 0;          // 0 = 받침 없음, 8 = ㄹ
     const has = jong !== 0;
@@ -365,6 +369,8 @@ const {
   const EL_PLAIN = { wood: '나무 기운(뻗어 나가는 힘)', fire: '불 기운(의욕과 열기)', earth: '흙 기운(중심과 안정)', metal: '쇠 기운(맺고 끊는 힘)', water: '물 기운(쉬어 가는 힘)' };
   const REL_PLAIN = ['네 성격과 같은 결이라 남이 시키지 않아도 혼자 밀고 간다', '네 재주를 밖으로 꺼내 보이는 일이라 잘 맞는다', '손댄 만큼 돈으로 돌아오는 일이라 결과가 바로 보인다', '네 어깨를 누르는 일이라 버겁지만, 해내면 이름이 선다', '배울수록 힘이 붙는 일이라 서두르지 않으면 된다'];
   const UNSUNG_PLAIN = { '장생': '힘이 돋아나는 자리', '목욕': '멋을 알고 흔들리기 쉬운 자리', '관대': '어깨에 힘이 들어가는 자리', '건록': '제 힘으로 서는 자리', '제왕': '힘이 가장 센 자리', '쇠': '힘이 조금 꺾이는 자리', '병': '지치기 쉬운 자리', '사': '멈춰 서는 자리', '묘': '안으로 갈무리하는 자리', '절': '끊겼다 다시 잇는 자리', '태': '새로 품는 자리', '양': '길러지는 자리' };
+  // 대운 칸처럼 좁은 자리용 짧은 쉬운 말 (업데이트 39, 검수 7번): 칸에는 '힘 돋는 때(장생)'처럼
+  const UNSUNG_SHORT = { '장생': '힘 돋는 때', '목욕': '흔들리는 때', '관대': '힘 붙는 때', '건록': '홀로 서는 때', '제왕': '가장 센 때', '쇠': '꺾이는 때', '병': '지치는 때', '사': '멈추는 때', '묘': '거두는 때', '절': '끊고 잇는 때', '태': '새로 품는 때', '양': '길러지는 때' };
   /** 꿈 문장에서 가장 많이 걸리는 오행 (없으면 null) */
   function dreamElement(dream) {
     const t = String(dream || '');
@@ -758,7 +764,8 @@ let currentSajuData = null;
     setTimeout(reveal, REDUCED() ? 0 : 500);   // 첫 줄은 저절로
   }
 
-  const RITUAL_LINES = ['대문 밖 바람이 멎었다…', '벽사견이 네 냄새를 맡고 있다…', '네 등 뒤에서 무언가 움찔했다…', '명식이 드러난다.'];
+  // 마지막 줄의 '명식'은 쉬운 말로 (업데이트 39, 검수 7번). 원래 줄: '명식이 드러난다.'
+  const RITUAL_LINES = ['대문 밖 바람이 멎었다…', '벽사견이 네 냄새를 맡고 있다…', '네 등 뒤에서 무언가 움찔했다…', '네 사주가 드러난다.'];
   let _ritualTimer = null;
   function playRitual() {
     const veil = document.getElementById('ritualVeil');
@@ -871,7 +878,8 @@ let currentSajuData = null;
     ae.textContent = dBranch.hanja; ae.classList.add('animal-seal'); ae.setAttribute('data-emoji', animalEmojis[dBranch.char] || '✨');
     document.getElementById('animalTitle').innerText = `${elColors[dStem.el]} ${dBranch.animal}의 살기(殺氣)가 보인다.`;
     // 일지 특성이 '~하는'처럼 꾸미는 말로 끝나면 '쥐의 기질'을 붙여 명사로 맺고, 조사는 받침에 맞춘다 ('맹수으로', '신뢰과' 방지)
-    const bTrait = /[는은진]$/.test(dBranch.trait) ? `${dBranch.trait} ${dBranch.animal}의 기질` : dBranch.trait;
+    //   토끼(卯)의 '~매력을 지닌'도 꾸미는 말 — '닌'이 빠져 '지닌으로 빚어졌다'로 깨지던 것 (업데이트 39, 검수 3번)
+    const bTrait = /[는은진닌]$/.test(dBranch.trait) ? `${dBranch.trait} ${dBranch.animal}의 기질` : dBranch.trait;
     // 둘째 문장(뼈대)은 12운성 세기×음양으로 갈리고, 시간을 알면 시주 한 줄이 붙는다 (원래 문장은 ORIG.boneLine)
     ORIG.boneLine = `기운의 날이 시퍼렇지만, 그만큼 사방에서 쏘아대는 시기와 질투의 화살을 정면으로 맞는 고독한 팔자다.`;
     const PHb = window.BYEOKSA_PHRASES;
@@ -1075,7 +1083,7 @@ let currentSajuData = null;
     document.getElementById('mindItem1').innerHTML = 
       `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">` +
       `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">👀 속마음 투시 (골수까지 도려내는 소름 돋는 팩폭)</strong>` +
-      `  <span style="font-size:12px; font-family:var(--font-display); color:var(--cinnabar-deep); border:1px solid rgba(168,42,32,0.5); padding:2px 8px; border-radius:2px;">${data.iljuName}(태어난 날) 맞춤</span>` +
+      `  <span style="font-size:12px; font-family:var(--font-display); color:var(--cinnabar-deep); border:1px solid rgba(168,42,32,0.5); padding:2px 8px; border-radius:2px; white-space:nowrap;">${data.iljuName}(태어난 날) 맞춤</span>` +
       `</div>` +
       `<p style="margin:8px 0; font-size:15.5px; line-height:2.0;">` +
       `${mindOpen}<br><br>` +
@@ -1120,6 +1128,9 @@ let currentSajuData = null;
     ];
     if (safe) rows.splice(1, 0, ['네 꿈', `[<strong>${safe}</strong>] — 조화율 <strong>${(document.getElementById('fitScore') || {}).innerText || ''}</strong>`.replace('영적 조화율 ', '')]);
     ul.innerHTML = rows.map(([k, v]) => `<li><span class="glance-key">${k}</span><span class="glance-val">${v}</span></li>`).join('');
+    // 안내 글의 줄 수는 실제 개수로 (꿈을 적으면 여섯 줄), '핵심' 표시는 한지 카드에선 노란색이 아니라 붉은 꼬리표 (업데이트 39, 검수 8번)
+    const note = document.querySelector('#glanceCard .glance-note');
+    if (note) note.textContent = `아래 풀이는 이 ${({ 4: '네', 5: '다섯', 6: '여섯', 7: '일곱' })[rows.length] || rows.length} 줄을 길게 푼 것이다. '핵심' 표시가 붙은 줄만 따라 읽어도 된다.`;
   }
   function updateKpiDashboard(dStemIdx, dBranchIdx, ohengResult, yVal, mVal, dVal) {
     const yNum = parseInt(yVal) || 2000;
@@ -1507,8 +1518,8 @@ let currentSajuData = null;
           <span class="badge ${item.branchObj.el}" style="font-size:12px; font-weight:800;">${item.branchObj.char}</span>
         </div>
         <div class="daeun-sub">
-          <div>${item.sipsin}</div>
-          <div style="color:#64748b;">${item.unsung}</div>
+          <div>${SIPSIN_SHORT[item.sipsin] || item.sipsin}<span class="daeun-term">(${item.sipsin})</span></div>
+          <div style="color:#64748b;">${UNSUNG_SHORT[item.unsung] || item.unsung}<span class="daeun-term">(${item.unsung})</span></div>
         </div>
       </div>
     `).join('');
@@ -1520,7 +1531,7 @@ let currentSajuData = null;
       `이 시기는 <strong>${sipsinPlain(activeItem.sipsin)}</strong>과 <strong>${UNSUNG_PLAIN[activeItem.unsung] || activeItem.unsung}(${activeItem.unsung})</strong>의 기운이 엇갈리며 인생의 판을 통째로 엎어버리는 때다. 머뭇거리다간 기회를 통째로 뜯어먹히니, 이를 악물고 네 칼을 쥐어라.` +
       (window.BYEOKSA_PHRASES.DAEUN_NOW[activeItem.sipsin] ? '<br>' + window.BYEOKSA_PHRASES.DAEUN_NOW[activeItem.sipsin](CUR || {}) : '');
     const nextItem = daeunItems[(curActiveIndex >= 0 ? curActiveIndex : 2) + 1];
-    setKeyLine('daeunCard', `지금은 <strong>${activeItem.ageStart}세부터의 10년 운(${activeItem.stemObj.char}${activeItem.branchObj.char})</strong> 한복판, 만 ${currentAge}세${nextItem ? ` · <strong>${nextItem.ageStart}세</strong>에 다음 10년 운(${nextItem.stemObj.char}${nextItem.branchObj.char})으로 바뀐다` : ''}.`, '.section-title');
+    setKeyLine('daeunCard', `지금은 <strong>${activeItem.ageStart}세부터의 10년 운(${activeItem.stemObj.char}${activeItem.branchObj.char})</strong> 한복판, 만 ${currentAge}세${nextItem ? ` · <strong>${nextItem.ageStart}세</strong>에 다음 10년 운(${nextItem.stemObj.char}${nextItem.branchObj.char})으로 바뀐다` : ''}.`, '.daeun-header');   // 제목이 .daeun-header 안에 있어 그 뒤에 (업데이트 39, 검수 11번 — 전엔 카드 맨 위에 붙었다)
   }
 
   function renderOheng(p) {
@@ -1562,7 +1573,7 @@ let currentSajuData = null;
     });
 
     let comment = `네 사주 ${total}글자를 훑어보니, `;
-    if (strong.length > 0) comment += `<strong>${strong.join(', ')}</strong>의 기운이 지나치게 치솟아 나쁜 기운(살)로 변할 조짐이다. `;
+    if (strong.length > 0) comment += `<strong>${strong.join(', ')}</strong>의 기운이 지나치게 치솟아 나쁜 기운(살)으로 변할 조짐이다. `;   // 조사는 괄호 앞 '기운'에 맞춘다 (업데이트 39, 검수 12번)
     if (weak.length > 0) {
       const weakLabels = weak.map(k => {
         const found = elNames.find(x => x.key === k);
@@ -2273,7 +2284,8 @@ let currentSajuData = null;
     unlocked.style.display = 'flex';
     closePaymentModal();
     openReport();
-    showToast('🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제');
+    // 카드사 관점(액막이를 파는 것처럼 읽히지 않게)·외래어 없이 (업데이트 39, 대표님 OK). 원래 알림: '🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제'
+    showToast('복채 잘 받았다. 천명 리포트 6개 장의 봉인이 모두 풀렸다.');
   }
 
   function openReport() {
@@ -2409,8 +2421,14 @@ let currentSajuData = null;
   }
 
   // PDF·인쇄에는 모든 장이 나오게: 인쇄 직전에 펼쳤다가 끝나면 보던 장으로
-  window.addEventListener('beforeprint', () => { document.querySelectorAll('.book-off').forEach(el => el.classList.remove('book-off')); });
-  window.addEventListener('afterprint', () => { if (BOOK.pages.length) showBookPage(BOOK.idx); });
+  window.addEventListener('beforeprint', () => {
+    document.querySelectorAll('.book-off').forEach(el => el.classList.remove('book-off'));
+    document.querySelectorAll('details.saju-fold:not([open])').forEach(d => { d.open = true; d.dataset.printOpened = '1'; });   // 접어 둔 사주 표도 인쇄에는 (업데이트 39)
+  });
+  window.addEventListener('afterprint', () => {
+    if (BOOK.pages.length) showBookPage(BOOK.idx);
+    document.querySelectorAll('details.saju-fold[data-print-opened]').forEach(d => { d.open = false; delete d.dataset.printOpened; });
+  });
 
   /** 리포트 결제창의 '전부 묶음' 버튼 */
   function openBundleForReport() {

@@ -483,11 +483,12 @@
           + (loveYear ? `<br><br>올해(${NOW_Y}년)는 네게 <strong>${yearSipsin}</strong>의 해라, 인연의 문이 활짝 열리는 시기다. 소개와 모임을 마다하지 마라.` : '');
       }
       case 'money':
-        return `${wealthDiagnosis(ps, 'chat')}<br><br>올해(${NOW_Y}년) 천간은 네게 <strong>${yearSipsin}</strong>${josa(yearSipsin, '으로')} 들어온다. ${MONEY_YEAR[SIPSIN_GROUP[yearSipsin]]}`;
+        // 쉬운 말 (업데이트 39, 검수 7번): '천간은 네게 정재로' → '기운은 네게 꾸준한 돈이 쌓이는 운(정재)으로'
+        return `${wealthDiagnosis(ps, 'chat')}<br><br>올해(${NOW_Y}년)의 기운은 네게 <strong>${sp(yearSipsin)}</strong>${josa(sp(yearSipsin), '으로')} 들어온다. ${MONEY_YEAR[SIPSIN_GROUP[yearSipsin]]}`;
       case 'work':
-        return `${CAREER_BY_EL[ps.dmEl]}<br><br>그리고 올해는 <strong>${yearSipsin}</strong>의 해다. ${YEAR_SIPSIN_TEXT_10[yearSipsin]}`;
+        return `${CAREER_BY_EL[ps.dmEl]}<br><br>그리고 올해는 <strong>${sp(yearSipsin)}</strong>의 해다. ${YEAR_SIPSIN_TEXT_10[yearSipsin]}`;
       case 'body':
-        return `${BODY_BY_WEAK[ps.weakKey]}<br><br><strong>다만 이건 오행으로 보는 재미 풀이일 뿐이다. 아픈 곳이 있으면 내 말 말고 의원(병원)부터 찾거라.</strong>`;
+        return `${BODY_BY_WEAK[ps.weakKey]}<br><br><strong>다만 이건 다섯 기운(오행)으로 보는 재미 풀이일 뿐이다. 아픈 곳이 있으면 내 말 말고 의원(병원)부터 찾거라.</strong>`;
       case 'warn': {
         const yb = ((NOW_Y - 4) % 12 + 12) % 12;
         const chung = (yb - P.dBranchIdx + 12) % 12 === 6;
@@ -500,11 +501,11 @@
       case 'today': {
         const t = today();
         const f = SajuCore.calculateDailyFortune(P, t.y, t.m, t.d);
-        return `오늘은 <strong>${f.dayStem.char}${f.dayBranch.char}일</strong>, 네게 <strong>${f.sipsin}</strong>의 날이다. ${DAILY_TEXT[f.sipsin].head}<br><br>오늘 점수는 <strong>${f.score}점</strong>이다. 자세한 건 대문 앞 '오늘의 운세' 쪽지를 떼어 보거라.`;
+        return `오늘은 <strong>${f.dayStem.char}${f.dayBranch.char}일</strong>, 네게 <strong>${sp(f.sipsin)}</strong>의 날이다. ${DAILY_TEXT[f.sipsin].head}<br><br>오늘 점수는 <strong>${f.score}점</strong>이다. 자세한 건 대문 앞 '오늘의 운세' 쪽지를 떼어 보거라.`;
       }
       case 'me': {
         const reading = getDynamicColdReading(P.dStem, P.dBranch, '천명');
-        return `너는 <strong>${sj.ilju}일주</strong>, ${P.dStem.trait} 기운을 타고났다.<br><br>${stripTags(reading.innerSoul)}`;
+        return `너는 태어난 날이 <strong>${sj.ilju}</strong>인 사람, ${P.dStem.trait} 기운을 타고났다.<br><br>${stripTags(reading.innerSoul)}`;   // '○○일주' 대신 쉬운 말 (업데이트 39)
       }
       default: return '무슨 말인지 냄새가 안 잡힌다. 다른 걸 물어보거라.';
     }
@@ -548,7 +549,7 @@
           };
         });
       };
-      say('dog', `<strong>${sj.ilju}일주</strong>로구나. 네 냄새는 기억해 두었다. 궁금한 걸 골라 물어보거라.`);
+      say('dog', `태어난 날이 <strong>${sj.ilju}</strong>인 사람이로구나. 네 냄새는 기억해 두었다. 궁금한 걸 골라 물어보거라.`);   // 원래: '○○일주로구나' (업데이트 39, 검수 7번)
       drawChips();
     });
   }

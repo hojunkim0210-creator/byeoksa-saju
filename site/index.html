@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>벽사신견(辟邪神犬) 사주 - 대문 앞 벽사견의 시크릿 퇴마 포트폴리오</title>
+  <!-- 2026-11-08 업데이트 39(대표님 OK): 카드사 관점·외래어 없이, 인스타 이름과 같게. 원래 제목: 벽사신견(辟邪神犬) 사주 - 대문 앞 벽사견의 시크릿 퇴마 포트폴리오 -->
+  <title>벽사신견(辟邪神犬) | 대문 앞 벽사견이 읽는 사주</title>
   <meta name="description" content="밤의 대문 앞을 지키며 귀신을 보고 짖는 개, 벽사견... 네 등 뒤에 붙은 악운과 살(煞)의 숨소리를 모조리 털어내주마.">
   <meta property="og:title" content="벽사신견 사주 - 대문 앞 벽사견의 소름 돋는 영적 리포트">
   <meta property="og:description" content="네 등 뒤에 붙은 차가운 그림자가 보인다. 네 사주에 숨은 살(煞)과 기(氣)를 빨아먹는 악연을 모조리 털어낼 테니, 생년월일을 대거라.">
@@ -18,13 +19,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=38">
+  <link rel="manifest" href="manifest.json?v=39">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=38">
+    <link rel="stylesheet" href="css/style.css?v=39">
 </head>
 <body>
 
@@ -70,7 +71,7 @@
           등 뒤의 악살에 휘둘려 안 풀리면<br>
           <em>어떻게 기를 뜯기며 무너지는지</em>를 풀어내어<br><br>
           내 기(氣)를 빨아먹는 파멸의 악연을 피하고,<br>
-          <span class="yr-roadmap">2026~2028년</span> 대운의 골든타임을 틀어쥐는 실전 조언과<br>
+          <span class="yr-roadmap">2026~2028년</span> 10년 운의 가장 좋은 때를 틀어쥐는 실전 조언과<br>
           피 같은 돈이 새는 누재살(漏財煞)을 막아내는 비방으로<br>
           <strong>소름 돋게 정확한 벽사(辟邪) 사주</strong>로 알려졌습니다.
         </div>
@@ -186,6 +187,11 @@
         </div>
       </div>
 
+      <!-- 바로 사주 보기 버튼 — 2026-11-08 업데이트 39(디자인 검수 2번): 모든 휴대폰에서 첫 화면 밖이라 제목 바로 아래로 올림. 설화 띠·인용 상자는 그 아래로(글은 그대로) -->
+      <button class="btn-main" onclick="goToStep(2)">
+        벽사 사주 풀이 시작하기 ➔
+      </button>
+
       <!-- 벽사신견이란: 개는 귀신을 본다 -->
       <div class="lore-strip" data-fold="6" data-fold-tone="dark">   <!-- 2026-11-01: 여섯 줄까지만 보이고 '더 보기' (글은 그대로) -->
         <p class="lore-line">예로부터 <strong>개는 귀신을 보고 짖어 쫓는다</strong> 했다.</p>
@@ -205,10 +211,6 @@
         </div>
       </div>
 
-      <!-- 바로 사주 보기 버튼 -->
-      <button class="btn-main" onclick="goToStep(2)">
-        벽사 사주 풀이 시작하기 ➔
-      </button>
     </header>
 
     <!-- 대문에 붙은 쪽지 메뉴 (2026-10-19 카드사 심사: "부적" 낱말을 판매 화면에서 뺌) -->
@@ -347,23 +349,23 @@
     </div>
 
     <div class="form-group">
-      <span class="form-label">지금 하는 일</span>
+      <span class="form-label">지금 하는 일 <span class="form-optional">(선택)</span></span>   <!-- 비워도 풀이는 나온다 (업데이트 39, 검수 5번) -->
       <input type="text" id="userJob" placeholder="예: 대학생, 취준생, 개발자, 사업가 등">
     </div>
 
     <div class="input-row">
       <div class="form-group" style="flex:1;">
-        <span class="form-label">전공 / 관심 분야</span>
+        <span class="form-label">전공 / 관심 분야 <span class="form-optional">(선택)</span></span>
         <input type="text" id="userMajor" placeholder="예: 컴퓨터, 디자인, 경영">
       </div>
       <div class="form-group" style="flex:1;">
-        <span class="form-label">취미 / 특기</span>
+        <span class="form-label">취미 / 특기 <span class="form-optional">(선택)</span></span>
         <input type="text" id="userHobby" placeholder="예: 게임, 영상, 운동">
       </div>
     </div>
 
     <div class="form-group">
-      <span class="form-label">간절히 이루고 싶은 꿈 🌟</span>
+      <span class="form-label">간절히 이루고 싶은 꿈 <span class="form-optional">(선택)</span> 🌟</span>
       <input type="text" id="userDream" placeholder="예: 1인 개발자로 성공, 창업, 취업, 큰 자산 형성">
     </div>
 
@@ -401,7 +403,7 @@
     <div class="glance-card" id="glanceCard">
       <div class="glance-title">📌 벽사견이 맡은 냄새, 한눈에</div>
       <ul class="glance-list" id="glanceList"></ul>
-      <p class="glance-note">아래 풀이는 이 다섯 줄을 길게 푼 것이다. 노란 '핵심' 줄만 따라 읽어도 된다.</p>
+      <p class="glance-note">아래 풀이는 이 다섯 줄을 길게 푼 것이다. '핵심' 표시가 붙은 줄만 따라 읽어도 된다.</p>   <!-- 2026-11-08: '노란' → 실제 모양(붉은 꼬리표), 줄 수는 renderGlance 가 실제 개수로 -->
     </div>
 
     <!-- 2. 🎯 꿈 & 현실 기운 조화도 카드 -->
@@ -416,6 +418,9 @@
     <!-- 3. 사주 원국 테이블 -->
     <div class="section-title">📊 네 기둥 원국 (四柱) 영적 분석</div>
     <p class="section-sub">태어난 해·달·날·시간을 옛 글자로 적은 표다. 전문 용어라 몰라도 된다. 아래 풀이가 쉬운 말로 다시 말한다.</p>
+    <!-- 2026-11-08 업데이트 39(디자인 검수 6·7번): 옛 글자·전문 용어 표는 접어 두고, 궁금한 손님만 펼친다. 인쇄할 때는 app.js beforeprint 가 펼친다 -->
+    <details class="saju-fold">
+    <summary class="saju-fold-summary"><span class="saju-fold-closed">네 사주 여덟 글자 표(옛 글자) 펼쳐 보기</span><span class="saju-fold-opened">표 접기</span></summary>
     <table class="saju-table">
       <thead>
         <tr>
@@ -435,6 +440,7 @@
         <tr><td class="label-col">신살</td><td id="hourSinsal">-</td><td id="daySinsal">-</td><td id="monthSinsal">-</td><td id="yearSinsal">-</td></tr>
       </tbody>
     </table>
+    </details>
     <p class="hour-unknown-note" id="hourUnknownNote" hidden>🕯️ 태어난 시간을 몰라 시간의 기둥(시주)은 비워 두고 세 기둥으로 풀었다. 시간을 알게 되면 다시 적어 오거라. 시간까지 더해 맡아 주마.</p>
     <div class="term-boundary-note" id="termBoundaryNote" style="display:none;"></div>
 
@@ -507,7 +513,7 @@
         <p id="sniffCareerText">
           "올해와 내년 사이, 직장에서 네 공든 탑을 무너뜨리고 성과를 가로챌 자의 그림자가 보인다..."
         </p>
-        <span class="sniff-lock-badge">🔒 직장 성과 도둑 퇴치법 및 이직·독립 골든타임은 복채 결제 후 개봉</span>
+        <span class="sniff-lock-badge">🔒 직장 성과 도둑 퇴치법 및 이직·독립하기 가장 좋은 때는 복채 결제 후 개봉</span>
       </div>
     </div>
 
@@ -545,8 +551,8 @@
           <div class="reason-item">
             <span class="reason-num">02</span>
             <div>
-              <strong>추상적인 뜬구름 잡기 없는 실전 전략 포트폴리오</strong>
-              <p><span class="yr-roadmap">2026~2028년</span> 구체적 월별 골든타임, 나를 파멸시킬 인간의 구체적 인상착의와 대처법을 낱낱이 밝힌다.</p>
+              <strong>뜬구름 잡는 말 없이, 바로 써먹는 실전 전략</strong>   <!-- 2026-11-08 쉬운 말: 원래 '추상적인 뜬구름 잡기 없는 실전 전략 포트폴리오', '구체적 월별 골든타임' -->
+              <p><span class="yr-roadmap">2026~2028년</span> 달마다 가장 좋은 때, 나를 파멸시킬 인간의 구체적 인상착의와 대처법을 낱낱이 밝힌다.</p>
             </div>
           </div>
           <div class="reason-item">
@@ -568,7 +574,7 @@
             <div class="plan-card plan-bundle">
               <span class="plan-ribbon">가장 알찬 보따리</span>
               <h4 class="plan-name">📦 전부 묶음 보따리</h4>
-              <p class="plan-price"><s id="planBundleList">13,700원</s> <strong>₩<span id="planBundlePrice">10,900</span></strong></p>
+              <p class="plan-price"><s id="planBundleList">13,700원</s> <strong><span id="planBundlePrice">10,900</span>원</strong></p>
               <ul class="plan-items">
                 <li>천명 리포트 6개 장</li>
                 <li><span class="plan-ny-year">2027</span>년 신년운세 (열두 달)</li>
@@ -835,10 +841,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=38"></script>
-  <script src="js/phrases.js?v=38"></script>
-  <script src="js/app.js?v=38"></script>
-  <script src="js/extras.js?v=38"></script>
-  <script src="js/shop.js?v=38"></script>
+  <script src="js/saju-core.js?v=39"></script>
+  <script src="js/phrases.js?v=39"></script>
+  <script src="js/app.js?v=39"></script>
+  <script src="js/extras.js?v=39"></script>
+  <script src="js/shop.js?v=39"></script>
 </body>
 </html>

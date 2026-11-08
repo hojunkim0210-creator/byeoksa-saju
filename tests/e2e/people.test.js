@@ -2,6 +2,8 @@
 //   11/3 전체 점검과 같은 5명(생년월일·성별·태어난 시간 — 모름 포함, 직업·꿈 빈칸 포함) + 궁합 3쌍(남녀·여여·남남)으로
 //   무료 결과 · 결제창 · 궁합 · '상대에게 보내기' · 받은 링크 열기 · 숫자 세기 호출을 돌려
 //   깨진 값(undefined·NaN·null·빈 괄호)·조사 오류·콘솔 오류가 0개인지 본다.
+// 업데이트 39 (2026-11-08 디자인 검수): 토끼날(卯) 사람 1명 추가('지닌으로' 깨짐), 괄호 뒤 조사 규칙('운(정재)로' → '으로'),
+//   오늘의 운세·벽사견에게 묻기(8가지 답)·신년운세 무료 맛보기와 접어 둔 사주 표도 같은 기준으로 본다.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium, openPage, SITE } = require('./helpers');
@@ -15,7 +17,8 @@ const PEOPLE = [
   { label: '1990 남 오시', y: '1990', m: '3', d: '10', hour: '6', gender: 'M', job: '개발자', dream: '창업' },
   { label: '2002 남 시간 모름 (꿈 빈칸)', y: '2002', m: '10', d: '4', hour: '-1', gender: 'M', job: '학생', dream: '' },
   { label: '1985 여 자시', y: '1985', m: '12', d: '25', hour: '0', gender: 'F', job: '간호사', dream: '건물주' },
-  { label: '1972 남 해시 (직업 빈칸)', y: '1972', m: '7', d: '15', hour: '11', gender: 'M', job: '', dream: '세계 여행' }
+  { label: '1972 남 해시 (직업 빈칸)', y: '1972', m: '7', d: '15', hour: '11', gender: 'M', job: '', dream: '세계 여행' },
+  { label: '1994 여 시간 모름 (토끼날 계묘)', y: '1994', m: '5', d: '17', hour: '-1', gender: 'F', job: '회사원', dream: '내 가게 열기' }
 ];
 const PAIRS = [
   { label: '남녀', a: { name: '준석', y: '1990', m: '3', d: '10', h: '6', g: 'M' }, b: { name: '민지', y: '1994', m: '1', d: '23', h: '-1', g: 'F' } },
@@ -32,17 +35,24 @@ function brokenBits(text) {
   return out;
 }
 
-/** 조사 오류: [직업]과 / '꿈'은 처럼 끼워 넣은 낱말 뒤의 조사가 받침과 맞는지 (2026-11-01 '[애견미용사]과' 같은 실수를 잡는다) */
+/** 조사 오류: [직업]과 / '꿈'은 / 운(정재)로 처럼 끼워 넣은 낱말 뒤의 조사가 받침과 맞는지
+ *  (2026-11-01 '[애견미용사]과', 2026-11-08 '기운(살)로'·'소띠(축)을' 같은 실수를 잡는다) */
+const JOSA = '(으로|로|을|를|이|가|은|는|과|와)(?![가-힣])';
 function josaErrors(text) {
   const out = [];
-  const res = [/\[([^\]\n]{1,30})\](을|를|이|가|은|는|과|와)(?![가-힣])/g, /'([^'\s][^'\n]{0,28}[^'\s]|[^'\s])'(을|를|이|가|은|는|과|와)(?![가-힣])/g];
+  const res = [
+    new RegExp(`\\[([^\\]\\n]{1,30})\\]${JOSA}`, 'g'),                      // [끼워 넣은 낱말]조사
+    new RegExp(`'([^'\\s][^'\\n]{0,28}[^'\\s]|[^'\\s])'${JOSA}`, 'g'),       // '끼워 넣은 낱말'조사
+    new RegExp(`([가-힣]+)\\(([^()\\n]{1,30})\\)${JOSA}`, 'g')                  // 낱말(괄호 풀이)조사 — 조사는 괄호 앞 낱말을 따른다
+  ];
   for (const re of res) for (const m of text.matchAll(re)) {
-    // 괄호 풀이는 건너뛰고 본말에 맞춘다: '흡기귀(…귀신)가' → 흡기귀가 (조사는 괄호 앞 낱말을 따른다)
+    // 괄호 풀이는 건너뛰고 본말에 맞춘다: '흡기귀(…귀신)가' → 흡기귀가
     let word = m[1]; while (/\([^()]*\)\s*$/.test(word)) word = word.replace(/\s*\([^()]*\)\s*$/, '');
     const last = word.replace(/[^가-힣]+$/, '').match(/[가-힣]$/);
     if (!last) continue;
-    const has = (last[0].charCodeAt(0) - 0xAC00) % 28 !== 0;
-    const ok = { '을': has, '를': !has, '이': has, '가': !has, '은': has, '는': !has, '과': has, '와': !has }[m[2]];
+    const jong = (last[0].charCodeAt(0) - 0xAC00) % 28, has = jong !== 0;   // 받침 0 = 없음, 8 = ㄹ
+    const j = m[m.length - 1];
+    const ok = { '으로': has && jong !== 8, '로': !has || jong === 8, '을': has, '를': !has, '이': has, '가': !has, '은': has, '는': !has, '과': has, '와': !has }[j];
     if (!ok) out.push(m[0]);
   }
   return out;
@@ -50,7 +60,7 @@ function josaErrors(text) {
 // 파일로 여는 테스트에서만 생기는 것은 뺀다: 외부 주소 차단(Failed to load resource), 결제 수 서버 /api/stats (실제 사이트에는 있다)
 const consoleErrors = page => page._console.filter(t => !/^Failed to load resource|^Fetch API cannot load file:\/\/\/api\//.test(t));
 
-test('사주 5명: 무료 결과·결제창에 깨진 값·조사 오류·콘솔 오류가 없고, 숫자 세기(free·payopen)가 불린다', async () => {
+test('사주 6명: 무료 결과·결제창·오늘의 운세·묻기·신년운세 맛보기에 깨진 값·조사 오류·콘솔 오류가 없고, 숫자 세기(free·payopen)가 불린다', async () => {
   const seen = [];
   for (const p of PEOPLE) {
     const { ctx, page } = await openPage(browser);
@@ -67,9 +77,32 @@ test('사주 5명: 무료 결과·결제창에 깨진 값·조사 오류·콘솔
     assert.deepEqual(josaErrors(text), [], `${p.label}: 조사 오류`);
     const emptyKeys = await page.evaluate(() => [...document.querySelectorAll('#viewResult .key-line-text')].filter(e => e.getClientRects().length && !e.innerText.trim()).length);
     assert.equal(emptyKeys, 0, `${p.label}: 비어 있는 핵심 줄`);
+    // 접어 둔 사주 표(업데이트 39)는 화면 글에 안 잡히니 따로 본다
+    const table = await page.evaluate(() => document.querySelector('#viewResult .saju-table').textContent);
+    assert.deepEqual(brokenBits(table), [], `${p.label}: 사주 표 깨진 값`);
+    const first = await page.evaluate(() => document.getElementById('animalDesc').textContent);
+    assert.ok(!/지닌으로/.test(first), `${p.label}: '지닌으로' 깨짐 — "${first.slice(0, 90)}"`);
+    if (p.label.includes('토끼날')) assert.ok(/매력을 지닌 토끼의 기질로 빚어졌다/.test(first), `${p.label}: 첫 카드 "${first.slice(0, 90)}"`);
     await page.evaluate(() => openPaymentModal()); await page.waitForTimeout(150);
     const modal = await page.evaluate(() => document.getElementById('paymentModal').innerText);
     assert.deepEqual(brokenBits(modal), [], `${p.label}: 결제창 깨진 값`);
+    await page.evaluate(() => closePaymentModal());
+    // 같은 사람으로 오늘의 운세 · 묻기(첫 인사 + 8가지 답) · 신년운세 무료 맛보기
+    const more = await page.evaluate(() => {
+      const out = {};
+      openFeature('daily'); out.daily = document.getElementById('viewDaily').innerText;
+      openFeature('chat'); out.chatHello = document.getElementById('viewChat').innerText;
+      const prof = JSON.parse(localStorage.getItem('byeoksa.profile.v1'));
+      const X = window.BYEOKSA_EXTRAS, sj = X.readSaju(prof);
+      out.chat = X.TOPICS.map(t => X.answer(t.id, prof, sj).replace(/<[^>]+>/g, ' ')).join('\n');
+      openFeature('newyear'); out.newyear = document.getElementById('viewNewYear').innerText;
+      return out;
+    });
+    for (const [k, t] of Object.entries(more)) {
+      assert.ok(t.trim().length > 30, `${p.label}: ${k} 글이 비었다`);
+      assert.deepEqual(brokenBits(t), [], `${p.label}: ${k} 깨진 값`);
+      assert.deepEqual(josaErrors(t), [], `${p.label}: ${k} 조사 오류`);
+    }
     const log = await page.evaluate(() => window.__trackLog || []);
     assert.deepEqual(log, ['visit', 'free', 'payopen'], `${p.label}: 숫자 세기 호출`);
     assert.deepEqual(page._errors, [], `${p.label}: 페이지 오류`);
@@ -123,6 +156,12 @@ test('궁합 3쌍(남녀·여여·남남): 결과·보내기·받은 링크 열�
 });
 
 test('점검 도구 자체 확인: 알려진 실수는 잡고, 맞는 글은 그냥 둔다', () => {
+  // 괄호 뒤 조사 (업데이트 39, 검수 12번)
+  assert.deepEqual(josaErrors('나쁜 기운(살)로 변할 조짐이다'), ['기운(살)로']);
+  assert.deepEqual(josaErrors('꾸준한 돈이 쌓이는 운(정재)로 들어온다'), ['운(정재)로']);
+  assert.deepEqual(josaErrors('귀인인 소띠(축)을 곁에 두고'), ['소띠(축)을']);
+  assert.deepEqual(josaErrors('나쁜 기운(살)으로 변하고, 운(정재)으로 들어오고, 소띠(축)를 곁에, [별]로 가고, 운(정재)이 앉는다'), []);
+  assert.deepEqual(josaErrors('[달]으로 간다'), ['[달]으로']);
   assert.deepEqual(josaErrors('너는 [애견미용사]과 잘 맞는다'), ['[애견미용사]과']);
   assert.deepEqual(josaErrors("꿈 '억만장자'은 쇠 기운"), ["'억만장자'은"]);
   assert.deepEqual(josaErrors('너는 [애견미용사]와 잘 맞고, [회사원]이 된다. [흡기귀(吸氣鬼, 기운을 빨아먹는 귀신)]가 붙는다'), []);

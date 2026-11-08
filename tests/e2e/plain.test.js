@@ -77,3 +77,39 @@ test('새 글(업데이트 38): 궁합 공유 상자·받은 사람 안내·숫�
     .replace(/<style>[\s\S]*?<\/style>/, '').replace(/<[^>]+>/g, ' ');
   for (const w of NEW_JARGON) assert.ok(!pageText.includes(w), '숫자 페이지에 명리 용어: ' + w);
 });
+
+// 업데이트 39 (2026-11-08 디자인 검수 7번): 묻기·신년운세 무료 맛보기·풀이 의식·대운 칸 이름표 — 쉬운 말 먼저, 용어는 괄호 안에만
+//   ('상관·목욕·제왕'처럼 보통 낱말과 겹치는 용어는 이 넓은 글 검사에서 빼고, 대운 칸은 모양으로 따로 본다)
+const TERMS_39 = ['일주', '천간', '일지', '명식', '오행', '화개', '정재', '편재', '정관', '편관', '식신', '겁재', '정인', '편인', '비견', '포트폴리오', '골든타임'];
+const outsideParens = t => { let s = t; while (/\([^()]*\)/.test(s)) s = s.replace(/\([^()]*\)/g, ''); return s; };
+const SIPSIN_RE = '(비견|겁재|식신|상관|편재|정재|편관|정관|편인|정인)';
+const UNSUNG_RE = '(장생|목욕|관대|건록|제왕|쇠|병|사|묘|절|태|양)';
+
+test('새 글(업데이트 39): 묻기 첫 인사·8가지 답, 신년운세 맛보기, 풀이 의식 줄에 괄호 밖 명리 용어가 없고, 대운 칸은 \'쉬운 말(용어)\' 모양이다', async () => {
+  for (const p of [{ y: '1994', m: '5', d: '17', hour: '-1', gender: 'F' }, { y: '1990', m: '3', d: '10', hour: '6', gender: 'M' }, { y: '1972', m: '7', d: '15', hour: '11', gender: 'M' }]) {
+    const { ctx, page } = await openPage(browser);
+    await submit(page, { ...p, job: '회사원', major: '', hobby: '', dream: '' });
+    const t = await page.evaluate(() => {
+      const o = {};
+      openFeature('chat'); o.chatHello = document.getElementById('viewChat').innerText;
+      const prof = JSON.parse(localStorage.getItem('byeoksa.profile.v1')); const X = window.BYEOKSA_EXTRAS, sj = X.readSaju(prof);
+      o.chat = X.TOPICS.map(tp => X.answer(tp.id, prof, sj).replace(/<[^>]+>/g, ' ')).join('\n');
+      openFeature('newyear'); o.newyear = document.getElementById('viewNewYear').innerText;
+      o.ritual = RITUAL_LINES.join(' ');
+      o.result = document.getElementById('viewResult').innerText;   // 무료 결과(결제 이유 카드 포함) — 제목의 옛 용어는 그대로 두므로 외래어·'화개의 자리'만 본다
+      o.daeunCells = [...document.querySelectorAll('#daeunScroll .daeun-sub')].map(e => [...e.children].map(c => c.textContent.trim()));
+      return o;
+    });
+    for (const k of ['chatHello', 'chat', 'newyear', 'ritual']) {
+      const out = outsideParens(t[k]);
+      for (const w of TERMS_39) assert.ok(!out.includes(w), `${p.y}-${p.m}-${p.d} ${k}: 괄호 밖 용어 '${w}' — …${out.slice(Math.max(0, out.indexOf(w) - 30), out.indexOf(w) + 20)}…`);
+    }
+    for (const w of ['포트폴리오', '골든타임', '화개의 자리']) assert.ok(!outsideParens(t.result).includes(w), `무료 결과에 '${w}'`);
+    assert.ok(t.daeunCells.length >= 6, '대운 칸');
+    for (const [a, b] of t.daeunCells) {
+      assert.match(a, new RegExp(`^[가-힣 ]+\\(${SIPSIN_RE}\\)$`), `대운 칸 윗줄 '${a}'`);
+      assert.match(b, new RegExp(`^[가-힣 ]+\\(${UNSUNG_RE}\\)$`), `대운 칸 아랫줄 '${b}'`);
+    }
+    await ctx.close();
+  }
+});

@@ -13,6 +13,7 @@
   const pickBy = (arr, seed) => arr[seed % arr.length];
   const EL_HANJA = { wood: '木', fire: '火', earth: '土', metal: '金', water: '水' };
   const REMEDY = k => ELEMENT_REMEDIES[k];
+  const sp = n => ((window.BYEOKSA_PHRASES && window.BYEOKSA_PHRASES.sp) ? window.BYEOKSA_PHRASES.sp(n) : n);   // 십신 → 쉬운 말(용어는 괄호), extras.js 와 같은 것
 
   /** 신년운세 대상 해: 9월부터는 다음 해 */
   function targetYear() { const d = new Date(); return d.getMonth() + 1 >= 9 ? d.getFullYear() + 1 : d.getFullYear(); }
@@ -213,11 +214,11 @@
     const head = `
       ${X.profileLine(p, D.sj)}
       <div class="feature-card ny-head">
-        <p class="ny-year">${yName} · ${esc(D.sj.ilju)}일주</p>
+        <p class="ny-year">${yName} · 태어난 날 ${esc(D.sj.ilju)}</p>
         <div class="score-block"><span class="score-num">${D.avg}</span><span class="score-unit">점</span><span class="score-band">${bandOf(D.avg)}의 해</span></div>
-        <p class="feature-text">${D.TY}년의 천간이 네게 <strong>${D.ySipsin}</strong>${josa(D.ySipsin, '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[D.ySipsin]}</p>
-        ${D.yRel.chung ? `<p class="feature-text">게다가 그해의 띠가 네 일지와 부딪친다. 생활의 터전이 한 번 크게 흔들리는 해이니, 큰 결정일수록 천천히 가거라.</p>` : ''}
-        ${(D.yRel.yukhap || D.yRel.samhap) ? `<p class="feature-text">그해의 띠가 네 일지와 손을 잡는다. 사람 덕을 보는 해이니 인연을 넓히거라.</p>` : ''}
+        <p class="feature-text">${D.TY}년의 기운이 네게 <strong>${sp(D.ySipsin)}</strong>${josa(sp(D.ySipsin), '으로')} 들어온다. ${YEAR_SIPSIN_TEXT_10[D.ySipsin]}</p>
+        ${D.yRel.chung ? `<p class="feature-text">게다가 그해의 띠가 네가 태어난 날의 글자와 부딪친다. 생활의 터전이 한 번 크게 흔들리는 해이니, 큰 결정일수록 천천히 가거라.</p>` : ''}
+        ${(D.yRel.yukhap || D.yRel.samhap) ? `<p class="feature-text">그해의 띠가 네가 태어난 날의 글자와 손을 잡는다. 사람 덕을 보는 해이니 인연을 넓히거라.</p>` : ''}
         <h3 class="feature-card-title">열두 달 기운</h3>
         <ol class="ny-bars">${bars}</ol>
         <div class="ny-picks">
@@ -239,7 +240,7 @@
       bindBundle(body, p, 'newyear');
       $('nyBuy').onclick = () => openProductModal('newyear', {
         title: `📜 ${D.TY}년 신년운세 봉인 풀기`,
-        desc: `${esc(D.sj.ilju)}일주의 ${D.TY}년 열두 달 풀이와 분야별 흐름, 한 해 비방이 열린다.`,
+        desc: `태어난 날 ${esc(D.sj.ilju)}인 사람의 ${D.TY}년 열두 달 풀이와 분야별 흐름, 한 해 비방이 열린다.`,
         provide: '결제 즉시 이 화면에서 열람 · PDF로 저장 가능',
         again: '같은 기기·같은 생년월일로 들어오면 다시 열림',
         subjectKey: key, data: p
@@ -465,7 +466,7 @@
     const rows = BUNDLE_ITEMS.map(it => `<li><span>${it.text}</span><span class="bundle-each">${won(it.price)}원</span></li>`).join('');
     openProductModal('bundle', {
       title: '📦 벽사견의 전부 묶음 보따리',
-      desc: `<strong>${esc(sj.ilju)}일주</strong>(${p.y}년 ${p.m}월 ${p.d}일) 한 사람 몫의 유료 풀이가 한 번에 모두 열린다.
+      desc: `태어난 날 <strong>${esc(sj.ilju)}</strong>(${p.y}년 ${p.m}월 ${p.d}일) 한 사람 몫의 유료 풀이가 한 번에 모두 열린다.
         <ul class="bundle-list">${rows}</ul>
         <p class="bundle-sum">따로 사면 <s>${won(BUNDLE_LIST_TOTAL)}원</s> → 묶음 <strong>${won(PRODUCTS.bundle.price)}원</strong></p>
         <p class="feature-note">이미 따로 산 풀이가 있어도 묶음 가격은 같다. 다른 생년월일에는 열리지 않는다.</p>`,
