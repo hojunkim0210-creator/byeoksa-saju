@@ -20,7 +20,7 @@
 ## 폴더 구성
 
 ```
-site/                  ← 배포되는 웹사이트 (GitHub Pages에는 이 폴더만 올라감)
+site/                  ← 배포되는 웹사이트 (Cloudflare Pages가 이 폴더를 byeoksa.com으로 올림)
   index.html           ← 모든 화면 (대문·입력·결과·궁합·운세·패·묻기)
   legal.html           ← 이용약관 · 개인정보처리방침 · 환불 안내 · 오락 목적 고지 · 사업자 정보
   css/style.css        ← 디자인 ("밤의 대문 앞, 노란 부적" — docs/DESIGN.md)
@@ -46,10 +46,10 @@ AI_RULES.md            ← 사람·AI 공통 작업 규칙 (문구 보존 등)
 ## 처음 한 번: GitHub에 올리고 배포 켜기
 
 1. GitHub에서 새 저장소를 만들고 이 폴더 전체를 올립니다 (`.env`는 올라가지 않습니다).
-2. 저장소 **Settings → Pages → Source**를 **GitHub Actions**로 바꿉니다.
-3. 이후 `main`에 올라오는 변경은 테스트가 통과할 때만 자동 배포됩니다.
-4. 배포할 때 CSS·JS 주소 뒤에 커밋 번호(`?v=…`)가 붙어서, 방문자 브라우저가 새 버전을 자동으로 받아 갑니다.
-   새 JS·CSS 파일을 추가하면 `.github/workflows/deploy.yml`의 목록에도 넣어야 합니다(빠뜨리면 테스트가 알려 줍니다).
+2. 배포는 **Cloudflare Pages**가 합니다 — 저장소를 연결해 두면 `main`에 올라온 변경을 바로 byeoksa.com에 올립니다(`functions/` 서버 포함).
+   **GitHub Pages는 쓰지 않습니다**(저장소 Settings → Pages는 꺼 둡니다). 2026-11-10까지는 GitHub Pages에도 복사본이 올라갔는데, 그쪽에는 결제 확인 서버가 없어 없앴습니다.
+3. GitHub Actions(`.github/workflows/ci.yml`)는 `main`에 올라올 때마다 테스트만 돌립니다.
+4. 방문자 브라우저가 옛 CSS·JS를 쓰지 않게, `site/index.html`·`site/legal.html`의 파일 주소 꼬리표 `?v=숫자`를 올릴 때마다 업데이트 번호로 바꿉니다(빠뜨리면 테스트가 알려 줍니다).
 
 ## 할인 (공유 할인 · 할인 코드)
 

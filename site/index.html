@@ -19,13 +19,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=45">
+  <link rel="manifest" href="manifest.json?v=46">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=45">
+    <link rel="stylesheet" href="css/style.css?v=46">
 </head>
 <body>
 
@@ -354,23 +354,23 @@
 
     <div class="form-group">
       <span class="form-label">지금 하는 일 <span class="form-optional">(선택)</span></span>   <!-- 비워도 풀이는 나온다 (업데이트 39, 검수 5번) -->
-      <input type="text" id="userJob" placeholder="예: 대학생, 취준생, 개발자, 사업가 등">
+      <input type="text" id="userJob" maxlength="40" placeholder="예: 대학생, 취준생, 개발자, 사업가 등">
     </div>
 
     <div class="input-row">
       <div class="form-group" style="flex:1;">
         <span class="form-label">전공 / 관심 분야 <span class="form-optional">(선택)</span></span>
-        <input type="text" id="userMajor" placeholder="예: 컴퓨터, 디자인, 경영">
+        <input type="text" id="userMajor" maxlength="40" placeholder="예: 컴퓨터, 디자인, 경영">
       </div>
       <div class="form-group" style="flex:1;">
         <span class="form-label">취미 / 특기 <span class="form-optional">(선택)</span></span>
-        <input type="text" id="userHobby" placeholder="예: 게임, 영상, 운동">
+        <input type="text" id="userHobby" maxlength="40" placeholder="예: 게임, 영상, 운동">
       </div>
     </div>
 
     <div class="form-group">
       <span class="form-label">간절히 이루고 싶은 꿈 <span class="form-optional">(선택)</span> 🌟</span>
-      <input type="text" id="userDream" placeholder="예: 1인 개발자로 성공, 창업, 취업, 큰 자산 형성">
+      <input type="text" id="userDream" maxlength="40" placeholder="예: 1인 개발자로 성공, 창업, 취업, 큰 자산 형성">
     </div>
 
     <p class="scare-notice">⚠️ 풀이 결과에는 귀신 그림이 나옵니다. 어린이·노약자·임산부, 무서운 그림을 힘들어하는 분은 주의하세요. (그림은 직접 눌러야 보입니다)</p>
@@ -847,10 +847,10 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=45"></script>
-  <script src="js/phrases.js?v=45"></script>
-  <script src="js/app.js?v=45"></script>
-  <script src="js/extras.js?v=45"></script>
-  <script src="js/shop.js?v=45"></script>
+  <script src="js/saju-core.js?v=46"></script>
+  <script src="js/phrases.js?v=46"></script>
+  <script src="js/app.js?v=46"></script>
+  <script src="js/extras.js?v=46"></script>
+  <script src="js/shop.js?v=46"></script>
 </body>
 </html>

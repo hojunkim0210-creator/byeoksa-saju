@@ -910,16 +910,36 @@ let currentSajuData = null;
     at(4000, finish);
   }
 
+  /**
+   * 손님이 적은 글(직업·전공·취미·꿈)을 화면에 넣기 전에 한 번 거른다 (업데이트 46, 2026-11-10 보안 점검 1번).
+   *   이 네 값은 풀이 문장 40여 곳에 그대로(innerHTML) 들어가므로, 자리마다 막지 않고 들어오는 문 하나(calculateSaju)에서 막는다.
+   *   태그·속성이 될 수 있는 글자는 지우지 않고 모양이 같은 다른 글자로 바꾼다:  < > & " ' ` \  →  ＜ ＞ ＆ ” ’ ‘ ＼
+   *   (그래서 'R&D 연구원'·"O'Reilly" 같은 글은 그대로 읽히고, 글자 그대로 쓰는 곳(요약문 복사·공유 카드)에서도 '&amp;' 같은 것이 보이지 않는다)
+   *   줄바꿈·제어 글자는 빈칸으로, 40자(글자 단위 — 두 칸짜리 글자를 반으로 자르지 않는다)까지.
+   *   그림 이모지는 뺀다 — 화면에서는 어차피 감추므로(hideEmoji), 이모지만 적은 칸이 '[]'처럼 빈 괄호로 보이던 것을 막는다.
+   */
+  const USER_TEXT_MAX = 40;
+  const USER_TEXT_SWAP = { '<': '＜', '>': '＞', '&': '＆', '"': '”', "'": '’', '`': '‘', '\\': '＼' };
+  function cleanUserText(raw) {
+    const s = String(raw == null ? '' : raw)
+      .replace(/[\u0000-\u001F\u007F\u2028\u2029]+/g, ' ')
+      .replace(EMOJI_RE, '').replace(/[\u200D\uFE0F\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}]/gu, '')
+      .replace(/[<>&"'`\\]/g, ch => USER_TEXT_SWAP[ch])
+      .replace(/\s+/g, ' ').trim();
+    return Array.from(s).slice(0, USER_TEXT_MAX).join('').trim();
+  }
+
   function calculateSaju(y, m, d, info) {   // info = { lunar: 음력으로 받았을 때 { y, m, d, leap }, late: 밤 자시 } (업데이트 44). y·m·d는 늘 계산에 쓰는 양력
     const lunar = (info && info.lunar) || null, late = !!(info && info.late);
     let hourVal = parseInt(document.getElementById('hourSelect').value);
     if (hourVal === LATE_ZI) hourVal = 0;   // 밤 자시는 (하루 넘긴 날의) 자시
     const genderVal = document.getElementById('gender').value;
 
-    const userJob = document.getElementById('userJob').value.trim() || '현재의 신분';
-    const userMajor = document.getElementById('userMajor').value.trim() || '갈고닦는 무기';
-    const userHobby = document.getElementById('userHobby').value.trim() || '숨 쉬는 구멍';
-    const userDream = document.getElementById('userDream').value.trim() || '이루고픈 천명';
+    // 손님이 적은 네 값은 여기서 한 번 거른다(cleanUserText) — 이 아래 모든 풀이 문장이 이 값을 쓴다 (업데이트 46 보안)
+    const userJob = cleanUserText(document.getElementById('userJob').value) || '현재의 신분';
+    const userMajor = cleanUserText(document.getElementById('userMajor').value) || '갈고닦는 무기';
+    const userHobby = cleanUserText(document.getElementById('userHobby').value) || '숨 쉬는 구멍';
+    const userDream = cleanUserText(document.getElementById('userDream').value) || '이루고픈 천명';
 
     // 🌟 만세력 원국: 계산은 전부 SajuCore가 담당 (입춘·절입 '시각' 기준, 서울 역사 표준시 반영)
     const pillars = calculateFourPillars(y, m, d, hourVal >= 0 ? hourVal : null);
@@ -2819,10 +2839,8 @@ let currentSajuData = null;
       document.getElementById('day').value = params.get('d');
       if (params.get('h')) document.getElementById('hourSelect').value = params.get('h');
       if (params.get('g')) document.getElementById('gender').value = params.get('g');
-      if (params.get('job')) document.getElementById('userJob').value = params.get('job');
-      if (params.get('major')) document.getElementById('userMajor').value = params.get('major');
-      if (params.get('hobby')) document.getElementById('userHobby').value = params.get('hobby');
-      if (params.get('dream')) document.getElementById('userDream').value = params.get('dream');
+      // 주소의 job·major·hobby·dream은 받지 않는다 (업데이트 46 보안 — 남이 만든 링크로 화면에 글·스크립트를 끼워 넣던 길).
+      //   '결과 링크 복사'는 원래 이 값을 주소에 싣지 않는다(개인적인 내용이라). 받는 사람은 생년월일 풀이만 본다.
       setCalendarInput(null);   // 결과 링크의 날짜는 늘 양력 (업데이트 44)
       submitAndGoToResult();
     }

@@ -1,28 +1,23 @@
-// 배포 때 붙이는 캐시 무효화 표시(?v=커밋)가 사이트가 쓰는 CSS·JS를 빠짐없이 덮는지
-// (새 JS 파일을 추가하고 deploy.yml 목록에 안 넣으면, 방문자 브라우저가 옛 파일을 계속 쓰는 사고를 막는다)
+// 캐시 무효화 꼬리표(?v=업데이트 번호)와 배포 경로 검사
+// 업데이트 46 (2026-11-10 보안 점검 2번): 예전에는 .github/workflows/deploy.yml 이 Push마다 GitHub Pages(○○.github.io/byeoksa-saju)에도
+//   사이트 복사본을 올렸다. 그 복사본에는 결제 확인 서버·보안 헤더가 없어(거기서 결제하면 돈만 나가고 리포트가 안 열린다) 배포 작업을 없앴다.
+//   실제 사이트는 Cloudflare Pages가 git에서 바로 배포한다. 테스트는 ci.yml 이 main Push·PR 때 그대로 돈다.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'); const path = require('path');
 const ROOT = path.resolve(__dirname, '../..');
-const deploy = fs.readFileSync(path.join(ROOT, '.github/workflows/deploy.yml'), 'utf8');
 
-test('index.html의 로컬 CSS·JS·manifest가 모두 버전 표시 대상이다', () => {
-  const line = deploy.split('\n').find(l => l.includes('sed -i -E') && l.includes('site/index.html'));
-  assert.ok(line, 'deploy.yml에서 index.html용 sed 줄을 찾지 못함');
-  const listed = (line.match(/\(css[^)]*\)/) || [''])[0].slice(1, -1).split('|').map(s => s.replace(/\\\./g, '.'));
-  const html = fs.readFileSync(path.join(ROOT, 'site/index.html'), 'utf8');
-  const refs = [...html.matchAll(/(?:href|src)="((?:css|js)\/[^"?]+|manifest\.json)(?:\?v=[^"]*)?"/g)].map(m => m[1]);
-  const missing = refs.filter(r => !listed.includes(r));
-  assert.deepEqual(missing, [], `deploy.yml 버전 표시 목록에 빠진 파일: ${missing.join(', ')}`);
-  const expected = Number((deploy.match(/test "\$COUNT" -eq (\d+)/) || [])[1]);
-  assert.equal(refs.length, expected, `index.html 참조 ${refs.length}곳 ≠ deploy.yml 기대값 ${expected}`);
+test('GitHub Pages로 사이트 복사본을 올리는 작업이 없다 (배포는 Cloudflare Pages 한 곳)', () => {
+  const dir = path.join(ROOT, '.github/workflows');
+  const files = fs.readdirSync(dir).filter(f => /\.ya?ml$/.test(f));
+  assert.ok(files.includes('ci.yml'), '테스트 워크플로(ci.yml)는 남아 있어야 한다');
+  for (const f of files) {
+    const y = fs.readFileSync(path.join(dir, f), 'utf8');
+    assert.ok(!/deploy-pages|upload-pages-artifact|configure-pages|pages:\s*write/.test(y), `${f}: GitHub Pages 배포 단계가 있다`);
+  }
 });
 
-test('legal.html의 스타일시트도 버전 표시 대상이다', () => {
-  assert.match(deploy, /site\/legal\.html/);
-});
-
-// 2026-10-27: 실제 사이트(Cloudflare Pages)는 위 워크플로를 거치지 않고 git에서 바로 배포된다.
+// 2026-10-27: 실제 사이트(Cloudflare Pages)는 git에서 바로 배포된다(파일 주소를 바꿔 주는 단계가 없다).
 //   그래서 원본 HTML에 ?v=업데이트번호 꼬리표를 직접 붙여 둔다 — 안 붙이면 전에 왔던 손님의 브라우저가 옛 CSS·JS를
 //   새 HTML에 입혀 첫 화면이 깨진다(2026-10-27 맥북 크롬에서 실제로 남). 올릴 때마다 숫자를 그 업데이트 번호로 바꾼다.
 const tagsIn = html => [...html.matchAll(/(?:href|src)="(?:(?:css|js)\/[^"?]+|manifest\.json)(\?v=[^"]*)?"/g)].map(m => m[1] || '');
