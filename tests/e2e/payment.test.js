@@ -186,16 +186,106 @@ test('통신 오류·설정 오류(500)·서버 장애(502)·가격 불일치(40
   }
 });
 
-test('서버 확인이 실패하면 열지 않는다 (verifyUrl)', async () => {
-  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
-  await page.route('https://verify.test/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'FAILED' }) }));
+// 업데이트 47 (2026-11-10 보안 점검 4번): 확인이 한 번 끊겨도 손님이 결제 번호를 잃지 않게 화면에 남는 상자를 띄우고,
+//   대기 기록을 남겨 다시 들어오면(또는 '다시 확인'을 누르면) 서버에 다시 묻는다. 여는 것은 서버가 '결제 완료'라고 답할 때만.
+const failBoxShown = page => page.evaluate(() => getComputedStyle(document.getElementById('payFailModal')).display !== 'none');
+const pendingOf = page => page.evaluate(() => JSON.parse(localStorage.getItem('byeoksa.pending.v1') || 'null'));
+const paidKeys = page => page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('byeoksa.paid.')).length);
+/** 결제는 했는데 확인 서버가 답을 못 한 상태(502)를 만든다 */
+async function payWithVerifyDown(page) {
+  await page.route('https://verify.test/**', r => r.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ status: 'UPSTREAM_ERROR' }) }));
   await page.evaluate(() => { PAYMENT.verifyUrl = 'https://verify.test/api/payment/complete'; });
   await fillAndSubmit(page, ME);
   await page.evaluate(() => openPaymentModal());
   await page.click('#payButton'); await page.waitForTimeout(500);
+}
+
+test('서버 확인이 실패하면 열지 않는다 — 사라지는 알림 대신 결제 번호가 적힌 상자가 남고, 대기 기록도 남는다 (verifyUrl)', async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await payWithVerifyDown(page);
   assert.ok(await locked(page));
-  assert.match(await page.textContent('#toastMsg'), /결제 확인에 실패/);
+  assert.ok(await failBoxShown(page), '남는 안내 상자');
+  const [call] = await page.evaluate(() => window.__calls);
+  assert.equal(await page.textContent('#payFailId'), call.paymentId);
+  const box = await page.textContent('#payFailModal');
+  for (const w of ['결제 확인이 끊겼소', '다시 결제하지 마시오', '다시 확인', '번호 복사', '고객센터에 문의']) assert.ok(box.includes(w), w);
+  assert.equal((await pendingOf(page)).paymentId, call.paymentId, '대기 기록은 남긴다');
+  assert.equal(await paidKeys(page), 0);
+  await page.waitForTimeout(2800);
+  assert.ok(await failBoxShown(page), '알림처럼 저절로 사라지지 않는다');
+  // 고객센터에 문의: 결제 번호가 문의 칸에 들어간다
+  await page.click('#payFailHelp'); await page.waitForTimeout(200);
+  assert.equal(await viewOf(page), 'viewHelp');
+  assert.equal(await page.inputValue('#helpOrder'), call.paymentId);
+  assert.deepEqual(page._errors, []);
   await ctx.close();
+});
+
+test("확인이 끊긴 뒤 '다시 확인'을 누르면: 서버가 결제 완료라고 답할 때 리포트가 열린다 · 아직 답을 못 하면 그대로", async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await payWithVerifyDown(page);
+  await page.click('#payFailRetry'); await page.waitForTimeout(400);
+  assert.ok(await failBoxShown(page), '아직 답이 없으면 상자는 그대로');
+  assert.match(await page.textContent('#toastMsg'), /아직 확인하지 못했소/);
+  assert.ok(await locked(page));
+  await page.unroute('https://verify.test/**');
+  await page.route('https://verify.test/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'PAID' }) }));
+  await page.click('#payFailRetry'); await page.waitForTimeout(500);
+  assert.equal(await failBoxShown(page), false);
+  assert.equal(await viewOf(page), 'viewReport');
+  assert.equal(await pendingOf(page), null);
+  assert.equal(await paidKeys(page), 1);
+  await page.waitForTimeout(700);
+  assert.match(await page.textContent('#toastMsg'), /결제를 다시 확인했소\. 봉인을 풀었소\./);
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('확인이 끊긴 손님이 다시 들어오면: 서버에 다시 물어 결제 완료면 보던 풀이를 다시 그리고 리포트를 연다', async () => {
+  const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+  await payWithVerifyDown(page);
+  assert.ok(await locked(page));
+  await page.reload(); await page.waitForTimeout(1500);   // 새로 열면 확인 서버(helpers의 가짜 서버)가 '결제 완료'라고 답한다
+  assert.equal(await viewOf(page), 'viewReport', '입력을 다시 하지 않아도 열린다');
+  assert.equal(await pendingOf(page), null);
+  assert.equal(await paidKeys(page), 1);
+  assert.equal(await failBoxShown(page), false);
+  assert.match(await page.textContent('#toastMsg'), /결제를 다시 확인했소/);
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('다시 들어왔을 때 서버 답에 따라: 취소·실패는 대기 기록을 지우고 잠근 채 · 아직 결제 전일 수 있는 답은 1시간이 지난 기록만 지움 · 통신 오류는 그대로 · 7일이 지나면 묻지 않고 지움', async () => {
+  const cases = [
+    // [확인 서버 답, 대기 기록 나이(분), 남아야 하나]
+    [[400, { status: 'INVALID', reason: 'status:CANCELLED' }], 5, false],
+    [[400, { status: 'INVALID', reason: 'status:FAILED' }], 5, false],
+    [[404, { status: 'NOT_FOUND' }], 5, true],            // 다른 탭에서 결제하는 중일 수 있다
+    [[400, { status: 'INVALID', reason: 'status:READY' }], 5, true],
+    [[404, { status: 'NOT_FOUND' }], 120, false],         // 두 시간 전 것 — 결제창을 닫고 떠난 기록
+    [[400, { status: 'INVALID', reason: 'status:READY' }], 120, false],
+    [[0, null], 120, true],                               // 통신 오류
+    [[502, { status: 'UPSTREAM_ERROR' }], 120, true],
+    [[400, { status: 'INVALID', reason: 'amount' }], 120, true],   // 금액 불일치 등은 손님 탓이 아니다 — 문의로 풀 일
+    [[200, { status: 'PAID' }], 8 * 24 * 60, false]       // 7일이 지난 기록은 묻지 않고 지운다(열지도 않는다)
+  ];
+  for (const [[status, body], ageMin, kept] of cases) {
+    const { ctx, page } = await livePage('o => ({ paymentId: o.paymentId })');
+    await fillAndSubmit(page, ME);
+    await page.evaluate(min => {
+      const sd = currentSajuData;
+      localStorage.setItem('byeoksa.pending.v1', JSON.stringify({ paymentId: 'byeoksa-test-recheck', productId: 'report', subjectKey: sajuKey(sd),
+        data: { y: sd.y, m: sd.m, d: sd.d, hourVal: sd.hourVal, genderVal: sd.genderVal, userJob: sd.userJob, userMajor: '', userHobby: '', userDream: sd.userDream }, at: Date.now() - min * 60000 }));
+    }, ageMin);
+    await reloadWithVerifyAnswer(page, status, body);
+    const label = `${status} ${JSON.stringify(body)} · ${ageMin}분 전`;
+    assert.equal(!!(await pendingOf(page)), kept, `${label}: 대기 기록`);
+    assert.equal(await paidKeys(page), 0, `${label}: 열림 표시는 생기지 않는다`);
+    assert.notEqual(await viewOf(page), 'viewReport', label);
+    assert.equal(await failBoxShown(page), false, `${label}: 다시 들어왔을 때는 조용히`);
+    assert.deepEqual(page._errors, [], label);
+    await ctx.close();
+  }
 });
 
 test('휴대폰 결제 페이지에서 돌아오면: 맡겨 둔 사주를 다시 풀고 리포트를 연다, 주소는 깨끗해진다', async () => {

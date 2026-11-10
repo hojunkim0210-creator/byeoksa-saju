@@ -616,11 +616,23 @@ let currentSajuData = null;
       if (window.__BYEOKSA_TEST__) { (window.__trackLog = window.__trackLog || []).push(name); return; }   // 자동 테스트: 보내지 않고 기록만
       if (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\]|.*\.localhost)?$/.test(location.hostname)) return;
       if (navigator.webdriver || BOT_UA.test(navigator.userAgent || '')) return;
-      const body = JSON.stringify({ e: name });   // 글자 그대로 보낸다(text/plain) — 어느 브라우저에서도 sendBeacon이 받아 준다
-      if (navigator.sendBeacon && navigator.sendBeacon('/api/count', body)) return;
-      fetch('/api/count', { method: 'POST', body, keepalive: true }).catch(() => {});
+      // 같은 순간에 생긴 단계(방문 + 대문 도착)는 모아서 한 번에 보낸다 — 서버 장부 쓰기를 줄이려고 (업데이트 47, 보안 점검 3번)
+      if (!_trackQueue.includes(name)) _trackQueue.push(name);
+      if (!_trackTimer) _trackTimer = setTimeout(flushTrack, 80);
     } catch (e) { /* 숫자 세기 때문에 화면이 멈추면 안 된다 */ }
   }
+  let _trackQueue = [], _trackTimer = null;
+  function flushTrack() {
+    try {
+      if (_trackTimer) { clearTimeout(_trackTimer); _trackTimer = null; }
+      if (!_trackQueue.length) return;
+      const names = _trackQueue.slice(0, 4); _trackQueue = [];
+      const body = JSON.stringify({ e: names.length === 1 ? names[0] : names });   // 글자 그대로 보낸다(text/plain) — 어느 브라우저에서도 sendBeacon이 받아 준다
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/count', body)) return;
+      fetch('/api/count', { method: 'POST', body, keepalive: true }).catch(() => {});
+    } catch (e) { /* 무시 */ }
+  }
+  window.addEventListener('pagehide', flushTrack);   // 모으는 사이 화면을 떠나도 빠지지 않게
   window.track = track;
   // 궁합 링크에 붙는 보낸 사람 별명: 한글·영문·숫자·띄어쓰기·_.- 만, 10자까지 (보내는 쪽 extras.js 와 받는 쪽이 같은 규칙)
   const NICK_RE = /^[0-9A-Za-z가-힣 _.\-]{1,10}$/;
@@ -2395,6 +2407,29 @@ let currentSajuData = null;
   }
 
   /** 결제 결과 마무리: 실패면 안내, 성공이면 (서버가 있으면 확인 후) 상품을 연다 */
+  /** 결제 확인 서버에 한 번 묻는다 → 'paid' | 'notpaid'(취소·실패가 분명함) | 'pending'(아직 결제 전일 수 있음) | 'unknown'(통신·서버 문제) */
+  async function askPaymentServer(paymentId) {
+    try {
+      const r = await fetch(PAYMENT.verifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
+      let j = null;
+      try { j = await r.json(); } catch (e) { /* 본문 없음 */ }
+      if (r.ok && j && j.status === 'PAID') return 'paid';
+      const reason = String((j && j.reason) || '');
+      if (r.status === 400 && j && j.status === 'INVALID' && /^status:(CANCELLED|PARTIAL_CANCELLED|FAILED)$/.test(reason)) return 'notpaid';
+      if ((r.status === 400 && j && j.status === 'INVALID' && /^status:/.test(reason)) || (r.status === 404 && j && j.status === 'NOT_FOUND')) return 'pending';
+      return 'unknown';   // 설정 오류·서버 장애·금액 불일치 같은 것은 손님 탓이 아니다 — 대기 기록을 지우지 않는다
+    } catch (e) { return 'unknown'; }
+  }
+  /** 결제가 확인된 대기 기록을 마무리한다: 구매 표시 → 할인 소진 → 화면 열기 */
+  function completePaid(pending) {
+    markPaidFor(pending.productId, pending.subjectKey, pending.paymentId);
+    if (activeCoupon() && priceFor(pending.productId).final < PRODUCTS[pending.productId].price) consumeCoupon();
+    clearPending();
+    closePaymentModal();
+    hidePayFail();
+    const hooks = PRODUCT_HOOKS[pending.productId] || {};
+    if (hooks.onPaid) hooks.onPaid(pending.data);
+  }
   async function finishPayment(paymentId, code, message) {
     const pending = loadPending();
     if (code) {
@@ -2404,21 +2439,66 @@ let currentSajuData = null;
     }
     if (!pending || pending.paymentId !== paymentId) { showToast('결제 정보를 찾지 못했소. 결제가 됐다면 문의해 주시오.'); return false; }
     if (PAYMENT.verifyUrl) {
-      let ok = false;
-      try {
-        const r = await fetch(PAYMENT.verifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
-        ok = r.ok && (await r.json()).status === 'PAID';
-      } catch (e) { ok = false; }
-      if (!ok) { showToast(`결제 확인에 실패했소. 결제가 됐다면 ${CONTACT_EMAIL}로 결제 번호 ${paymentId}를 보내 주시오.`); return false; }
+      // 확인이 안 되면 사라지는 알림 대신 화면에 남는 상자를 띄우고, 대기 기록은 남겨 둔다 — 다시 들어오면 다시 확인한다 (업데이트 47, 보안 점검 4번).
+      //   전 알림: `결제 확인에 실패했소. 결제가 됐다면 ${CONTACT_EMAIL}로 결제 번호 ${paymentId}를 보내 주시오.` (2.5초 뒤 사라졌다)
+      if ((await askPaymentServer(paymentId)) !== 'paid') { showPayFail(paymentId); return false; }
     }
-    markPaidFor(pending.productId, pending.subjectKey, paymentId);
-    if (activeCoupon() && priceFor(pending.productId).final < PRODUCTS[pending.productId].price) consumeCoupon();
-    clearPending();
-    closePaymentModal();
-    const hooks = PRODUCT_HOOKS[pending.productId] || {};
-    if (hooks.onPaid) hooks.onPaid(pending.data);
+    completePaid({ ...pending, paymentId });
     return true;
   }
+
+  // ─────────────────────────────────────────────────────────────────
+  // 🔁 결제 다시 확인 (업데이트 47, 보안 점검 4번): 결제는 됐는데 확인이 한 번 끊긴 손님을 위해
+  //   사이트를 열 때 대기 기록(7일 안)이 있으면 서버에 다시 묻고, 서버가 '결제 완료'라고 답할 때만 연다.
+  //   취소·실패가 분명하면 대기 기록을 지운다. 아직 결제 전일 수 있는 답(없는 결제·결제 대기)은 1시간이 지난 기록만 지운다
+  //   (다른 탭에서 결제하는 중일 수 있어서). 통신·서버 문제면 그대로 둔다. 결제창·PAYMENT·동의 칸 흐름은 건드리지 않는다.
+  // ─────────────────────────────────────────────────────────────────
+  const PENDING_RECHECK_MS = 7 * 86400000, PENDING_GRACE_MS = 3600000;
+  let _recheckBusy = false;
+  async function recheckPendingPayment(manual) {
+    if (PAYMENT.mode !== 'portone' || !PAYMENT.verifyUrl || _recheckBusy) return 'skip';
+    const pending = loadPending();
+    if (!pending || typeof pending.paymentId !== 'string') return 'none';
+    const age = Date.now() - (pending.at || 0);
+    if (!(age >= 0 && age < PENDING_RECHECK_MS)) { clearPending(); hidePayFail(); return 'expired'; }
+    _recheckBusy = true;
+    let res = 'unknown';
+    try { res = await askPaymentServer(pending.paymentId); } finally { _recheckBusy = false; }
+    if (res === 'paid') {
+      hideGate();
+      const hooks = PRODUCT_HOOKS[pending.productId] || {};
+      const onScreen = manual && pending.productId === 'report' && currentSajuData && sajuKey(currentSajuData) === pending.subjectKey;
+      if (!onScreen && hooks.resume) hooks.resume(pending.data);   // 보던 화면을 다시 그린 뒤
+      completePaid(pending);                                        // 연다
+      setTimeout(() => showToast('결제를 다시 확인했소. 봉인을 풀었소.'), 700);
+      return 'paid';
+    }
+    if (res === 'notpaid' || (res === 'pending' && age > PENDING_GRACE_MS)) {
+      clearPending(); hidePayFail();
+      if (manual) showToast('결제가 완료되지 않은 것으로 확인됐소. 필요하면 다시 결제하시오.');
+      return 'notpaid';
+    }
+    if (manual) showToast('아직 확인하지 못했소. 잠시 뒤 다시 눌러 보시오.');
+    return res;
+  }
+  /** 결제 확인이 끊겼을 때 화면에 남는 상자 (결제 번호 · 다시 확인 · 번호 복사 · 문의) */
+  function showPayFail(paymentId) {
+    const m = document.getElementById('payFailModal'); if (!m) return;
+    document.getElementById('payFailId').textContent = paymentId;
+    closePaymentModal();
+    m.style.display = 'flex';
+  }
+  function hidePayFail() { const m = document.getElementById('payFailModal'); if (m) m.style.display = 'none'; }
+  document.addEventListener('DOMContentLoaded', () => {
+    const pid = () => document.getElementById('payFailId').textContent;
+    const on = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    on('payFailRetry', async () => { const b = document.getElementById('payFailRetry'); b.disabled = true; try { await recheckPendingPayment(true); } finally { b.disabled = false; } });
+    on('payFailCopy', () => copyText(pid(), '결제 번호를 복사했소.'));
+    on('payFailHelp', () => { const id = pid(); hidePayFail(); if (typeof openFeature === 'function') { openFeature('help'); const o = document.getElementById('helpOrder'); if (o && !o.value) o.value = id; } });
+    on('payFailClose', hidePayFail);
+    // 결제 페이지에서 막 돌아온 길(주소에 결제 번호가 있음)은 resumePaymentFromRedirect가 맡는다 — 그 밖의 방문에서만 다시 확인
+    if (!new URLSearchParams(window.location.search).get('paymentId')) recheckPendingPayment(false);
+  });
 
   /** 휴대폰 결제 페이지에서 돌아왔을 때: 상품 화면을 다시 그리고 결제를 마무리한다 */
   function resumePaymentFromRedirect(params) {

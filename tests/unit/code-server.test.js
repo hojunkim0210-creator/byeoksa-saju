@@ -7,7 +7,9 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const load = f => import(pathToFileURL(path.resolve(__dirname, '../../functions', f)).href);
 const kv = () => { const m = new Map(); return { m, get: async k => (m.has(k) ? m.get(k) : null), put: async (k, v) => { m.set(k, v); } }; };
-const post = (body, headers = {}) => new Request('https://byeoksa.com/api/code', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
+// 브라우저가 우리 화면에서 보내는 요청처럼 Origin 을 붙인다 (업데이트 47). 빼려면 { Origin: null }
+const hdr = h => Object.fromEntries(Object.entries({ 'Content-Type': 'application/json', Origin: 'https://byeoksa.com', ...h }).filter(([, v]) => v !== null));
+const post = (body, headers = {}) => new Request('https://byeoksa.com/api/code', { method: 'POST', headers: hdr(headers), body });
 
 test('꺼져 있으면(기본값) 어떤 코드도 받지 않는다 — 켜는 날까지 서버도 503 OFF', async () => {
   const C = await load('api/code.js');
@@ -41,10 +43,12 @@ test('맞는 코드는 한 번만 — 두 번째는 USED, 틀린 코드·짧은 
   assert.deepEqual(await C.redeem('TEST-CODE-2345', { ...opt, kv: broken }), [503, { status: 'OFF' }], "장부 오류는 '틀린 코드'라고 하지 않는다");
 });
 
-test('다른 사이트에서 온 요청은 403, 잘못된 몸통은 400', async () => {
+test('다른 사이트·밖에서 직접 보낸 요청은 403(업데이트 47), 잘못된 몸통은 400', async () => {
   const C = await load('api/code.js');
   const a = await C.onRequestPost({ request: post(JSON.stringify({ code: 'ABCD-EFGH-JKLM' }), { Origin: 'https://evil.example' }), env: { COUNTS: kv() } });
   assert.equal(a.status, 403);
+  const n = await C.onRequestPost({ request: post(JSON.stringify({ code: 'ABCD-EFGH-JKLM' }), { Origin: null }), env: { COUNTS: kv() } });
+  assert.equal(n.status, 403, 'Origin·Referer 표시가 없는 요청(주소를 직접 두드림)');
   const b = await C.onRequestPost({ request: post('not json'), env: { COUNTS: kv() } });
   assert.equal(b.status, 400);
   const c = await C.onRequestPost({ request: post(JSON.stringify({ code: 12345 })), env: { COUNTS: kv() } });

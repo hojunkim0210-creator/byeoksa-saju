@@ -5,7 +5,9 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const load = f => import(pathToFileURL(path.resolve(__dirname, '../../functions', f)).href);
 const kv = () => { const m = new Map(); return { m, get: async k => (m.has(k) ? m.get(k) : null), put: async (k, v) => { m.set(k, v); } }; };
-const post = (body, headers = {}) => new Request('https://byeoksa.com/api/count', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
+// 브라우저가 우리 화면에서 보내는 요청처럼 Origin 을 붙인다 (업데이트 47 — 아무 표시가 없는 요청은 거절). 빼려면 { Origin: null }
+const hdr = h => Object.fromEntries(Object.entries({ 'Content-Type': 'application/json', Origin: 'https://byeoksa.com', ...h }).filter(([, v]) => v !== null));
+const post = (body, headers = {}) => new Request('https://byeoksa.com/api/count', { method: 'POST', headers: hdr(headers), body: typeof body === 'string' ? body : JSON.stringify(body) });
 
 test('날짜는 한국 시간 기준이다 (UTC 15시가 넘으면 다음 날)', async () => {
   const { dayKey } = await load('api/count.js');
@@ -14,10 +16,10 @@ test('날짜는 한국 시간 기준이다 (UTC 15시가 넘으면 다음 날)',
 });
 
 test('POST /api/count: 알려진 단계 이름이면 그날 합계에 1을 더한다', async () => {
-  const { onRequestPost, kvKey, dayKey } = await load('api/count.js');
+  const { onRequestPost, dayBookKey, dayKey } = await load('api/count.js');
   const COUNTS = kv();
   for (let i = 0; i < 3; i++) assert.equal((await onRequestPost({ request: post({ e: 'visit' }), env: { COUNTS } })).status, 204);
-  assert.equal(COUNTS.m.get(kvKey(dayKey(), 'visit')), '3');
+  assert.deepEqual(JSON.parse(COUNTS.m.get(dayBookKey(dayKey()))), { _w: 3, visit: 3 });   // 그날 장부 한 장 (업데이트 47)
   assert.equal([...COUNTS.m.keys()].length, 1);
 });
 
@@ -25,8 +27,8 @@ test('저장되는 것은 숫자 하나뿐이다 — 본문에 다른 값을 실
   const { onRequestPost } = await load('api/count.js');
   const COUNTS = kv();
   await onRequestPost({ request: post({ e: 'free', birth: '1990-03-10', name: '민지' }, { 'CF-Connecting-IP': '1.2.3.4' }), env: { COUNTS } });
-  assert.deepEqual([...COUNTS.m.values()], ['1']);
-  assert.ok([...COUNTS.m.keys()].every(k => /^n:\d{4}-\d{2}-\d{2}:free$/.test(k)));
+  assert.deepEqual([...COUNTS.m.values()].map(v => JSON.parse(v)), [{ _w: 1, free: 1 }]);
+  assert.ok([...COUNTS.m.keys()].every(k => /^d:\d{4}-\d{2}-\d{2}$/.test(k)));
 });
 
 test('모르는 단계 이름·깨진 본문은 거절, 다른 사이트에서 온 요청은 403', async () => {
@@ -60,9 +62,9 @@ test('/numbers: 열쇠가 없거나 틀리면 404, 열쇠가 설정되지 않았
 
 test('/numbers: 열쇠가 맞으면 표를 보여 주고, 검색·저장되지 않게 하며, 결제 완료는 포트원 응답에서 센다', async () => {
   const { onRequestGet } = await load('numbers.js');
-  const { kvKey, dayKey } = await load('api/count.js');
+  const { dayBookKey, dayKey } = await load('api/count.js');
   const COUNTS = kv();
-  COUNTS.m.set(kvKey(dayKey(), 'visit'), '40'); COUNTS.m.set(kvKey(dayKey(), 'free'), '20'); COUNTS.m.set(kvKey(dayKey(), 'payopen'), '5');
+  COUNTS.m.set(dayBookKey(dayKey()), JSON.stringify({ visit: 40, free: 20, payopen: 5, _w: 65 }));
   const real = global.fetch;
   let calls = 0;
   global.fetch = async (u, o) => { calls++; assert.match(String(u), /^https:\/\/api\.portone\.io\/payments\?requestBody=/); assert.equal(o.headers.Authorization, 'PortOne s3cret'); return new Response(JSON.stringify({ page: { totalCount: 1 } }), { status: 200 }); };
@@ -97,11 +99,11 @@ test('집계 이벤트 이름은 화면 쪽(app.js·extras.js·shop.js)이 보�
 });
 
 test('브라우저 sendBeacon 이 보내는 모양(text/plain 글자)도 그대로 받는다', async () => {
-  const { onRequestPost, kvKey, dayKey } = await load('api/count.js');
+  const { onRequestPost, dayBookKey, dayKey } = await load('api/count.js');
   const COUNTS = kv();
   const request = new Request('https://byeoksa.com/api/count', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8', Origin: 'https://byeoksa.com' }, body: '{"e":"compatsend"}' });
   assert.equal((await onRequestPost({ request, env: { COUNTS } })).status, 204);
-  assert.equal(COUNTS.m.get(kvKey(dayKey(), 'compatsend')), '1');
+  assert.equal(JSON.parse(COUNTS.m.get(dayBookKey(dayKey()))).compatsend, 1);
 });
 
 test('숫자 페이지 깔때기: 방문 → 대문 → 입력 → 무료 풀이 → 결제창 → 결제 순서, 비율은 바로 윗줄 대비 (업데이트 45)', async () => {
@@ -133,5 +135,70 @@ test('깔때기는 대문 숫자가 있는 날부터만 더한다 — 업데이�
   assert.match(before, /어디서 줄어드나 \(1일 합계\)/);
   assert.ok(!before.includes('→ 대문 도착'));
   assert.match(before, /<td>→ 무료 풀이 봄<\/td><td>1<\/td><td>8%<\/td>/);
+});
+
+// ── 업데이트 47 (2026-11-10 보안 점검 3번): 같은 사이트 요청만 · 한 요청에 여러 단계 · 하루 쓰기 한도 ──
+test('우리 사이트 화면에서 온 요청만 받는다 — Origin이 우리 주소, 또는 Origin이 없고 Sec-Fetch-Site·Referer가 같은 사이트', async () => {
+  const { onRequestPost, fromOurSite } = await load('api/count.js');
+  const COUNTS = kv();
+  const st = async h => (await onRequestPost({ request: post({ e: 'visit' }, h), env: { COUNTS } })).status;
+  assert.equal(await st({}), 204);                                                            // Origin: https://byeoksa.com
+  assert.equal(await st({ Origin: null }), 403, '아무 표시도 없는 요청(주소를 직접 두드림)은 거절');
+  assert.equal(await st({ Origin: 'https://evil.example' }), 403);
+  assert.equal(await st({ Origin: null, 'Sec-Fetch-Site': 'same-origin' }), 204, 'Origin을 안 붙이는 브라우저');
+  assert.equal(await st({ Origin: null, 'Sec-Fetch-Site': 'cross-site' }), 403);
+  assert.equal(await st({ Origin: null, Referer: 'https://byeoksa.com/?from=share' }), 204, '옛 브라우저(Referer만)');
+  assert.equal(await st({ Origin: null, Referer: 'https://evil.example/byeoksa.com' }), 403);
+  assert.equal(await st({ Origin: null, Referer: 'not a url' }), 403);
+  assert.equal(JSON.parse([...COUNTS.m.values()][0]).visit, 3, '받은 것만 센다');
+  // www·미리보기 주소로 열린 화면은 그 주소가 '우리 주소'다
+  assert.equal(fromOurSite(new Request('https://www.byeoksa.com/api/count', { method: 'POST', headers: { Origin: 'https://www.byeoksa.com' } })), true);
+  assert.equal(fromOurSite(new Request('https://www.byeoksa.com/api/count', { method: 'POST', headers: { Origin: 'https://byeoksa.com' } })), false);
+});
+
+test('한 요청에 단계를 여럿 실으면(방문 + 대문 도착) 한 번만 쓴다 — 4개까지, 모르는 이름이 섞이면 통째로 거절', async () => {
+  const { onRequestPost, dayBookKey, dayKey } = await load('api/count.js');
+  let puts = 0;
+  const COUNTS = kv(); const put0 = COUNTS.put; COUNTS.put = async (k, v, o) => { puts++; return put0(k, v, o); };
+  const st = async e => (await onRequestPost({ request: post({ e }), env: { COUNTS } })).status;
+  assert.equal(await st(['visit', 'home']), 204);
+  assert.equal(puts, 1);
+  assert.deepEqual(JSON.parse(COUNTS.m.get(dayBookKey(dayKey()))), { _w: 1, visit: 1, home: 1 });
+  assert.equal(await st(['visit', 'visit', 'input']), 204, '같은 이름이 겹치면 한 번만');
+  assert.deepEqual(JSON.parse(COUNTS.m.get(dayBookKey(dayKey()))), { _w: 2, visit: 2, home: 1, input: 1 });
+  assert.equal(await st(['visit', 'hack']), 400);
+  assert.equal(await st([]), 400);
+  assert.equal(await st(['visit', 'home', 'input', 'free', 'payopen']), 400);
+  assert.equal(await st({ visit: 1 }), 400);
+  assert.equal(puts, 2);
+});
+
+test('하루 쓰기 한도(800번): 다 쓰면 그날은 더 쓰지 않는다 — 무료 코드 몫을 남긴다. 깨진 장부는 빈 장부로 본다', async () => {
+  const { onRequestPost, dayBookKey, dayKey, DAY_WRITE_BUDGET, readBook } = await load('api/count.js');
+  assert.equal(DAY_WRITE_BUDGET, 800);
+  let puts = 0;
+  const COUNTS = kv(); const put0 = COUNTS.put; COUNTS.put = async (k, v, o) => { puts++; return put0(k, v, o); };
+  COUNTS.m.set(dayBookKey(dayKey()), JSON.stringify({ visit: 500, home: 400, _w: 799 }));
+  assert.equal((await onRequestPost({ request: post({ e: 'visit' }), env: { COUNTS } })).status, 204);
+  assert.equal(puts, 1);
+  assert.deepEqual(JSON.parse(COUNTS.m.get(dayBookKey(dayKey()))), { _w: 800, visit: 501, home: 400 });
+  for (let i = 0; i < 5; i++) assert.equal((await onRequestPost({ request: post({ e: 'visit' }), env: { COUNTS } })).status, 204, '손님 쪽에는 그대로 204');
+  assert.equal(puts, 1, '한도를 넘은 뒤에는 쓰지 않는다');
+  assert.deepEqual(readBook('not json'), { _w: 0 });
+  assert.deepEqual(readBook(JSON.stringify({ visit: 3, evil: 9, home: -1, _w: 'x' })), { _w: 0, visit: 3 });
+});
+
+test('/numbers: 그날 장부 한 장을 읽고, 바꾼 날 전후(옛 모양 n:날짜:단계)는 둘을 더한다 · 오늘 쓴 횟수를 보여 준다', async () => {
+  const { onRequestGet, LEGACY_LAST_DAY } = await load('numbers.js');
+  const { kvKey, dayBookKey, dayKey } = await load('api/count.js');
+  const COUNTS = kv(); let gets = 0; const get0 = COUNTS.get; COUNTS.get = async k => { gets++; return get0(k); };
+  const today = dayKey();
+  COUNTS.m.set(dayBookKey(today), JSON.stringify({ visit: 7, home: 6, input: 3, free: 2, _w: 12 }));
+  if (today <= LEGACY_LAST_DAY) COUNTS.m.set(kvKey(today, 'visit'), '5');
+  const res = await onRequestGet({ request: new Request('https://byeoksa.com/numbers?k=key-key-key'), env: { NUMBERS_KEY: 'key-key-key', COUNTS } });
+  const t = await res.text();
+  assert.match(t, new RegExp(`<td>${today.slice(5)}</td><td>${today <= LEGACY_LAST_DAY ? 12 : 7}</td><td>6</td><td>3</td><td>2</td>`));
+  assert.match(t, /오늘 숫자 장부에 쓴 횟수: <strong>12<\/strong> \/ 800번/);
+  assert.ok(gets <= 14 + 9 * 14, `읽기 ${gets}번`);
 });
 

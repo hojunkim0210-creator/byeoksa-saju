@@ -1996,3 +1996,10 @@ body.buy-bar-on { padding-bottom: calc(96px + 68px + env(safe-area-inset-bottom)
 .event-input { flex: 1 1 100%; text-transform: uppercase; letter-spacing: 0.06em; }   /* 코드는 대문자로 보이게 (넣을 때 대소문자는 상관없음) */
 .event-apply { flex: 1 1 100%; white-space: nowrap; }
 
+/* 결제 확인이 끊겼을 때 남는 안내 상자 (업데이트 47): 결제창과 같은 한지 상자, 결제 번호는 끊기지 않게 줄바꿈 */
+.pay-fail-id { margin: 10px 0 14px; padding: 10px 12px; border: 1px solid var(--paper-line); border-radius: 6px; background: rgba(255, 250, 240, 0.7); font-size: 14px; color: var(--ink-soft); word-break: break-all; }
+.pay-fail-id strong { color: var(--ink); }
+.pay-fail-row { display: flex; gap: 8px; margin: 10px 0 4px; }
+.pay-fail-row .btn-action { flex: 1; min-height: 44px; font-size: 14px; color: var(--ink); background: rgba(255, 252, 244, 0.7); border: 1px solid var(--paper-line); }   /* 한지 상자 위라 먹색 글씨 (.btn-action 기본은 밤 바탕용) */
+.pay-fail-row .btn-action:hover { background: var(--paper-deep); border-color: var(--ink-soft); }
+

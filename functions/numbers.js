@@ -6,10 +6,11 @@
 //   (PORTONE_API_SECRET·COUNTS 는 결제 확인 서버·count.js 가 쓰는 것과 같다)
 // 주소는 대표님만 북마크한다: https://byeoksa.com/numbers?k=열쇠
 
-import { EVENTS, dayKey, kvKey } from './api/count.js';
+import { EVENTS, DAY_WRITE_BUDGET, dayKey, dayBookKey, kvKey, readBook } from './api/count.js';
 import { buildQuery, readCount, STORE_ID } from './api/stats.js';
 
 export const DAYS = 14;
+export const LEGACY_LAST_DAY = '2026-11-12';   // 이 날짜까지는 옛 장부 모양(`n:날짜:단계`)도 읽는다 — 업데이트 47을 올린 날 전후
 export const LABELS = {
   visit: '첫 화면 방문', home: '대문 도착', input: '입력 화면 도착', free: '무료 풀이 봄', payopen: '결제창 연 횟수', paid: '결제 완료',
   compat: '궁합 결과 봄', compatsend: '궁합 "상대에게 보내기"', invited: '보낸 궁합 링크로 들어옴',
@@ -33,7 +34,7 @@ const html = (body, status = 200) => new Response(body, {
 });
 
 /** 표 페이지 만들기 (순수 함수 — 테스트용). rows = [{ day, visit, home, input, free, payopen, paid, compat, compatsend, invited, codeopen }] 최신이 위 */
-export function renderPage(rows, { configured = true, paidKnown = true } = {}) {
+export function renderPage(rows, { configured = true, paidKnown = true, writesToday = null } = {}) {
   const sum = k => rows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0);
   const total = Object.fromEntries(['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen'].map(k => [k, sum(k)]));
   const cell = v => (Number.isFinite(v) ? v : '-');
@@ -57,6 +58,7 @@ th:first-child,td:first-child{text-align:left;white-space:nowrap}th{color:#E3B34
 <h1>벽사신견 숫자</h1><p>최근 ${rows.length}일(한국 시간). 개인정보 없이 횟수만 센 것입니다.</p>
 ${configured ? '' : '<div class="warn">아직 숫자 장부(KV)가 연결되지 않아 방문·풀이 횟수는 비어 있습니다. 결제 완료만 보입니다.</div>'}
 ${paidKnown ? '' : '<div class="warn">포트원에서 결제 완료 건수를 가져오지 못했습니다(- 로 표시).</div>'}
+${Number.isInteger(writesToday) ? `<p>오늘 숫자 장부에 쓴 횟수: <strong>${writesToday}</strong> / ${DAY_WRITE_BUDGET}번. ${writesToday >= DAY_WRITE_BUDGET ? '오늘 몫을 다 써서 지금부터 숫자는 세지 않습니다(내일 다시 셉니다). 무료 코드는 그대로 됩니다.' : '이 횟수를 넘으면 그날은 더 세지 않고, 남은 쓰기는 무료 코드 몫으로 둡니다.'}</p>` : ''}
 <h2>${funnelTitle}</h2>
 <table class="big"><tbody>
 <tr><td>첫 화면 방문</td><td>${cell(f.visit)}</td><td></td></tr>
@@ -102,15 +104,22 @@ export async function onRequestGet({ request, env }) {
   if (!env.NUMBERS_KEY || key.length !== env.NUMBERS_KEY.length || key !== env.NUMBERS_KEY) return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
   const days = lastDays();
   const configured = !!env.COUNTS;
-  const rows = await Promise.all(days.map(async day => {
+  let writesToday = null;
+  const rows = await Promise.all(days.map(async (day, idx) => {
     const row = { day };
-    for (const e of EVENTS) {
-      let v = NaN;
-      if (configured) { try { const n = parseInt(await env.COUNTS.get(kvKey(day, e)), 10); v = Number.isInteger(n) ? n : 0; } catch (x) { v = NaN; } }
-      row[e] = v;
+    if (!configured) { for (const e of EVENTS) row[e] = NaN; }
+    else {
+      try {
+        const book = readBook(await env.COUNTS.get(dayBookKey(day)));   // 그날 장부 한 장 (업데이트 47)
+        for (const e of EVENTS) row[e] = book[e] || 0;
+        if (idx === 0) writesToday = book._w;
+        if (day <= LEGACY_LAST_DAY) {   // 업데이트 46까지 쓰던 옛 모양(단계마다 숫자 하나)도 더한다 — 바꾼 날에는 두 모양이 섞여 있다
+          for (const e of EVENTS) { const n = parseInt(await env.COUNTS.get(kvKey(day, e)), 10); if (Number.isInteger(n) && n > 0) row[e] += n; }
+        }
+      } catch (x) { for (const e of EVENTS) row[e] = NaN; }
     }
     row.paid = env.PORTONE_API_SECRET ? await paidOn(day, env) : NaN;
     return row;
   }));
-  return html(renderPage(rows, { configured, paidKnown: rows.every(r => Number.isFinite(r.paid)) }));
+  return html(renderPage(rows, { configured, paidKnown: rows.every(r => Number.isFinite(r.paid)), writesToday }));
 }

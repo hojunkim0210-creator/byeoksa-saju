@@ -19,13 +19,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=46">
+  <link rel="manifest" href="manifest.json?v=47">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=46">
+    <link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
 
@@ -844,13 +844,28 @@
   <div class="modal-box" id="productModalBody"></div>
 </div>
 
+<!-- 결제 확인이 끊겼을 때 남는 안내 상자 (업데이트 47, 보안 점검 4번) — 결제는 됐는데 확인 한 번이 실패한 손님이 결제 번호를 잃지 않게. app.js showPayFail -->
+<div class="modal-overlay" id="payFailModal" role="dialog" aria-modal="true" aria-labelledby="payFailTitle">
+  <div class="modal-box">
+    <h3 id="payFailTitle">결제 확인이 끊겼소</h3>
+    <p>결제가 됐다면 다시 결제하지 마시오. 아래 '다시 확인'을 누르거나, 이 기기로 다시 들어오면 벽사견이 다시 확인해 봉인을 풀어 두겠소.</p>
+    <p class="pay-fail-id">결제 번호 <strong id="payFailId"></strong></p>
+    <button class="btn-submit" id="payFailRetry">다시 확인</button>
+    <div class="pay-fail-row">
+      <button class="btn-action" id="payFailCopy">번호 복사</button>
+      <button class="btn-action" id="payFailHelp">고객센터에 문의</button>
+    </div>
+    <button class="btn-close" id="payFailClose">닫기</button>
+  </div>
+</div>
+
 <div class="toast-msg" id="toastMsg"></div>
 
 
-  <script src="js/saju-core.js?v=46"></script>
-  <script src="js/phrases.js?v=46"></script>
-  <script src="js/app.js?v=46"></script>
-  <script src="js/extras.js?v=46"></script>
-  <script src="js/shop.js?v=46"></script>
+  <script src="js/saju-core.js?v=47"></script>
+  <script src="js/phrases.js?v=47"></script>
+  <script src="js/app.js?v=47"></script>
+  <script src="js/extras.js?v=47"></script>
+  <script src="js/shop.js?v=47"></script>
 </body>
 </html>

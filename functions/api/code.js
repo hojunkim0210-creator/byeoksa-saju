@@ -5,9 +5,12 @@
 //   코드 원문은 어디에도 두지 않는다(대표님 marketing/이벤트_코드_명단.md 에만, 깃 제외). 여기엔 되돌릴 수 없는 지문(SHA-256)만 있다.
 //   코드는 12자리(헷갈리는 0·O·1·I를 뺀 32글자)라, 공개된 지문으로 거꾸로 맞히는 것은 사실상 불가능하다.
 //   '사용 완료' 기록은 이미 연결된 숫자 장부(KV 바인딩 COUNTS)에 `code:<지문>` 이름으로 쓴다 — 대시보드 작업이 필요 없다. 손님 정보는 적지 않는다.
-// 응답: 200 {status:'OK'} · 404 {status:'WRONG'} · 409 {status:'USED'} · 503 {status:'OFF'}(이벤트 꺼짐·장부 없음·장부 오류) · 403 다른 사이트 · 400 잘못된 요청
+// 응답: 200 {status:'OK'} · 404 {status:'WRONG'} · 409 {status:'USED'} · 503 {status:'OFF'}(이벤트 꺼짐·장부 없음·장부 오류) · 403 다른 사이트·밖에서 직접 보낸 요청 · 400 잘못된 요청
+// 장부 쓰기 한도: 무료 요금제는 하루 1,000번. 숫자 세기(count.js)가 800번까지만 쓰므로 코드 18개의 '사용 완료'는 늘 쓸 자리가 남는다.
 // 한계: KV는 곳에 따라 1분쯤 늦게 퍼지므로 같은 코드를 거의 동시에 두 곳에서 넣으면 둘 다 열릴 수 있다(코드는 DM으로 한 사람에게만 가므로 그대로 둔다).
 // 켜는 법: EVENT_ON = true — 화면 쪽 site/js/app.js 의 EVENT.enabled 도 같이 켠다(CLAUDE.md 2절 업데이트 45).
+
+import { fromOurSite } from './count.js';
 
 export const EVENT_ON = false;
 export const SALT = 'a6baaa21e396ad012c0060af83e23313';
@@ -66,8 +69,7 @@ const json = (status, body) => new Response(JSON.stringify(body), {
 });
 
 export async function onRequestPost({ request, env }) {
-  const origin = request.headers.get('Origin');
-  if (origin && origin !== new URL(request.url).origin) return json(403, { status: 'FORBIDDEN' });   // 다른 사이트에서 보낸 요청은 받지 않는다
+  if (!fromOurSite(request)) return json(403, { status: 'FORBIDDEN' });   // 우리 사이트 화면에서 온 요청만 받는다 (업데이트 47 — 밖에서 주소를 직접 두드리는 요청도 거절)
   let code = null;
   try { const body = await request.json(); code = body && body.code; } catch (e) { return json(400, { status: 'BAD' }); }
   if (typeof code !== 'string' || code.length > 40) return json(400, { status: 'BAD' });
