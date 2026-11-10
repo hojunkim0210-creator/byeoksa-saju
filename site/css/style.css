@@ -488,6 +488,9 @@ header {
   transform: rotate(-5deg);
 }
 .scroll-btn-row { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+/* 두루마리 안 '설화록 序 다시 보기' (업데이트 45): 버튼 아래 글 단추 */
+.btn-scroll-sub { align-self: center; padding: 8px 10px; background: none; border: 0; font-family: var(--font-body); font-size: 14px; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.btn-scroll-sub:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
 
 /* ── 입력 화면 ─────────────────────────────────────────────────────── */
 .gaze-header {
@@ -1984,3 +1987,12 @@ body.buy-bar-on { padding-bottom: calc(96px + 68px + env(safe-area-inset-bottom)
 .birth-note { margin: 12px 4px 10px; font-size: 13.5px; line-height: 1.55; text-align: center; color: var(--moon-soft); }
 .birth-note + .birth-note { margin-top: -4px; }
 .compat-card .birth-note { margin: 4px 0 8px; color: var(--ink-soft); }
+
+/* 🎟️ 무료 코드 이벤트 (업데이트 45): 할인 코드 칸과 같은 모양, 아래에 안내 한 줄 — EVENT.enabled 를 켰을 때만 나온다 */
+.promo-fold + .promo-fold { margin-top: 10px; }
+.promo-fold .event-note { margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }   /* 결제창 글(.modal-box p)보다 작게 */
+.event-fold[open] .promo-row { margin-top: 8px; }
+.event-fold .promo-row { flex-wrap: wrap; }   /* 12자리 코드가 다 보이게 입력칸은 한 줄 전체, 단추는 그 아래 */
+.event-input { flex: 1 1 100%; text-transform: uppercase; letter-spacing: 0.06em; }   /* 코드는 대문자로 보이게 (넣을 때 대소문자는 상관없음) */
+.event-apply { flex: 1 1 100%; white-space: nowrap; }
+

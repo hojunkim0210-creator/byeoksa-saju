@@ -191,11 +191,12 @@ test('궁합: 내 이름을 적으면 결과에 이름으로 나온다', async (
   await ctx.close();
 });
 
-test('설화 두루마리는 버튼 하나: 대문에선 풀이로, 다른 화면에선 닫기', async () => {
+test("설화 두루마리의 큰 버튼은 하나: 대문에선 풀이로, 다른 화면에선 닫기 (그 아래 글 단추 '설화록 序 다시 보기'는 업데이트 45)", async () => {
   const { ctx, page } = await openPage(browser);
   await home(page);
   await page.evaluate(() => openHanjiScroll()); await page.waitForTimeout(200);
-  assert.equal(await page.locator('#hanjiScrollModal button:visible').count(), 1);
+  assert.equal(await page.locator('#hanjiScrollModal button.btn-scroll-action:visible').count(), 1);
+  assert.deepEqual(await page.locator('#hanjiScrollModal button:visible').allTextContents().then(t => t.map(x => x.trim()).slice(1)), ['설화록 序 다시 보기']);
   assert.match(await page.textContent('#scrollActionBtn'), /사주 풀이 보기/);
   await page.click('#scrollActionBtn'); await page.waitForTimeout(700);
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('viewInput')).display), 'flex');

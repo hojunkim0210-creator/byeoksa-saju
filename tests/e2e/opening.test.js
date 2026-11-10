@@ -1,6 +1,8 @@
 // 첫 진입 관문 (2026-11-01 벤치마킹: 다른 운세 서비스 9곳 모두 첫 화면에 바로 내용):
 //   序와 대문 안내창을 한 관문으로 합쳤다. 序는 하루 한 번(마지막 줄 뒤 현판 버튼 → 접견실), 건너뛰기·같은 날 재방문·결과 링크는 관문 없이 바로 화면.
 //   helpers.openPage는 자동 테스트용으로 序를 건너뛰므로(QUIET), 여기서는 序가 실제로 도는 조건(움직임 줄이기로 짧게)으로 연다.
+// 업데이트 45 (2026-11-10 대표님 OK): 처음 온 손님도 序 없이 바로 대문(app.js OPENING.firstVisit = 'skip'). 序는 설화록 두루마리의 '설화록 序 다시 보기'로 본다.
+//   예전 흐름(하루 한 번 序)은 스위치를 'show'로 돌리면 그대로 살아나야 하므로, 아래에서 show: true(window.__BYEOKSA_OPENING__)로 계속 검사한다.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium, SITE } = require('./helpers');
@@ -9,11 +11,12 @@ let browser;
 test.before(async () => { browser = await chromium.launch(); });
 test.after(async () => { await browser.close(); });
 
-async function realPage({ seen = false, url = 'file://' + SITE } = {}) {
+async function realPage({ seen = false, url = 'file://' + SITE, show = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   page._errors = []; page.on('pageerror', e => page._errors.push(e.message));
   await page.route('**/*', r => { const u = r.request().url(); (u.startsWith('file:') || u.startsWith('data:')) ? r.continue() : r.abort(); });
+  if (show) await page.addInitScript(() => { window.__BYEOKSA_OPENING__ = 'show'; });   // 스위치를 'show'로 돌린 것처럼 (예전 흐름)
   // seen: 'today' = 오늘 이미 序를 봄, 'yesterday' = 어제 봄 (값은 YYYY-MM-DD, app.js todayStr 와 같은 모양)
   if (seen) await page.addInitScript(when => { const d = new Date(); if (when === 'yesterday') d.setDate(d.getDate() - 1); const s = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; try { localStorage.setItem('byeoksa.seen.v1', s); } catch (e) { /* 무시 */ } }, seen);
   await page.goto(url); await page.waitForTimeout(700);
@@ -24,8 +27,64 @@ const shown = (page, id) => page.evaluate(i => { const e = document.getElementBy
 const gateDisplay = page => page.evaluate(() => getComputedStyle(document.getElementById('introGateModal')).display);
 const viewOf = page => page.evaluate(() => [...document.querySelectorAll('.app-container > .view-step')].find(v => v.style.display !== 'none').id);
 
-test('처음 온 손님: 관문은 序 한 겹 — 줄을 다 읽으면 현판 버튼이 나오고, 누르면 접견실(입력)로', async () => {
+test("처음 온 손님(기본 'skip'): 序·관문 없이 바로 대문이 보이고 시작 버튼이 첫 화면 안에 있다 — 어제 봤어도 마찬가지", async () => {
+  for (const seen of [false, 'yesterday']) {
+    const { ctx, page } = await realPage({ seen });
+    assert.equal(await page.evaluate(() => OPENING.firstVisit), 'skip');
+    assert.ok(!(await shown(page, 'openingVeil')), '序는 저절로 나오지 않는다');
+    assert.equal(await gateDisplay(page), 'none', '대문 안내창도 없다');
+    assert.equal(await viewOf(page), 'viewLanding');
+    const btn = await page.evaluate(() => { const r = document.querySelector('#viewLanding .btn-main').getBoundingClientRect(); return { top: r.top, bottom: r.bottom, h: innerHeight }; });
+    assert.ok(btn.top >= 0 && btn.bottom <= btn.h, `시작 버튼이 첫 화면 밖: ${JSON.stringify(btn)}`);
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('byeoksa.t.home')), '1', "'대문 도착'을 센다");
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('byeoksa.t.input')), null);
+    if (!seen) assert.equal(await page.evaluate(() => localStorage.getItem('byeoksa.seen.v1')), null, '序를 안 봤으니 본 날짜도 적지 않는다');
+    await page.click('#viewLanding .btn-main'); await page.waitForTimeout(200);
+    assert.equal(await viewOf(page), 'viewInput');
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('byeoksa.t.input')), '1', "'입력 화면 도착'을 센다");
+    assert.deepEqual(page._errors, []);
+    await ctx.close();
+  }
+});
+
+test("설화록 두루마리의 '설화록 序 다시 보기': 序 글 여섯 줄이 그대로 나오고, 현판 버튼을 누르면 문이 열려 접견실로 — 두 번 봐도 처음부터", async () => {
   const { ctx, page } = await realPage();
+  const lines = await page.$$eval('#openingLines p', ps => ps.map(p => p.textContent.trim()));
+  assert.equal(lines.length, 6);
+  assert.equal(lines[0], '옛글에 이르기를, 개는 사람의 눈이 닿지 않는 것을 본다 하였다.');
+  assert.match(lines[4], /그 개가 지금, 네 등 뒤를 보고 있다\./);
+  await page.click('.home-topbar-link'); await page.waitForTimeout(400);   // 대문 상단 '설화록' → 두루마리
+  assert.equal(await page.textContent('#scrollOpeningBtn'), '설화록 序 다시 보기');
+  await page.click('#scrollOpeningBtn'); await page.waitForTimeout(700);
+  assert.ok(await shown(page, 'openingVeil'), '序가 다시 보인다');
+  assert.ok(!(await shown(page, 'openingEnter')));
+  await page.click('#openingSkip'); await page.waitForTimeout(1200);          // 한 번은 건너뛰기 → 대문 그대로
+  assert.ok(!(await shown(page, 'openingVeil')));
+  assert.equal(await gateDisplay(page), 'none');
+  assert.equal(await viewOf(page), 'viewLanding');
+  await page.evaluate(() => replayOpening()); await page.waitForTimeout(700);   // 다시 한 번: 처음 모습부터
+  assert.equal(await page.$$eval('#openingLines p.is-on', ps => ps.length), 1, '첫 줄만 켜진 처음 모습');
+  assert.ok(await shown(page, 'openingSkip'));
+  for (let i = 1; i < lines.length; i++) { await page.click('#openingLines'); await page.waitForTimeout(60); }
+  assert.equal(await page.$$eval('#openingLines p.is-on', ps => ps.length), 6, '한 번 누를 때 한 줄씩(겹쳐 붙은 단추 없음)');
+  assert.ok(await shown(page, 'openingEnter'), '마지막 줄 뒤 현판 버튼');
+  await page.click('#openingEnter'); await page.waitForTimeout(1500);
+  assert.ok(!(await shown(page, 'openingVeil')));
+  assert.equal(await gateDisplay(page), 'none');
+  assert.equal(await viewOf(page), 'viewInput', '대문에서 다시 보면 예전처럼 접견실로');
+  // 입력 화면에서 다시 보면(두루마리 '설화 읽기') 序만 걷히고 화면은 그대로
+  await page.evaluate(() => { openHanjiScroll(); replayOpening(); }); await page.waitForTimeout(700);
+  for (let i = 1; i < lines.length; i++) { await page.click('#openingLines'); await page.waitForTimeout(60); }
+  await page.click('#openingEnter'); await page.waitForTimeout(1500);
+  assert.ok(!(await shown(page, 'openingVeil')));
+  assert.equal(await viewOf(page), 'viewInput');
+  assert.equal(await gateDisplay(page), 'none');
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test("스위치 'show'(예전 흐름) — 처음 온 손님: 관문은 序 한 겹, 줄을 다 읽으면 현판 버튼이 나오고 누르면 접견실(입력)로", async () => {
+  const { ctx, page } = await realPage({ show: true });
   assert.ok(await shown(page, 'openingVeil'), '序가 보인다');
   assert.ok(!(await shown(page, 'gateEnterBtn')), '대문 안내창의 글·버튼은 序에 합쳐져 따로 보이지 않는다');
   assert.ok(!(await shown(page, 'openingEnter')), '현판 버튼은 다 읽기 전엔 없다');
@@ -41,8 +100,8 @@ test('처음 온 손님: 관문은 序 한 겹 — 줄을 다 읽으면 현판 �
   await ctx.close();
 });
 
-test('건너뛰기: 序를 걷고 관문 없이 대문(홈)으로', async () => {
-  const { ctx, page } = await realPage();
+test("스위치 'show' — 건너뛰기: 序를 걷고 관문 없이 대문(홈)으로", async () => {
+  const { ctx, page } = await realPage({ show: true });
   await page.click('#openingSkip'); await page.waitForTimeout(1200);
   assert.ok(!(await shown(page, 'openingVeil')));
   assert.equal(await gateDisplay(page), 'none');
@@ -50,8 +109,8 @@ test('건너뛰기: 序를 걷고 관문 없이 대문(홈)으로', async () => 
   await ctx.close();
 });
 
-test('같은 날 다시 오면: 序도 대문 안내창도 없이 바로 대문(홈)', async () => {
-  const { ctx, page } = await realPage({ seen: 'today' });
+test("스위치 'show' — 같은 날 다시 오면: 序도 대문 안내창도 없이 바로 대문(홈)", async () => {
+  const { ctx, page } = await realPage({ seen: 'today', show: true });
   assert.ok(!(await shown(page, 'openingVeil')));
   assert.equal(await gateDisplay(page), 'none');
   assert.equal(await viewOf(page), 'viewLanding');
@@ -59,8 +118,8 @@ test('같은 날 다시 오면: 序도 대문 안내창도 없이 바로 대문(
   await ctx.close();
 });
 
-test('다음 날 오면 다시 序부터 (하루 한 번, 2026-11-01 대표님 결정), 본 날짜를 다시 적는다', async () => {
-  const { ctx, page } = await realPage({ seen: 'yesterday' });
+test("스위치 'show' — 다음 날 오면 다시 序부터 (하루 한 번, 2026-11-01 대표님 결정), 본 날짜를 다시 적는다", async () => {
+  const { ctx, page } = await realPage({ seen: 'yesterday', show: true });
   assert.ok(await shown(page, 'openingVeil'), '어제 봤으면 오늘은 다시 序');
   const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   assert.equal(await page.evaluate(() => localStorage.getItem('byeoksa.seen.v1')), today);

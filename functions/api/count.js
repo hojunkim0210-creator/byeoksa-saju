@@ -7,7 +7,8 @@
 //   ① KV 네임스페이스 하나 만들기(이름 예: byeoksa-counts)  ② Pages 프로젝트 → 설정 → 바인딩 → KV 네임스페이스, 변수 이름은 COUNTS
 // 한계: KV는 "읽고 더해 쓰기"라 같은 순간에 겹치면 한두 건 빠질 수 있다. 방향을 보는 용도라 그대로 둔다.
 
-export const EVENTS = ['visit', 'free', 'payopen', 'compat', 'compatsend', 'invited'];
+// home = 대문 도착, input = 입력 화면 도착 (업데이트 45 — 방문과 무료 풀이 사이 어디서 빠지는지), codeopen = 무료 코드로 리포트를 엶
+export const EVENTS = ['visit', 'home', 'input', 'free', 'payopen', 'compat', 'compatsend', 'invited', 'codeopen'];
 export const KEEP_SECONDS = 400 * 86400;   // 13개월쯤 지난 숫자는 저절로 사라진다
 
 /** 한국 시간 기준 날짜 'YYYY-MM-DD' (순수 함수 — 테스트용) */

@@ -550,7 +550,8 @@
   const STATS_MIN_SHOW = 100;
 
   function reviewItemHtml(r) {
-    const who = [r.who ? esc(r.who) : '손님', r.verified ? '실제 구매자' : null, r.when ? esc(r.when) : null].filter(Boolean).join(' · ');
+    // r.event: 무료 코드 이벤트로 연 손님의 후기 → '실제 구매자' 대신 '무료 이벤트 참여'로 밝힌다 (업데이트 45)
+    const who = [r.who ? esc(r.who) : '손님', r.event ? '무료 이벤트 참여' : (r.verified ? '실제 구매자' : null), r.when ? esc(r.when) : null].filter(Boolean).join(' · ');
     return `<li class="review-item"><p class="review-text">“${esc(r.text)}”</p><p class="review-who">${who}</p></li>`;
   }
   /** 대문 '먼저 다녀간 손님의 한 줄'(최대 3개)과 결제창의 후기 두 줄. 후기가 없으면 둘 다 숨긴다 */
@@ -587,7 +588,8 @@
     if (!REVIEW_FORM_URL) return;
     link.href = REVIEW_FORM_URL;
     const pid = paidIdFor(typeof currentSajuData !== 'undefined' ? currentSajuData : null);
-    if (idEl) { idEl.hidden = !pid; idEl.textContent = pid ? `결제 번호 ${pid} (후기에 적어 주면 확인이 빠르오)` : ''; }
+    const viaEvent = /^event/.test(pid);   // 무료 코드로 연 리포트 (업데이트 45)
+    if (idEl) { idEl.hidden = !pid; idEl.textContent = viaEvent ? "무료 코드로 열었으니 후기의 결제 번호 칸에는 '무료 이벤트'라고 적어 주시오." : pid ? `결제 번호 ${pid} (후기에 적어 주면 확인이 빠르오)` : ''; }
   }
   document.addEventListener('DOMContentLoaded', () => { renderReviews(); renderStats(); });
 

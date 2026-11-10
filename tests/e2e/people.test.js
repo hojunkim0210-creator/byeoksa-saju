@@ -64,7 +64,7 @@ function josaErrors(text) {
 // 파일로 여는 테스트에서만 생기는 것은 뺀다: 외부 주소 차단(Failed to load resource), 결제 수 서버 /api/stats (실제 사이트에는 있다)
 const consoleErrors = page => page._console.filter(t => !/^Failed to load resource|^Fetch API cannot load file:\/\/\/api\//.test(t));
 
-test('사주 6명: 무료 결과·결제창·오늘의 운세·묻기·신년운세 맛보기에 깨진 값·조사 오류·콘솔 오류가 없고, 숫자 세기(free·payopen)가 불린다', async () => {
+test('사주 6명: 무료 결과·결제창·오늘의 운세·묻기·신년운세 맛보기에 깨진 값·조사 오류·콘솔 오류가 없고, 숫자 세기(home·input·free·payopen)가 불린다', async () => {
   const seen = [];
   for (const p of PEOPLE) {
     const { ctx, page } = await openPage(browser);
@@ -108,7 +108,7 @@ test('사주 6명: 무료 결과·결제창·오늘의 운세·묻기·신년운
       assert.deepEqual(josaErrors(t), [], `${p.label}: ${k} 조사 오류`);
     }
     const log = await page.evaluate(() => window.__trackLog || []);
-    assert.deepEqual(log, ['visit', 'free', 'payopen'], `${p.label}: 숫자 세기 호출`);
+    assert.deepEqual(log, ['visit', 'home', 'input', 'free', 'payopen'], `${p.label}: 숫자 세기 호출`);   // home·input = 대문·입력 도착 (업데이트 45)
     assert.deepEqual(page._errors, [], `${p.label}: 페이지 오류`);
     assert.deepEqual(consoleErrors(page), [], `${p.label}: 콘솔 오류`);
     seen.push(text.slice(0, 400));
@@ -189,7 +189,7 @@ test('궁합 3쌍(남녀·여여·남남): 결과·보내기·받은 링크 열�
     const url = (await page.evaluate(() => window.__shared)).url;
     assert.ok(url.endsWith('?compat=1&n=' + encodeURIComponent(a.name)), `${label}: 보내는 링크 ${url}`);
     for (const v of [a, b]) assert.ok(!url.includes(v.y), `${label}: 링크에 생년이 들어갔다`);
-    assert.deepEqual(await page.evaluate(() => window.__trackLog), ['visit', 'compat', 'compatsend'], `${label}: 숫자 세기 호출`);
+    assert.deepEqual(await page.evaluate(() => window.__trackLog), ['visit', 'home', 'compat', 'compatsend'], `${label}: 숫자 세기 호출`);
     assert.deepEqual(page._errors, [], `${label}: 페이지 오류`);
     assert.deepEqual(consoleErrors(page), [], `${label}: 콘솔 오류`);
     await ctx.close();

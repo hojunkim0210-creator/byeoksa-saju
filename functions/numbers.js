@@ -11,8 +11,9 @@ import { buildQuery, readCount, STORE_ID } from './api/stats.js';
 
 export const DAYS = 14;
 export const LABELS = {
-  visit: '첫 화면 방문', free: '무료 풀이 봄', payopen: '결제창 연 횟수', paid: '결제 완료',
-  compat: '궁합 결과 봄', compatsend: '궁합 "상대에게 보내기"', invited: '보낸 궁합 링크로 들어옴'
+  visit: '첫 화면 방문', home: '대문 도착', input: '입력 화면 도착', free: '무료 풀이 봄', payopen: '결제창 연 횟수', paid: '결제 완료',
+  compat: '궁합 결과 봄', compatsend: '궁합 "상대에게 보내기"', invited: '보낸 궁합 링크로 들어옴',
+  codeopen: '무료 코드로 엶'   // 업데이트 45 — 무료 코드 이벤트를 켠 뒤부터 쌓인다
 };
 
 /** 오늘부터 거슬러 올라간 날짜 목록 'YYYY-MM-DD' (순수 함수 — 테스트용) */
@@ -31,12 +32,20 @@ const html = (body, status = 200) => new Response(body, {
   status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' }
 });
 
-/** 표 페이지 만들기 (순수 함수 — 테스트용). rows = [{ day, visit, free, payopen, paid, compat, compatsend, invited }] 최신이 위 */
+/** 표 페이지 만들기 (순수 함수 — 테스트용). rows = [{ day, visit, home, input, free, payopen, paid, compat, compatsend, invited, codeopen }] 최신이 위 */
 export function renderPage(rows, { configured = true, paidKnown = true } = {}) {
   const sum = k => rows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0);
-  const total = Object.fromEntries(['visit', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited'].map(k => [k, sum(k)]));
+  const total = Object.fromEntries(['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen'].map(k => [k, sum(k)]));
   const cell = v => (Number.isFinite(v) ? v : '-');
-  const cols = ['visit', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited'];
+  // 깔때기는 '대문 도착'을 세기 시작한 날부터만 더한다(업데이트 45 전 날짜는 대문·입력 숫자가 없어 비율이 어긋난다). 아직 한 번도 안 셌으면 예전처럼 방문 → 무료 풀이.
+  const oldest = rows.map(r => r.home > 0).lastIndexOf(true);   // rows는 최신이 위 → 대문 숫자가 있는 가장 오래된 날
+  const stepped = oldest >= 0;
+  const fRows = stepped ? rows.slice(0, oldest + 1) : rows;
+  const f = Object.fromEntries(['visit', 'home', 'input', 'free', 'payopen', 'paid'].map(k => [k, fRows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0)]));
+  const funnelTitle = stepped && fRows.length < rows.length
+    ? `어디서 줄어드나 (${fRows.length}일 합계 — 대문·입력을 세기 시작한 ${esc(fRows[fRows.length - 1].day.slice(5))}부터)`
+    : `어디서 줄어드나 (${rows.length}일 합계)`;
+  const cols = ['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen'];
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>벽사신견 숫자</title>
 <style>body{font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#121426;color:#E6D6B3;margin:0;padding:16px;line-height:1.5}
@@ -48,14 +57,17 @@ th:first-child,td:first-child{text-align:left;white-space:nowrap}th{color:#E3B34
 <h1>벽사신견 숫자</h1><p>최근 ${rows.length}일(한국 시간). 개인정보 없이 횟수만 센 것입니다.</p>
 ${configured ? '' : '<div class="warn">아직 숫자 장부(KV)가 연결되지 않아 방문·풀이 횟수는 비어 있습니다. 결제 완료만 보입니다.</div>'}
 ${paidKnown ? '' : '<div class="warn">포트원에서 결제 완료 건수를 가져오지 못했습니다(- 로 표시).</div>'}
-<h2>어디서 줄어드나 (14일 합계)</h2>
+<h2>${funnelTitle}</h2>
 <table class="big"><tbody>
-<tr><td>첫 화면 방문</td><td>${cell(total.visit)}</td><td></td></tr>
-<tr><td>→ 무료 풀이 봄</td><td>${cell(total.free)}</td><td>${pct(total.free, total.visit)}</td></tr>
-<tr><td>→ 결제창 연 횟수</td><td>${cell(total.payopen)}</td><td>${pct(total.payopen, total.free)}</td></tr>
-<tr><td>→ 결제 완료</td><td>${cell(total.paid)}</td><td>${pct(total.paid, total.payopen)}</td></tr>
+<tr><td>첫 화면 방문</td><td>${cell(f.visit)}</td><td></td></tr>
+${stepped ? `<tr><td>→ 대문 도착</td><td>${cell(f.home)}</td><td>${pct(f.home, f.visit)}</td></tr>
+<tr><td>→ 입력 화면 도착</td><td>${cell(f.input)}</td><td>${pct(f.input, f.home)}</td></tr>
+<tr><td>→ 무료 풀이 봄</td><td>${cell(f.free)}</td><td>${pct(f.free, f.input)}</td></tr>` : `<tr><td>→ 무료 풀이 봄</td><td>${cell(f.free)}</td><td>${pct(f.free, f.visit)}</td></tr>`}
+<tr><td>→ 결제창 연 횟수</td><td>${cell(f.payopen)}</td><td>${pct(f.payopen, f.free)}</td></tr>
+<tr><td>→ 결제 완료</td><td>${cell(f.paid)}</td><td>${pct(f.paid, f.payopen)}</td></tr>
 </tbody></table>
 <p>오른쪽 %는 바로 윗줄 대비입니다. 결제창은 한 사람이 여러 번 열 수 있어 100%를 넘을 수도 있습니다.</p>
+<p>'대문 도착'·'입력 화면 도착'은 업데이트 45를 올린 날부터 셉니다(탭 하나에 한 번). 위 표는 그 숫자가 있는 날부터만 더합니다. 결과 링크·궁합 링크로 바로 들어온 손님은 대문·입력을 거치지 않아, 무료 풀이가 입력보다 많을 수도 있습니다.</p>
 <h2>궁합 공유</h2>
 <table class="big"><tbody>
 <tr><td>궁합 결과 봄</td><td>${cell(total.compat)}</td><td></td></tr>

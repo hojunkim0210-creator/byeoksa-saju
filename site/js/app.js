@@ -44,6 +44,14 @@ const {
   };
   const CONTACT_EMAIL = 'pathlogue.help@gmail.com';
 
+  // ─────────────────────────────────────────────────────────────────
+  // 🎟️ 무료 코드 이벤트 (업데이트 45, 2026-11-10 — 대표님 "카카오페이 나오면 바로 시작, 미리 준비만")
+  //   enabled: false 이면 손님 화면에 아무것도 안 보인다(결제창의 '무료 이벤트 코드' 칸도 없음). 결제 흐름·PAYMENT·KCP와는 따로 논다.
+  //   켤 때는 서버 functions/api/code.js 의 EVENT_ON 도 같이 true로 — 켜는 순서는 CLAUDE.md 2절 업데이트 45.
+  //   코드 원문은 marketing/이벤트_코드_명단.md(깃 제외)에만 있고, 서버에는 지문만 있다.
+  // ─────────────────────────────────────────────────────────────────
+  const EVENT = { enabled: false, url: '/api/code' };
+
   function renderSale() {
     const priceText = SALE.price.toLocaleString('ko-KR');
     document.querySelectorAll('.sale-price').forEach(el => { el.textContent = priceText; });
@@ -576,6 +584,7 @@ let currentSajuData = null;
     tidyTitles(document.getElementById(id));
     updateBuyBar(id);
     if (id === 'viewResult' && _resultFoldsDirty) { _resultFoldsDirty = false; applyFolds(document.getElementById('viewResult')); }
+    if (id === 'viewLanding') trackOnce('home'); else if (id === 'viewInput') trackOnce('input');   // 어디서 빠지는지 보려고 (업데이트 45, 탭 하나에 한 번)
     // 하단 메뉴: 지금 화면에 해당하는 칸을 표시
     document.querySelectorAll('#tabBar .tab-item').forEach(t => {
       const on = (t.dataset.views || '').split(' ').includes(id);
@@ -615,10 +624,12 @@ let currentSajuData = null;
   window.track = track;
   // 궁합 링크에 붙는 보낸 사람 별명: 한글·영문·숫자·띄어쓰기·_.- 만, 10자까지 (보내는 쪽 extras.js 와 받는 쪽이 같은 규칙)
   const NICK_RE = /^[0-9A-Za-z가-힣 _.\-]{1,10}$/;
-  function trackVisitOnce() {
-    try { if (sessionStorage.getItem('byeoksa.t.visit')) return; sessionStorage.setItem('byeoksa.t.visit', '1'); } catch (e) { /* 저장 못 하면 그냥 센다 */ }
-    track('visit');
+  /** 탭 하나(세션)에 한 번만 세는 단계 — visit(첫 화면), home(대문 도착), input(입력 화면 도착) */
+  function trackOnce(name) {
+    try { const k = 'byeoksa.t.' + name; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); } catch (e) { /* 저장 못 하면 그냥 센다 */ }
+    track(name);
   }
+  function trackVisitOnce() { trackOnce('visit'); }
 
   // ─────────────────────────────────────────────────────────────────────────
   // 💬 사이트 공유: 개인정보 없이 첫 화면 주소만 보낸다 (휴대폰은 공유 창 → 카카오톡, 안 되면 문구 복사)
@@ -777,21 +788,46 @@ let currentSajuData = null;
   const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const seenOpening = () => { try { return localStorage.getItem(SEEN_KEY) === todayStr(); } catch (e) { return false; } };
   function hideGate() { const m = document.getElementById('introGateModal'); if (m) m.style.display = 'none'; }
+  // 序를 처음 온 손님에게 보일지 (업데이트 45, 2026-11-10 대표님 OK — 방문 12번 중 무료 풀이 1번, 序를 다섯 번 눌러야 들어오는 것이 가장 의심)
+  //   'skip' = 그날 처음 와도 序·관문 없이 바로 대문(홈).  'show' = 예전처럼 하루 한 번 序(마지막 줄 뒤 '문을 두드린다' → 접견실).
+  //   되돌리려면 이 값만 'show'로 바꾼다. 序 글은 그대로 있고, 설화록 두루마리의 '설화록 序 다시 보기'로 언제든 다시 본다(replayOpening).
+  //   (window.__BYEOKSA_OPENING__ 은 자동 테스트가 'show' 흐름을 돌려 볼 때만 쓴다)
+  const OPENING = { firstVisit: window.__BYEOKSA_OPENING__ === 'show' ? 'show' : 'skip' };
+  /** 대문 안내창을 처음 모습으로 (序를 다시 볼 때 문 여는 장면을 한 번 더 쓰려고) */
+  function resetGate() {
+    const modal = document.getElementById('introGateModal'), scene = document.getElementById('gateScene'), btn = document.getElementById('gateEnterBtn');
+    if (!modal) return;
+    if (scene) scene.classList.remove('is-arming', 'is-blink', 'is-open', 'is-leaving');
+    if (btn) btn.disabled = false;
+    modal.style.display = ''; modal.style.opacity = ''; modal.style.visibility = '';
+  }
 
   // 관문은 한 겹 (2026-11-01 벤치마킹: 다른 운세 서비스 9곳 모두 첫 화면에 바로 내용):
   //   그날 처음 온 손님은 序만 — 줄을 다 읽으면 序 안에 현판 버튼 '문을 두드린다'가 나오고, 누르면 序가 걷히며 대문이 열리고 접견실로.
   //   대문 안내창(introGateModal)의 글·버튼은 序에 합쳐져(is-merged) 사진만 문 여는 장면으로 쓴다. 건너뛰기는 관문 없이 대문(홈).
   //   같은 날 다시 오면 序도 안내창도 없이 바로 대문(홈), 다음 날엔 다시 序(하루 한 번). 자동 테스트(QUIET)는 예전처럼 序 없이 대문 안내창만 본다.
-  function playOpening() {
+  /** 序를 튼다. replay = 설화록 두루마리의 '序 다시 보기'로 다시 볼 때. 序를 실제로 틀었으면 true */
+  function playOpening(replay) {
     const veil = document.getElementById('openingVeil');
-    if (!veil || QUIET()) return;
-    if (seenOpening()) { hideGate(); return; }
-    try { localStorage.setItem(SEEN_KEY, todayStr()); } catch (e) { /* 무시 */ }
-    const gate = document.getElementById('introGateModal'); if (gate) gate.classList.add('is-merged');
+    if (!veil) return false;
+    if (!replay) {
+      if (QUIET()) return false;
+      if (OPENING.firstVisit !== 'show' || seenOpening()) { hideGate(); return false; }   // 'skip'이면 처음 와도 바로 대문
+      try { localStorage.setItem(SEEN_KEY, todayStr()); } catch (e) { /* 무시 */ }
+    }
+    const onHome = document.getElementById('viewLanding').style.display !== 'none';
+    const withGate = !replay || onHome;   // 문 여는 장면 → 접견실까지: 첫 방문, 또는 대문에서 다시 볼 때 (다른 화면에서 다시 보면 序만 걷힌다)
+    const gate = document.getElementById('introGateModal');
+    if (gate && withGate) { if (replay) resetGate(); gate.classList.add('is-merged'); }
     const lines = [...veil.querySelectorAll('.opening-lines p')];
     const hint = document.getElementById('openingHint');
     const skipBtn = document.getElementById('openingSkip');
     const enterBtn = document.getElementById('openingEnter');
+    lines.forEach(p => p.classList.remove('is-on', 'is-dim', 'is-gone'));   // 다시 볼 때를 위해 처음 모습으로
+    if (hint) hint.hidden = false;
+    if (skipBtn) skipBtn.hidden = false;
+    if (enterBtn) enterBtn.hidden = true;
+    veil.classList.remove('is-leaving');
     let shown = 0, done = false;
     const reveal = () => {   // 누를 때마다 한 줄(세로 한 단): 새 줄은 오른쪽에서 먹이 번지듯 떠오르고, 앞 줄은 옅어지고, 오래된 줄은 책장 넘기듯 사라진다
       if (shown >= lines.length) return;
@@ -814,15 +850,18 @@ let currentSajuData = null;
         if (_toastAfterOpening) { const t = _toastAfterOpening; _toastAfterOpening = null; setTimeout(() => showToast(t), 300); }   // 序 뒤로 미뤄 둔 알림
       }, 900);
     };
-    const enterGate = () => { if (done) return; finish(); acceptDestiny(); };   // 序가 걷히는 동안 대문이 열리고 접견실로
-    const skip = () => { if (done) return; finish(); hideGate(); };             // 건너뛰기: 관문 없이 대문(홈)으로
+    const enterGate = () => { if (done) return; finish(); if (withGate) acceptDestiny(); };   // 序가 걷히는 동안 대문이 열리고 접견실로
+    const skip = () => { if (done) return; finish(); hideGate(); if (!replay) trackOnce('home'); };   // 건너뛰기: 관문 없이 대문(홈)으로
     veil.hidden = false;
     document.body.classList.add('veil-on');
-    veil.addEventListener('click', e => { if (e.target.closest('#openingSkip, #openingEnter')) return; if (shown >= lines.length) { enterGate(); return; } reveal(); });
+    veil.onclick = e => { if (e.target.closest('#openingSkip, #openingEnter')) return; if (shown >= lines.length) { enterGate(); return; } reveal(); };   // onclick: 다시 볼 때 겹쳐 붙지 않게
     if (skipBtn) skipBtn.onclick = skip;
     if (enterBtn) enterBtn.onclick = enterGate;
     setTimeout(reveal, REDUCED() ? 0 : 500);   // 첫 줄은 저절로
+    return true;
   }
+  /** 설화록 두루마리의 '설화록 序 다시 보기' (업데이트 45): 두루마리를 말고 序를 처음부터 다시 튼다 */
+  function replayOpening() { closeHanjiScroll(); playOpening(true); }
 
   // 마지막 줄의 '명식'은 쉬운 말로 (업데이트 39, 검수 7번). 원래 줄: '명식이 드러난다.'
   const RITUAL_LINES = ['대문 밖 바람이 멎었소…', '벽사견이 그대 냄새를 맡고 있소…', '그대 등 뒤에서 무언가 움찔했소…', '그대 사주가 드러나오.'];
@@ -1984,7 +2023,7 @@ let currentSajuData = null;
 
     function openPaymentModal() {
       const m = document.getElementById('paymentModal');
-      const slot = document.getElementById('reportPromo'); if (slot && !slot.innerHTML) slot.innerHTML = promoRowHtml();
+      const slot = document.getElementById('reportPromo'); if (slot && !slot.innerHTML) slot.innerHTML = promoRowHtml() + (EVENT.enabled ? eventRowHtml() : '');   // 무료 이벤트 코드 칸은 켰을 때만 (업데이트 45)
       if (!m.dataset.promoBound) { m.addEventListener('promo', () => { renderPaymentMode(); renderCouponLines(); }); m.dataset.promoBound = '1'; }
       renderPaymentMode(); renderCouponLines(); m.style.display = 'flex';
       track('payopen');
@@ -2084,6 +2123,7 @@ let currentSajuData = null;
   function applyPromoCode(raw) {
     const code = String(raw || '').trim().toUpperCase();
     if (!code) return;
+    if (EVENT.enabled && !PROMO_CODES[code] && EVENT_CODE_RE.test(code)) { showToast("무료 이벤트 코드는 아래 '무료 이벤트 코드' 칸에 넣으시오."); return; }   // 업데이트 45
     if (!PROMO_CODES[code]) { showToast('그런 코드는 냄새가 안 나오. 다시 확인하시오.'); return; }
     if (activeCoupon()) { showToast('이미 할인이 걸려 있소. 할인은 한 번에 한 건이오.'); return; }
     if (grantCoupon('code:' + code)) { showToast(`🎁 ${PROMO_CODES[code]} 적용! 유료 풀이 1건 ${won(SHARE_DISCOUNT.amount)}원 할인.`); renderPaymentMode(); }
@@ -2093,6 +2133,37 @@ let currentSajuData = null;
   function promoRowHtml() {
     // 코드 칸은 접어 두어 결제창이 길어지지 않게 (코드가 있는 사람만 연다)
     return `<details class="promo-fold"><summary>할인 코드가 있으면 여기를 누르세요</summary><div class="promo-row"><input type="text" class="promo-input" maxlength="20" placeholder="할인 코드" aria-label="할인 코드" autocapitalize="characters"><button type="button" class="promo-apply" onclick="applyPromoCode(this.previousElementSibling.value); this.closest('.modal-overlay').dispatchEvent(new CustomEvent('promo'))">적용</button></div></details>`;
+  }
+  // 무료 이벤트 코드 (업데이트 45): 맞으면 결제 없이 천명 리포트를 연다(이 기기·이 생년월일). 한 번 쓰면 끝인지는 서버(/api/code)가 본다.
+  //   기록은 결제 기록 자리에 'event-code' 표시로 둔다 — 결제 취소 확인(verifyStoredPayments)은 'byeoksa-'로 시작하는 결제만 물으므로 건드리지 않는다.
+  const EVENT_CODE_RE = /^[0-9A-Z]{4}-?[0-9A-Z]{4}-?[0-9A-Z]{4}$/;   // 할인 칸에 무료 코드를 넣었는지 알아보는 꼴
+  function eventRowHtml() {
+    return `<details class="promo-fold event-fold"><summary>무료 이벤트 코드를 받았으면 여기를 누르세요</summary>` +
+      `<p class="event-note">이벤트로 받은 무료 코드를 넣으면 결제 없이 천명 리포트(6개 장)가 열립니다. 코드 하나에 한 번, 이 기기·이 생년월일로만 열리며 만 19세 이상만 쓸 수 있습니다. 할인 코드(1,000원)는 위 칸에 넣어 주세요.</p>` +
+      `<div class="promo-row"><input type="text" class="promo-input event-input" maxlength="20" placeholder="무료 코드 12자리" aria-label="무료 이벤트 코드" autocapitalize="characters" autocomplete="off" spellcheck="false">` +
+      `<button type="button" class="promo-apply event-apply" onclick="redeemEventCode(this.previousElementSibling.value, this)">코드로 봉인 풀기</button></div></details>`;
+  }
+  async function redeemEventCode(raw, btn) {
+    if (!EVENT.enabled || !currentSajuData) return;
+    const code = String(raw || '').trim();
+    if (!code) { showToast('받은 무료 코드를 넣으시오.'); return; }
+    if (btn) btn.disabled = true;
+    let status = 'OFF';
+    try {
+      const r = await fetch(EVENT.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      const j = await r.json().catch(() => null);
+      status = (j && j.status) || 'OFF';
+    } catch (e) { status = 'OFF'; }
+    if (btn) btn.disabled = false;
+    if (status === 'OK') {
+      markPaidFor('report', sajuKey(currentSajuData), 'event-code');
+      track('codeopen');
+      unlockContent('무료 코드가 맞소. 천명 리포트 6개 장의 봉인을 풀었소.');
+      return;
+    }
+    showToast(status === 'WRONG' ? '그런 무료 코드는 없소. 받은 코드를 다시 확인하시오.'
+      : status === 'USED' ? '이미 쓰인 코드요. 코드는 한 번만 쓸 수 있소.'
+      : '지금은 코드를 확인할 수 없소. 잠시 뒤 다시 해 보시오.');
   }
   const won = n => n.toLocaleString('ko-KR');
 
@@ -2361,7 +2432,7 @@ let currentSajuData = null;
   });
 
   /** 결제(현재는 테스트) 완료 → 리포트 전용 화면으로 */
-  function unlockContent() {
+  function unlockContent(msg) {   // msg: 열릴 때 알림 (무료 코드로 열면 그 문장, 업데이트 45)
     if (PAYMENT.mode !== 'portone' && currentSajuData && !isPaid(currentSajuData)) markPaid(currentSajuData, 'test');
     reportUnlocked = true;
     document.getElementById('paywallOverlay').style.display = 'none';
@@ -2371,7 +2442,7 @@ let currentSajuData = null;
     closePaymentModal();
     openReport();
     // 카드사 관점(액막이를 파는 것처럼 읽히지 않게)·외래어 없이 (업데이트 39, 대표님 OK). 원래 알림: '🕯️ 액막이 복채 정성 접수 완료! 6단계 퇴마 포트폴리오 전체 해제'
-    showToast('복채 잘 받았소. 천명 리포트 6개 장의 봉인이 모두 풀렸소.');
+    showToast(typeof msg === 'string' && msg ? msg : '복채 잘 받았소. 천명 리포트 6개 장의 봉인이 모두 풀렸소.');
   }
 
   function openReport() {
@@ -2728,7 +2799,7 @@ let currentSajuData = null;
     if (resumePaymentFromRedirect(params)) return;
     const toHelp = window.location.hash === '#help';   // 약관 페이지 등에서 고객센터로 바로 들어옴
     const compatInvite = params.get('compat') === '1' && !params.get('y');   // 친구가 보낸 궁합 링크 (업데이트 38)
-    if (!params.get('y') && !toHelp && !compatInvite) playOpening();
+    if (!params.get('y') && !toHelp && !compatInvite && !playOpening()) trackOnce('home');   // 序 없이 대문이 바로 보임 = 대문 도착 (업데이트 45)
     if (compatInvite) {   // 序·대문 없이 바로 궁합 입력으로. 링크에는 생일이 없고, 보낸 사람 별명만 선택으로 온다
       const nick = (params.get('n') || '').trim();
       window.__compatInviteFrom = NICK_RE.test(nick) ? nick : '';

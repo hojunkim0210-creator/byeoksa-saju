@@ -120,11 +120,13 @@ test('대문: 시작 버튼이 320×568부터 데스크톱까지 첫 화면 안�
 });
 
 test('序: \'화면을 누르면 다음 줄\'은 15px·달빛으로 책 바로 아래, 다 읽은 뒤 숨어도 책은 움직이지 않는다', async () => {
-  // helpers.openPage 는 序를 건너뛰므로 테스트 표시 없이 연다 (opening.test.js 와 같은 방식)
+  // helpers.openPage 는 序를 건너뛰므로 테스트 표시 없이 연다 (opening.test.js 와 같은 방식).
+  // 업데이트 45부터 序는 저절로 나오지 않으므로 '설화록 序 다시 보기'(replayOpening)로 튼다
   const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   await page.route('**/*', r => { const u = r.request().url(); (u.startsWith('file:') || u.startsWith('data:')) ? r.continue() : r.abort(); });
-  await page.goto('file://' + require('./helpers').SITE); await page.waitForTimeout(800);
+  await page.goto('file://' + require('./helpers').SITE); await page.waitForTimeout(500);
+  await page.evaluate(() => replayOpening()); await page.waitForTimeout(800);
   const pos = () => page.evaluate(() => {
     const h = document.getElementById('openingHint'), bk = document.querySelector('.opening-book'), cs = getComputedStyle(h);
     return { gap: h.getBoundingClientRect().top - bk.getBoundingClientRect().bottom, size: cs.fontSize, color: cs.color, opacity: cs.opacity, bookTop: bk.getBoundingClientRect().top };
