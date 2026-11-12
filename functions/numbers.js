@@ -14,7 +14,8 @@ export const LEGACY_LAST_DAY = '2026-11-12';   // 이 날짜까지는 옛 장부
 export const LABELS = {
   visit: '첫 화면 방문', home: '대문 도착', input: '입력 화면 도착', free: '무료 풀이 봄', payopen: '결제창 연 횟수', paid: '결제 완료',
   compat: '궁합 결과 봄', compatsend: '궁합 "상대에게 보내기"', invited: '보낸 궁합 링크로 들어옴',
-  codeopen: '무료 코드로 엶'   // 업데이트 45 — 무료 코드 이벤트를 켠 뒤부터 쌓인다
+  codeopen: '무료 코드로 엶',   // 업데이트 45 — 무료 코드 이벤트를 켠 뒤부터 쌓인다
+  direct: "'바로 입력' 주소로 옴"   // 업데이트 48 — byeoksa.com/?go=input (대문을 건너뜀)
 };
 
 /** 오늘부터 거슬러 올라간 날짜 목록 'YYYY-MM-DD' (순수 함수 — 테스트용) */
@@ -36,17 +37,17 @@ const html = (body, status = 200) => new Response(body, {
 /** 표 페이지 만들기 (순수 함수 — 테스트용). rows = [{ day, visit, home, input, free, payopen, paid, compat, compatsend, invited, codeopen }] 최신이 위 */
 export function renderPage(rows, { configured = true, paidKnown = true, writesToday = null } = {}) {
   const sum = k => rows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0);
-  const total = Object.fromEntries(['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen'].map(k => [k, sum(k)]));
+  const total = Object.fromEntries(['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen', 'direct'].map(k => [k, sum(k)]));
   const cell = v => (Number.isFinite(v) ? v : '-');
   // 깔때기는 '대문 도착'을 세기 시작한 날부터만 더한다(업데이트 45 전 날짜는 대문·입력 숫자가 없어 비율이 어긋난다). 아직 한 번도 안 셌으면 예전처럼 방문 → 무료 풀이.
-  const oldest = rows.map(r => r.home > 0).lastIndexOf(true);   // rows는 최신이 위 → 대문 숫자가 있는 가장 오래된 날
+  const oldest = rows.map(r => r.home > 0 || r.direct > 0).lastIndexOf(true);   // rows는 최신이 위 → 대문 숫자가 있는 가장 오래된 날
   const stepped = oldest >= 0;
   const fRows = stepped ? rows.slice(0, oldest + 1) : rows;
-  const f = Object.fromEntries(['visit', 'home', 'input', 'free', 'payopen', 'paid'].map(k => [k, fRows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0)]));
+  const f = Object.fromEntries(['visit', 'home', 'direct', 'input', 'free', 'payopen', 'paid'].map(k => [k, fRows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0)]));
   const funnelTitle = stepped && fRows.length < rows.length
     ? `어디서 줄어드나 (${fRows.length}일 합계 — 대문·입력을 세기 시작한 ${esc(fRows[fRows.length - 1].day.slice(5))}부터)`
     : `어디서 줄어드나 (${rows.length}일 합계)`;
-  const cols = ['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen'];
+  const cols = ['visit', 'home', 'input', 'free', 'payopen', 'paid', 'compat', 'compatsend', 'invited', 'codeopen', 'direct'];
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>벽사신견 숫자</title>
 <style>body{font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#121426;color:#E6D6B3;margin:0;padding:16px;line-height:1.5}
@@ -63,12 +64,14 @@ ${Number.isInteger(writesToday) ? `<p>오늘 숫자 장부에 쓴 횟수: <stron
 <table class="big"><tbody>
 <tr><td>첫 화면 방문</td><td>${cell(f.visit)}</td><td></td></tr>
 ${stepped ? `<tr><td>→ 대문 도착</td><td>${cell(f.home)}</td><td>${pct(f.home, f.visit)}</td></tr>
-<tr><td>→ 입력 화면 도착</td><td>${cell(f.input)}</td><td>${pct(f.input, f.home)}</td></tr>
+${f.direct > 0 ? `<tr><td>→ '바로 입력' 주소로 옴</td><td>${cell(f.direct)}</td><td>${pct(f.direct, f.visit)}</td></tr>
+` : ''}<tr><td>→ 입력 화면 도착</td><td>${cell(f.input)}</td><td>${pct(f.input, f.home + f.direct)}</td></tr>
 <tr><td>→ 무료 풀이 봄</td><td>${cell(f.free)}</td><td>${pct(f.free, f.input)}</td></tr>` : `<tr><td>→ 무료 풀이 봄</td><td>${cell(f.free)}</td><td>${pct(f.free, f.visit)}</td></tr>`}
 <tr><td>→ 결제창 연 횟수</td><td>${cell(f.payopen)}</td><td>${pct(f.payopen, f.free)}</td></tr>
 <tr><td>→ 결제 완료</td><td>${cell(f.paid)}</td><td>${pct(f.paid, f.payopen)}</td></tr>
 </tbody></table>
 <p>오른쪽 %는 바로 윗줄 대비입니다. 결제창은 한 사람이 여러 번 열 수 있어 100%를 넘을 수도 있습니다.</p>
+<p>'바로 입력' 주소(byeoksa.com/?go=input)로 온 손님은 대문을 건너뛰어 '대문 도착'에 들지 않습니다. 이 줄과 '대문 도착'의 %는 첫 화면 방문 대비이고, '입력 화면 도착'의 %는 둘을 합친 수 대비입니다.</p>
 <p>'대문 도착'·'입력 화면 도착'은 업데이트 45를 올린 날부터 셉니다(탭 하나에 한 번). 위 표는 그 숫자가 있는 날부터만 더합니다. 결과 링크·궁합 링크로 바로 들어온 손님은 대문·입력을 거치지 않아, 무료 풀이가 입력보다 많을 수도 있습니다.</p>
 <h2>궁합 공유</h2>
 <table class="big"><tbody>
@@ -114,7 +117,8 @@ export async function onRequestGet({ request, env }) {
         for (const e of EVENTS) row[e] = book[e] || 0;
         if (idx === 0) writesToday = book._w;
         if (day <= LEGACY_LAST_DAY) {   // 업데이트 46까지 쓰던 옛 모양(단계마다 숫자 하나)도 더한다 — 바꾼 날에는 두 모양이 섞여 있다
-          for (const e of EVENTS) { const n = parseInt(await env.COUNTS.get(kvKey(day, e)), 10); if (Number.isInteger(n) && n > 0) row[e] += n; }
+          for (const e of EVENTS) { if (e === 'direct') continue;   /* 업데이트 48에 생긴 단계라 옛 모양에는 없다 — 읽기 횟수 아끼기 */
+            const n = parseInt(await env.COUNTS.get(kvKey(day, e)), 10); if (Number.isInteger(n) && n > 0) row[e] += n; }
         }
       } catch (x) { for (const e of EVENTS) row[e] = NaN; }
     }

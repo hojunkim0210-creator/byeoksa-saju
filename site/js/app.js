@@ -584,7 +584,7 @@ let currentSajuData = null;
     tidyTitles(document.getElementById(id));
     updateBuyBar(id);
     if (id === 'viewResult' && _resultFoldsDirty) { _resultFoldsDirty = false; applyFolds(document.getElementById('viewResult')); }
-    if (id === 'viewLanding') trackOnce('home'); else if (id === 'viewInput') trackOnce('input');   // 어디서 빠지는지 보려고 (업데이트 45, 탭 하나에 한 번)
+    if (id === 'viewLanding') trackOnce('home'); else if (id === 'viewInput') { trackOnce('input'); syncMoreFields(); }   // 어디서 빠지는지 보려고 (업데이트 45, 탭 하나에 한 번)
     // 하단 메뉴: 지금 화면에 해당하는 칸을 표시
     document.querySelectorAll('#tabBar .tab-item').forEach(t => {
       const on = (t.dataset.views || '').split(' ').includes(id);
@@ -636,7 +636,7 @@ let currentSajuData = null;
   window.track = track;
   // 궁합 링크에 붙는 보낸 사람 별명: 한글·영문·숫자·띄어쓰기·_.- 만, 10자까지 (보내는 쪽 extras.js 와 받는 쪽이 같은 규칙)
   const NICK_RE = /^[0-9A-Za-z가-힣 _.\-]{1,10}$/;
-  /** 탭 하나(세션)에 한 번만 세는 단계 — visit(첫 화면), home(대문 도착), input(입력 화면 도착) */
+  /** 탭 하나(세션)에 한 번만 세는 단계 — visit(첫 화면), home(대문 도착), input(입력 화면 도착), direct('바로 입력' 주소로 옴) */
   function trackOnce(name) {
     try { const k = 'byeoksa.t.' + name; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); } catch (e) { /* 저장 못 하면 그냥 센다 */ }
     track(name);
@@ -666,6 +666,11 @@ let currentSajuData = null;
     copyText(`${SHARE_TEXT}\n${url}`, '💬 소개 문구와 주소를 복사했소. 휴대폰에서 공유 버튼으로 보내면 할인이 걸리오.');
   }
 
+  /** 입력 화면의 접힌 선택 칸(일·전공·취미·꿈): 적어 둔 값이 있으면 펼쳐서 보여 준다 (업데이트 48). 손님이 편 것을 도로 접지는 않는다 */
+  function syncMoreFields() {
+    const box = document.getElementById('moreFields'); if (!box) return;
+    if (['userJob', 'userMajor', 'userHobby', 'userDream'].some(id => { const el = document.getElementById(id); return el && el.value.trim(); })) box.open = true;
+  }
   function goToStep(step) {
     showView({ 1: 'viewLanding', 2: 'viewInput', 3: 'viewResult' }[step] || 'viewLanding');
   }
@@ -2899,7 +2904,16 @@ let currentSajuData = null;
     if (resumePaymentFromRedirect(params)) return;
     const toHelp = window.location.hash === '#help';   // 약관 페이지 등에서 고객센터로 바로 들어옴
     const compatInvite = params.get('compat') === '1' && !params.get('y');   // 친구가 보낸 궁합 링크 (업데이트 38)
-    if (!params.get('y') && !toHelp && !compatInvite && !playOpening()) trackOnce('home');   // 序 없이 대문이 바로 보임 = 대문 도착 (업데이트 45)
+    // '바로 입력' 주소 byeoksa.com/?go=input (업데이트 48 — 인스타 프로필 링크용): 대문을 건너뛰고 입력 화면부터. go 값은 'input'만 받는다.
+    //   숫자: visit·direct·input 을 세고 home 은 세지 않는다(대문을 안 봤으므로). 숫자 페이지는 입력 비율을 '대문 + 바로 입력' 대비로 본다.
+    const goInput = params.get('go') === 'input' && !params.get('y') && !toHelp && !compatInvite;
+    if (goInput) {
+      try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* 무시 */ }
+      hideGate();
+      trackOnce('direct');
+      goToStep(2);
+    }
+    if (!params.get('y') && !toHelp && !compatInvite && !goInput && !playOpening()) trackOnce('home');   // 序 없이 대문이 바로 보임 = 대문 도착 (업데이트 45)
     if (compatInvite) {   // 序·대문 없이 바로 궁합 입력으로. 링크에는 생일이 없고, 보낸 사람 별명만 선택으로 온다
       const nick = (params.get('n') || '').trim();
       window.__compatInviteFrom = NICK_RE.test(nick) ? nick : '';

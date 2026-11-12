@@ -14,7 +14,8 @@
 // 한계: KV는 "읽고 더해 쓰기"라 같은 순간에 겹치면 한두 건 빠질 수 있다. 방향을 보는 용도라 그대로 둔다.
 
 // home = 대문 도착, input = 입력 화면 도착 (업데이트 45 — 방문과 무료 풀이 사이 어디서 빠지는지), codeopen = 무료 코드로 리포트를 엶
-export const EVENTS = ['visit', 'home', 'input', 'free', 'payopen', 'compat', 'compatsend', 'invited', 'codeopen'];
+// direct = '바로 입력' 주소(?go=input)로 들어옴 (업데이트 48 — 대문을 건너뛰므로 home 대신 이것을 센다)
+export const EVENTS = ['visit', 'home', 'input', 'free', 'payopen', 'compat', 'compatsend', 'invited', 'codeopen', 'direct'];
 export const KEEP_SECONDS = 400 * 86400;   // 13개월쯤 지난 숫자는 저절로 사라진다
 export const DAY_WRITE_BUDGET = 800;        // 숫자 세기가 하루에 장부에 쓰는 횟수 한도 (무료 요금제 1,000번 중 200번은 무료 코드 몫)
 export const MAX_BATCH = 4;                 // 한 요청에 실을 수 있는 단계 수

@@ -2003,3 +2003,48 @@ body.buy-bar-on { padding-bottom: calc(96px + 68px + env(safe-area-inset-bottom)
 .pay-fail-row .btn-action { flex: 1; min-height: 44px; font-size: 14px; color: var(--ink); background: rgba(255, 252, 244, 0.7); border: 1px solid var(--paper-line); }   /* 한지 상자 위라 먹색 글씨 (.btn-action 기본은 밤 바탕용) */
 .pay-fail-row .btn-action:hover { background: var(--paper-deep); border-color: var(--ink-soft); }
 
+
+/* ── 업데이트 48 (2026-11-13): 입력 화면을 첫 화면 안으로 ── */
+/* 대문 버튼 아래 한 줄 */
+.free-line { margin: -4px 0 0; text-align: center; font-size: 14px; line-height: 1.5; color: var(--moon); opacity: 0.86; }
+/* 선택 칸 넷 접기 */
+.more-fields { border-top: 1px solid rgba(34, 27, 21, 0.18); border-bottom: 1px solid rgba(34, 27, 21, 0.18); }
+.more-fields > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 2px; font-size: 14.5px; font-weight: 700; line-height: 1.45; color: var(--ink-soft); cursor: pointer; list-style: none; }
+.more-fields > summary::-webkit-details-marker { display: none; }
+.more-fields > summary .form-optional { white-space: nowrap; }
+.more-fields > summary::after { content: '+'; flex-shrink: 0; font-size: 20px; font-weight: 400; line-height: 1; color: var(--cinnabar-deep); }
+.more-fields[open] > summary::after { content: '−'; }
+.more-fields > summary:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
+.more-fields .more-body { display: flex; flex-direction: column; gap: 16px; padding: 4px 0 18px; }
+/* 귀신 그림 주의 문구: 버튼 아래 작은 글 (문구 그대로) */
+#viewInput .btn-submit + .scare-notice, #viewInput .btn-submit ~ .scare-notice { margin: 2px 2px 0; padding: 0; border: 0; font-size: 12.5px; line-height: 1.55; text-align: center; }
+/* 생년월일 칸 안내 글자가 좁은 폰에서 '년 (1990'처럼 잘리던 것 */
+#viewInput .input-row > input[type="number"] { padding-left: 10px; padding-right: 6px; }
+#viewInput .input-row > input[type="number"]::placeholder { font-size: 14px; letter-spacing: -0.02em; }
+/* 키 작은 폰: 여백을 줄여 '무료 풀이 보기'가 첫 화면 안에 */
+@media (max-height: 760px) {
+  #viewInput { gap: 8px; }
+  #viewInput .btn-nav-back { padding: 5px 12px; font-size: 13px; }
+  #viewInput .gaze-avatar-box { width: 48px; height: 48px; }
+  #viewInput .gaze-speech { font-size: 14.5px; line-height: 1.5; }
+  #viewInput .card { gap: 9px; padding: 12px 16px 14px; }
+  #viewInput .form-group { gap: 4px; }
+  #viewInput .more-fields > summary { padding: 8px 2px; font-size: 14px; }
+  #viewInput .submit-lead { margin: 2px 2px 0; font-size: 14.5px; line-height: 1.45; }
+  /* 대문: 버튼 아래 한 줄이 들어갈 자리만큼 사진을 더 줄인다 (업데이트 39의 400px → 442px) */
+  .spirit-portrait-box { height: clamp(150px, calc(100dvh - 442px), min((min(100vw, 460px) - 28px) * 0.975, 375px)); }
+}
+/* 아주 작은 폰(높이 600 이하, 320×568 등): 버튼을 하단 메뉴 바로 위에 붙여 늘 보이게 */
+@media (max-height: 600px) {
+  #viewInput { gap: 6px; }
+  #viewInput .btn-nav-back { padding: 3px 10px; font-size: 12.5px; }
+  #viewInput .gaze-header { gap: 10px; }
+  #viewInput .gaze-avatar-box { width: 40px; height: 40px; }
+  #viewInput .gaze-speech { font-size: 13px; line-height: 1.45; }
+  #viewInput .card { gap: 6px; padding: 10px 14px 12px; }
+  #viewInput .card input, #viewInput .card select { padding-top: 8px; padding-bottom: 8px; }
+  #viewInput .form-label { font-size: 13px; }
+  #viewInput .more-fields > summary { padding: 6px 2px; font-size: 13px; }
+  #viewInput .submit-lead { font-size: 13.5px; }
+  #viewInput .btn-submit { position: sticky; bottom: calc(var(--tab-h, 65px) + env(safe-area-inset-bottom, 0px) + 8px); z-index: 5; box-shadow: 0 0 0 8px var(--paper); }
+}

@@ -202,3 +202,22 @@ test('/numbers: 그날 장부 한 장을 읽고, 바꾼 날 전후(옛 모양 n:
   assert.ok(gets <= 14 + 9 * 14, `읽기 ${gets}번`);
 });
 
+
+// 업데이트 48 (2026-11-13): '바로 입력' 주소(?go=input)로 온 손님은 대문을 건너뛴다 — direct 단계로 세고, 입력 비율은 '대문 + 바로 입력' 대비
+test("'바로 입력'(direct): 서버가 받는 단계이고, 숫자 페이지의 입력 비율이 100%를 넘지 않게 '대문 + 바로 입력' 대비로 나온다", async () => {
+  const { EVENTS } = await load('api/count.js');
+  assert.ok(EVENTS.includes('direct'));
+  const { renderPage, LABELS } = await load('numbers.js');
+  assert.equal(LABELS.direct, "'바로 입력' 주소로 옴");
+  const t = renderPage([{ day: '2026-11-14', visit: 20, home: 8, direct: 10, input: 12, free: 5, payopen: 1, paid: 0, compat: 0, compatsend: 0, invited: 0, codeopen: 0 }]);
+  assert.match(t, /<td>→ 대문 도착<\/td><td>8<\/td><td>40%<\/td>/);
+  assert.match(t, /<td>→ '바로 입력' 주소로 옴<\/td><td>10<\/td><td>50%<\/td>/);
+  assert.match(t, /<td>→ 입력 화면 도착<\/td><td>12<\/td><td>67%<\/td>/);   // 12 / (8 + 10)
+  // 바로 입력으로만 온 날(대문 0)도 깔때기에 든다
+  const only = renderPage([{ day: '2026-11-14', visit: 4, home: 0, direct: 4, input: 4, free: 2, payopen: 0, paid: 0 }]);
+  assert.match(only, /<td>→ 입력 화면 도착<\/td><td>4<\/td><td>100%<\/td>/);
+  // 바로 입력이 없으면 그 줄은 나오지 않는다(예전 모습 그대로)
+  const none = renderPage([{ day: '2026-11-14', visit: 20, home: 18, input: 9, free: 6, payopen: 3, paid: 1 }]);
+  assert.ok(!none.includes("<td>→ '바로 입력' 주소로 옴</td>"));
+  assert.match(none, /<td>→ 입력 화면 도착<\/td><td>9<\/td><td>50%<\/td>/);
+});

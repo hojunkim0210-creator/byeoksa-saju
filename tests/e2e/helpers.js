@@ -14,6 +14,8 @@ async function openPage(browser, { width = 390, height = 844, url = 'file://' + 
   page.on('dialog', async d => { page._alerts.push(d.message()); await d.accept(); });
   await page.addInitScript(() => {
     window.__BYEOKSA_TEST__ = true;
+    // 입력 화면의 선택 칸(일·전공·취미·꿈)은 접혀 있다(업데이트 48) — 테스트가 바로 채울 수 있게 펴 둔다(새로고침 뒤에도). 접힌 모습은 input-fold.test.js가 따로 본다.
+    document.addEventListener('DOMContentLoaded', () => { const m = document.getElementById('moreFields'); if (m) m.open = true; });
     // 파일로 연 사이트에는 결제 확인 서버가 없으므로, 기본 주소('/api/payment/complete')만 '결제 완료'로 답하는 가짜 서버를 둔다
     const realFetch = window.fetch;
     window.fetch = (u, o) => u === '/api/payment/complete'
