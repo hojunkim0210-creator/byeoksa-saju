@@ -7,6 +7,10 @@
   Cache-Control: no-cache
 /*.html
   Cache-Control: no-cache
+/2027/*
+  Cache-Control: no-cache
+/sitemap.xml
+  Cache-Control: no-cache
 /css/*
   Cache-Control: no-cache
 /js/*

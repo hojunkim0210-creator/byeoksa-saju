@@ -1,0 +1,6 @@
+# 업데이트 49 (2026-11-20): 검색 로봇 안내 — 모두 허용, 약관·숫자 페이지는 각 페이지가 noindex로 검색에서 뺀다
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://byeoksa.com/sitemap.xml
