@@ -643,6 +643,45 @@ let currentSajuData = null;
   }
   function trackVisitOnce() { trackOnce('visit'); }
 
+  // 📍 어디서 왔나 (업데이트 50): 첫 방문 한 번에 분류 이름 하나(src_ig 등)만 센다 — 방문과 같은 요청에 실리므로 장부 쓰기는 늘지 않는다.
+  //   ① 주소의 표시 s=ig·tt·yt·th·blog (프로필 링크에 붙임, utm_source 도 읽음) ② 친구 공유·궁합 링크 ③ 인스타·틱톡·카카오톡 앱 안 브라우저 ④ 바로 전 주소.
+  //   주소·기기 정보 자체는 보내지 않고, 정해진 분류 이름 중 하나만 보낸다. 판단 규칙은 sourceOf(순수 함수, 테스트가 직접 부른다).
+  const SRC_TAGS = { ig: 'src_ig', instagram: 'src_ig', tt: 'src_tt', tiktok: 'src_tt', yt: 'src_yt', youtube: 'src_yt',
+    th: 'src_th', threads: 'src_th', blog: 'src_blog', naver_blog: 'src_blog', kakao: 'src_kakao' };
+  function sourceOf(search, ua, referrer, selfHost) {
+    try {
+      const p = new URLSearchParams(search || '');
+      const tag = String(p.get('s') || p.get('utm_source') || '').trim().toLowerCase();
+      if (SRC_TAGS[tag]) return SRC_TAGS[tag];
+      if (p.get('from') === 'share' || p.get('compat') === '1') return 'src_share';
+      ua = String(ua || '');
+      if (/Instagram/i.test(ua)) return 'src_ig';
+      if (/musical_ly|BytedanceWebview|TikTok/i.test(ua)) return 'src_tt';
+      if (/KAKAOTALK/i.test(ua)) return 'src_kakao';
+      if (!referrer) return 'src_none';
+      const r = new URL(referrer), h = r.hostname.replace(/^www\.|^m\./, '');
+      if (h === selfHost.replace(/^www\./, '')) return r.pathname.startsWith('/2027') ? 'src_z2027' : null;   // 우리 사이트 안에서 옮겨 다님 = 새 방문 아님
+      if (/(^|\.)instagram\.com$/.test(h)) return 'src_ig';
+      if (/(^|\.)tiktok\.com$/.test(h)) return 'src_tt';
+      if (/(^|\.)(youtube\.com|youtu\.be)$/.test(h)) return 'src_yt';
+      if (/(^|\.)threads\.(net|com)$/.test(h)) return 'src_th';
+      if (/^blog\.naver\.com$/.test(h)) return 'src_blog';
+      if (/(^|\.)(google\.[a-z.]+|naver\.com|daum\.net|bing\.com|nate\.com|zum\.com)$/.test(h)) return 'src_search';
+      if (/(^|\.)kakao\.com$/.test(h)) return 'src_kakao';
+      return 'src_etc';
+    } catch (e) { return 'src_none'; }
+  }
+  window.sourceOf = sourceOf;
+  function trackSourceOnce() {
+    try {
+      try { if (sessionStorage.getItem('byeoksa.t.src')) return; } catch (e) { /* 저장 못 하면 그냥 센다 */ }
+      const src = sourceOf(window.location.search, navigator.userAgent, document.referrer, window.location.hostname);
+      if (!src) return;
+      try { sessionStorage.setItem('byeoksa.t.src', '1'); } catch (e) { /* 무시 */ }
+      track(src);   // 탭 하나에 한 번만
+    } catch (e) { /* 무시 */ }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // 💬 사이트 공유: 개인정보 없이 첫 화면 주소만 보낸다 (휴대폰은 공유 창 → 카카오톡, 안 되면 문구 복사)
   // ─────────────────────────────────────────────────────────────────────────
@@ -2901,6 +2940,13 @@ let currentSajuData = null;
     syncLeapBox(document.getElementById('calendarType'));   // 뒤로 가기 등으로 '음력'이 되살아난 경우 윤달 칸도 맞춘다 (업데이트 44)
     const params = new URLSearchParams(window.location.search);
     trackVisitOnce();
+    trackSourceOnce();   // 어디서 왔나 (업데이트 50) — 주소 꼬리를 지우기 전에, 방문과 같은 요청에 실린다
+    if (params.has('s') || [...params.keys()].some(k => k.startsWith('utm_'))) {   // 표시는 셌으니 주소에서 지운다 — 손님이 주소를 복사해 남에게 보내도 그쪽이 '인스타'로 세지지 않게
+      const keep = new URLSearchParams(params);
+      [...keep.keys()].filter(k => k === 's' || k.startsWith('utm_')).forEach(k => keep.delete(k));
+      const qs = keep.toString();
+      try { history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash); } catch (e) { /* 무시 */ }
+    }
     if (resumePaymentFromRedirect(params)) return;
     const toHelp = window.location.hash === '#help';   // 약관 페이지 등에서 고객센터로 바로 들어옴
     const compatInvite = params.get('compat') === '1' && !params.get('y');   // 친구가 보낸 궁합 링크 (업데이트 38)

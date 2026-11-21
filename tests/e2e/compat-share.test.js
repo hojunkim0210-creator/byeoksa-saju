@@ -66,7 +66,7 @@ test('받은 사람: 링크로 들어오면 대문·序 없이 바로 궁합 입
   assert.match(await page.textContent('.compat-invite'), /^민지가 그대와 궁합을 보고 싶다는구려\. 위에는 그대 생일, 아래에는 민지의 생일을 넣어 보시오\.$/);
   assert.equal(await page.inputValue('#cbName'), '민지');
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('introGateModal')).display), 'none');
-  assert.deepEqual(await log(page), ['visit', 'invited']);
+  assert.deepEqual(await log(page), ['visit', 'src_share', 'invited']);   // src_share = 공유·궁합 링크로 옴 (업데이트 50)
   assert.deepEqual(page._errors, []);
   await ctx.close();
 });

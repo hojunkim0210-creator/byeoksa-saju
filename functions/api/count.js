@@ -15,7 +15,10 @@
 
 // home = 대문 도착, input = 입력 화면 도착 (업데이트 45 — 방문과 무료 풀이 사이 어디서 빠지는지), codeopen = 무료 코드로 리포트를 엶
 // direct = '바로 입력' 주소(?go=input)로 들어옴 (업데이트 48 — 대문을 건너뛰므로 home 대신 이것을 센다)
-export const EVENTS = ['visit', 'home', 'input', 'free', 'payopen', 'compat', 'compatsend', 'invited', 'codeopen', 'direct'];
+// src_* = 첫 방문이 어디서 왔나 (업데이트 50 — 탭 하나에 한 번, 방문과 같은 요청에 실려 장부 쓰기 횟수는 늘지 않는다)
+//   ig 인스타 · tt 틱톡 · yt 유튜브 · th 스레드 · blog 네이버 블로그 · search 검색 · z2027 '2027 띠별 운세' 페이지 · kakao 카카오톡 · share 친구 공유·궁합 링크 · etc 그 밖의 사이트 · none 알 수 없음(주소 직접·북마크 등)
+export const SOURCES = ['src_ig', 'src_tt', 'src_yt', 'src_th', 'src_blog', 'src_search', 'src_z2027', 'src_kakao', 'src_share', 'src_etc', 'src_none'];
+export const EVENTS = ['visit', 'home', 'input', 'free', 'payopen', 'compat', 'compatsend', 'invited', 'codeopen', 'direct', ...SOURCES];
 export const KEEP_SECONDS = 400 * 86400;   // 13개월쯤 지난 숫자는 저절로 사라진다
 export const DAY_WRITE_BUDGET = 800;        // 숫자 세기가 하루에 장부에 쓰는 횟수 한도 (무료 요금제 1,000번 중 200번은 무료 코드 몫)
 export const MAX_BATCH = 4;                 // 한 요청에 실을 수 있는 단계 수

@@ -6,7 +6,7 @@
 //   (PORTONE_API_SECRET·COUNTS 는 결제 확인 서버·count.js 가 쓰는 것과 같다)
 // 주소는 대표님만 북마크한다: https://byeoksa.com/numbers?k=열쇠
 
-import { EVENTS, DAY_WRITE_BUDGET, dayKey, dayBookKey, kvKey, readBook } from './api/count.js';
+import { EVENTS, SOURCES, DAY_WRITE_BUDGET, dayKey, dayBookKey, kvKey, readBook } from './api/count.js';
 import { buildQuery, readCount, STORE_ID } from './api/stats.js';
 
 export const DAYS = 14;
@@ -15,8 +15,24 @@ export const LABELS = {
   visit: '첫 화면 방문', home: '대문 도착', input: '입력 화면 도착', free: '무료 풀이 봄', payopen: '결제창 연 횟수', paid: '결제 완료',
   compat: '궁합 결과 봄', compatsend: '궁합 "상대에게 보내기"', invited: '보낸 궁합 링크로 들어옴',
   codeopen: '무료 코드로 엶',   // 업데이트 45 — 무료 코드 이벤트를 켠 뒤부터 쌓인다
-  direct: "'바로 입력' 주소로 옴"   // 업데이트 48 — byeoksa.com/?go=input (대문을 건너뜀)
+  direct: "'바로 입력' 주소로 옴",   // 업데이트 48 — byeoksa.com/?go=input (대문을 건너뜀)
+  // 업데이트 50 — 첫 방문이 어디서 왔나
+  src_ig: '인스타그램', src_tt: '틱톡', src_yt: '유튜브', src_th: '스레드', src_blog: '네이버 블로그', src_search: '검색(구글·네이버 등)',
+  src_z2027: "'2027 띠별 운세' 페이지", src_kakao: '카카오톡', src_share: '친구 공유·궁합 링크', src_etc: '그 밖의 사이트', src_none: '알 수 없음(주소 직접·북마크 등)'
 };
+
+/** '어디서 왔나' 표 (순수 함수 — 테스트용). 아직 하나도 안 셌으면 빈 글 */
+export function renderSources(rows) {
+  const sum = k => rows.reduce((n, r) => n + (Number.isFinite(r[k]) ? r[k] : 0), 0);
+  const list = SOURCES.map(k => [k, sum(k)]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (!list.length) return '';
+  const all = list.reduce((n, [, v]) => n + v, 0);
+  return `<h2>어디서 왔나 (${rows.length}일 합계)</h2>
+<table class="big"><tbody>
+${list.map(([k, n]) => `<tr><td>${esc(LABELS[k])}</td><td>${n}</td><td>${pct(n, all)}</td></tr>`).join('\n')}
+</tbody></table>
+<p>첫 화면 방문 한 번마다 한 곳으로 셉니다(업데이트 50을 올린 날부터). 프로필 링크 끝의 표시(&amp;s=ig·tt·yt·th·blog)가 가장 정확하고, 표시가 없으면 인스타·틱톡·카카오톡 앱 안에서 열었는지, 그것도 아니면 바로 전 주소로 정합니다. 인스타·틱톡 앱 밖 브라우저로 옮겨 열면 '알 수 없음'이 될 수 있습니다.</p>`;
+}
 
 /** 오늘부터 거슬러 올라간 날짜 목록 'YYYY-MM-DD' (순수 함수 — 테스트용) */
 export function lastDays(n = DAYS, now = new Date()) {
@@ -73,6 +89,7 @@ ${f.direct > 0 ? `<tr><td>→ '바로 입력' 주소로 옴</td><td>${cell(f.dir
 <p>오른쪽 %는 바로 윗줄 대비입니다. 결제창은 한 사람이 여러 번 열 수 있어 100%를 넘을 수도 있습니다.</p>
 <p>'바로 입력' 주소(byeoksa.com/?go=input)로 온 손님은 대문을 건너뛰어 '대문 도착'에 들지 않습니다. 이 줄과 '대문 도착'의 %는 첫 화면 방문 대비이고, '입력 화면 도착'의 %는 둘을 합친 수 대비입니다.</p>
 <p>'대문 도착'·'입력 화면 도착'은 업데이트 45를 올린 날부터 셉니다(탭 하나에 한 번). 위 표는 그 숫자가 있는 날부터만 더합니다. 결과 링크·궁합 링크로 바로 들어온 손님은 대문·입력을 거치지 않아, 무료 풀이가 입력보다 많을 수도 있습니다.</p>
+${renderSources(rows)}
 <h2>궁합 공유</h2>
 <table class="big"><tbody>
 <tr><td>궁합 결과 봄</td><td>${cell(total.compat)}</td><td></td></tr>
@@ -117,7 +134,7 @@ export async function onRequestGet({ request, env }) {
         for (const e of EVENTS) row[e] = book[e] || 0;
         if (idx === 0) writesToday = book._w;
         if (day <= LEGACY_LAST_DAY) {   // 업데이트 46까지 쓰던 옛 모양(단계마다 숫자 하나)도 더한다 — 바꾼 날에는 두 모양이 섞여 있다
-          for (const e of EVENTS) { if (e === 'direct') continue;   /* 업데이트 48에 생긴 단계라 옛 모양에는 없다 — 읽기 횟수 아끼기 */
+          for (const e of EVENTS) { if (e === 'direct' || e.startsWith('src_')) continue;   /* 업데이트 48·50에 생긴 단계라 옛 모양에는 없다 — 읽기 횟수 아끼기 */
             const n = parseInt(await env.COUNTS.get(kvKey(day, e)), 10); if (Number.isInteger(n) && n > 0) row[e] += n; }
         }
       } catch (x) { for (const e of EVENTS) row[e] = NaN; }

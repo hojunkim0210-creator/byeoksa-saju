@@ -38,7 +38,7 @@ const beacons = page => page.evaluate(() => window.__beacons.map(([u, b]) => [u,
 
 test('첫 화면: 방문과 대문 도착을 한 요청으로 보내고, 그 뒤 단계는 하나씩 — 탭 하나에 한 번', async () => {
   const { ctx, page } = await sitePage();
-  assert.deepEqual(await beacons(page), [['/api/count', ['visit', 'home']]]);
+  assert.deepEqual(await beacons(page), [['/api/count', ['visit', 'src_none', 'home']]]);   // src_none = 어디서 왔는지 모름 (업데이트 50)
   await page.click('#viewLanding .btn-main'); await page.waitForTimeout(300);
   assert.deepEqual((await beacons(page)).slice(1), [['/api/count', 'input']]);
   await page.evaluate(() => { goToStep(1); goToStep(2); goToStep(1); }); await page.waitForTimeout(300);
@@ -54,8 +54,50 @@ test('첫 화면: 방문과 대문 도착을 한 요청으로 보내고, 그 뒤
 test('결과 링크로 들어오면 방문·무료 풀이만(대문·입력을 거치지 않는다), 화면을 떠날 때 모아 둔 것을 바로 보낸다', async () => {
   const { ctx, page } = await sitePage('https://byeoksa.test/?y=1990&m=3&d=10&g=M');
   const sent = (await beacons(page)).flatMap(([, e]) => e);
-  assert.deepEqual(sent.sort(), ['free', 'visit']);
+  assert.deepEqual(sent.sort(), ['free', 'src_none', 'visit']);
   await page.evaluate(() => { window.__beacons.length = 0; track('payopen'); window.dispatchEvent(new Event('pagehide')); });
   assert.deepEqual(await beacons(page), [['/api/count', 'payopen']], '80ms를 기다리지 않고 떠나는 순간 보낸다');
+  await ctx.close();
+});
+
+// 업데이트 50 (2026-11-21): 어디서 왔나 — 첫 방문과 같은 요청에 분류 이름 하나, 주소의 표시는 센 뒤 지운다
+test("프로필 링크 표시(?go=input&s=tt): 방문·틱톡·바로 입력·입력을 한 요청으로, 주소에서 표시가 지워진다", async () => {
+  const { ctx, page } = await sitePage('https://byeoksa.test/?go=input&s=tt');
+  assert.deepEqual(await beacons(page), [['/api/count', ['visit', 'src_tt', 'direct', 'input']]]);
+  assert.equal(await page.evaluate(() => location.search), '');
+  await page.reload(); await page.waitForTimeout(500);
+  const again = (await beacons(page)).flatMap(([, e]) => [].concat(e));
+  assert.ok(!again.includes('visit') && !again.some(e => e.startsWith('src_')), '같은 탭에서 다시 열어도 방문·경로는 또 세지 않는다');
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test('표시가 없는 첫 화면은 알 수 없음, 다른 표시(utm)는 지우고 결과 링크 값은 남긴다', async () => {
+  const a = await sitePage();
+  assert.deepEqual(await beacons(a.page), [['/api/count', ['visit', 'src_none', 'home']]]);
+  await a.ctx.close();
+  const b = await sitePage('https://byeoksa.test/?utm_source=instagram&utm_medium=bio&y=1990&m=3&d=10&g=M');
+  const sent = (await beacons(b.page)).flatMap(([, e]) => e);
+  assert.ok(sent.includes('src_ig'));
+  const qs = await b.page.evaluate(() => location.search);
+  assert.ok(!qs.includes('utm_'), qs);
+  await b.ctx.close();
+});
+
+test('sourceOf 판단 규칙: 표시 > 공유 링크 > 앱 안 브라우저 > 바로 전 주소', async () => {
+  const { ctx, page } = await sitePage();
+  const cases = await page.evaluate(() => {
+    const S = (q, ua, ref) => sourceOf(q, ua || 'Safari', ref || '', 'byeoksa.com');
+    return {
+      tag: S('?s=yt', 'Instagram 300'), share: S('?from=share'), compat: S('?compat=1&n=a'),
+      ig: S('', 'Mozilla/5.0 (iPhone) Instagram 312.0'), tt: S('', 'Mozilla/5.0 musical_ly_33.1 BytedanceWebview'), kakao: S('', 'Mozilla/5.0 KAKAOTALK 10.4'),
+      threads: S('', '', 'https://l.threads.net/'), blog: S('', '', 'https://m.blog.naver.com/x/1'), naver: S('', '', 'https://m.search.naver.com/search?q=a'),
+      google: S('', '', 'https://www.google.co.kr/'), yt: S('', '', 'https://m.youtube.com/'), z2027: S('', '', 'https://byeoksa.com/2027/ox'),
+      inside: S('', '', 'https://byeoksa.com/legal'), etc: S('', '', 'https://example.com/'), none: S(''), junk: S('?s=zzz')
+    };
+  });
+  assert.deepEqual(cases, { tag: 'src_yt', share: 'src_share', compat: 'src_share', ig: 'src_ig', tt: 'src_tt', kakao: 'src_kakao',
+    threads: 'src_th', blog: 'src_blog', naver: 'src_search', google: 'src_search', yt: 'src_yt', z2027: 'src_z2027',
+    inside: null, etc: 'src_etc', none: 'src_none', junk: 'src_none' });
   await ctx.close();
 });

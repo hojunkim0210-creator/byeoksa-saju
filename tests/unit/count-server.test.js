@@ -221,3 +221,29 @@ test("'바로 입력'(direct): 서버가 받는 단계이고, 숫자 페이지�
   assert.ok(!none.includes("<td>→ '바로 입력' 주소로 옴</td>"));
   assert.match(none, /<td>→ 입력 화면 도착<\/td><td>9<\/td><td>50%<\/td>/);
 });
+
+// 업데이트 50 (2026-11-21): 첫 방문이 어디서 왔나 — 분류 이름(src_*)만 받고, 숫자 페이지에 '어디서 왔나' 표
+test("어디서 왔나(src_*): 서버가 받는 단계이고, 방문·바로 입력·입력과 함께 한 요청(4개)에 실려 장부는 한 번만 쓴다", async () => {
+  const { EVENTS, SOURCES, MAX_BATCH, onRequestPost, dayBookKey, dayKey } = await load('api/count.js');
+  for (const s of SOURCES) assert.ok(EVENTS.includes(s));
+  assert.ok(MAX_BATCH >= 4);
+  const COUNTS = kv();
+  const r = await onRequestPost({ request: post({ e: ['visit', 'src_tt', 'direct', 'input'] }), env: { COUNTS } });
+  assert.equal(r.status, 204);
+  const book = JSON.parse(COUNTS.m.get(dayBookKey(dayKey())));
+  assert.equal(book.src_tt, 1); assert.equal(book._w, 1);
+  const bad = await onRequestPost({ request: post({ e: 'src_unknown' }), env: { COUNTS } });
+  assert.equal(bad.status, 400, '정해진 분류 밖의 이름은 받지 않는다');
+});
+
+test("숫자 페이지 '어디서 왔나': 많은 순서, 비율, 아직 없으면 표를 안 그린다", async () => {
+  const { renderPage, renderSources, LABELS } = await load('numbers.js');
+  const { SOURCES } = await load('api/count.js');
+  for (const s of SOURCES) assert.ok(LABELS[s], `${s} 이름표가 없다`);
+  const rows = [{ day: '2026-11-22', visit: 10, src_tt: 3, src_ig: 1 }, { day: '2026-11-21', visit: 6, src_tt: 3, src_none: 2, src_yt: 1 }];
+  const t = renderSources(rows);
+  assert.match(t, /<td>틱톡<\/td><td>6<\/td><td>60%<\/td>[\s\S]*<td>알 수 없음\(주소 직접·북마크 등\)<\/td><td>2<\/td><td>20%<\/td>/);
+  assert.ok(!t.includes('스레드'), '0인 분류는 줄을 만들지 않는다');
+  assert.equal(renderSources([{ day: '2026-11-20', visit: 5 }]), '');
+  assert.match(renderPage(rows), /어디서 왔나 \(2일 합계\)/);
+});

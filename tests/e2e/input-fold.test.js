@@ -63,11 +63,11 @@ test("'바로 입력' 주소 ?go=input: 대문 없이 입력 화면이 열리고
   assert.equal(await viewOf(a.page), 'viewInput');
   assert.equal(await a.page.evaluate(() => getComputedStyle(document.getElementById('introGateModal')).display), 'none', '대문 안내창이 덮지 않는다');
   assert.equal(await a.page.evaluate(() => location.search), '');
-  assert.deepEqual(await a.page.evaluate(() => window.__trackLog), ['visit', 'direct', 'input']);
+  assert.deepEqual(await a.page.evaluate(() => window.__trackLog), ['visit', 'src_none', 'direct', 'input']);   // src_none = 어디서 왔는지 모름 (업데이트 50)
   await a.page.fill('#year', '1990'); await a.page.fill('#month', '3'); await a.page.fill('#day', '10');
   await a.page.evaluate(() => submitAndGoToResult()); await a.page.waitForTimeout(400);
   assert.equal(await viewOf(a.page), 'viewResult');
-  assert.deepEqual(await a.page.evaluate(() => window.__trackLog), ['visit', 'direct', 'input', 'free']);
+  assert.deepEqual(await a.page.evaluate(() => window.__trackLog), ['visit', 'src_none', 'direct', 'input', 'free']);
   assert.deepEqual(a.page._errors, []);
   await a.ctx.close();
   for (const q of ['?go=result', '?go=', '?go=INPUT%3Cb%3E', '?go=viewHelp']) {
