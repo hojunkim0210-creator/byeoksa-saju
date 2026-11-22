@@ -465,6 +465,7 @@ let currentSajuData = null;
       modal.addEventListener('click', e => { if (e.target === modal) closeHanjiScroll(); });
       modal.dataset.bound = '1';
     }
+    clearTimeout(modal._hideTimer);
     modal.style.display = 'flex';
     modal.style.opacity = '1';
     
@@ -478,7 +479,8 @@ let currentSajuData = null;
   function closeHanjiScroll() {
     const modal = document.getElementById('hanjiScrollModal');
     modal.style.opacity = '0';
-    setTimeout(() => { modal.style.display = 'none'; }, 300);
+    clearTimeout(modal._hideTimer);   // 업데이트 51: 닫자마자 다시 열면 늦게 온 '숨김'이 새로 연 두루마리를 지우던 것
+    modal._hideTimer = setTimeout(() => { modal.style.display = 'none'; }, 300);
   }
 
   function proceedFromScroll() {
@@ -591,7 +593,7 @@ let currentSajuData = null;
       t.classList.toggle('active', on);
       if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);   // 업데이트 51: 화면은 바로 바뀌는데 스크롤만 미끄러져 올라가 출렁였고, '움직임 줄이기' 설정도 무시했다 (원래: behavior 'smooth')
   }
 
   /** 하단 메뉴 '내 사주': 이미 본 풀이가 있으면 그 화면, 리포트를 열었으면 리포트, 아니면 입력 화면(저장된 생년월일은 미리 채움) */
@@ -780,6 +782,9 @@ let currentSajuData = null;
     if (hour !== undefined && hour !== null) set('hourSelect', String(late ? LATE_ZI : hour));
   }
 
+  // 업데이트 51: 알림을 닫은 뒤 고칠 칸에 바로 커서를 둔다 (알림 문장은 그대로)
+  function focusField(id) { const el = document.getElementById(id); if (el && el.focus) { try { el.focus(); } catch (e) {} } }
+
   function submitAndGoToResult() {
     const yVal = document.getElementById('year').value.trim();
     const mVal = document.getElementById('month').value.trim();
@@ -788,6 +793,7 @@ let currentSajuData = null;
 
     if (!yVal || !mVal || !dVal) {
       alert('생년월일을 온전히 대지 않으면 등 뒤의 그림자를 벗겨낼 수 없소!');
+      focusField(!yVal ? 'year' : !mVal ? 'month' : 'day');
       return;
     }
 
@@ -797,11 +803,13 @@ let currentSajuData = null;
 
     if (isNaN(y) || isNaN(m) || isNaN(d) || y < 1920 || y > 2030) {
       alert('생년은 1920년부터 2030년 사이로 바르게 고하시오!');
+      focusField(isNaN(m) ? 'month' : isNaN(d) ? 'day' : 'year');
       return;
     }
 
     if (m < 1 || m > 12 || d < 1 || d > 31) {
       alert('올바른 생월과 생일을 고하시오!');
+      focusField((m < 1 || m > 12) ? 'month' : 'day');
       return;
     }
 
@@ -819,14 +827,16 @@ let currentSajuData = null;
       const testDate = new Date(Date.UTC(y, m - 1, d));
       if (testDate.getUTCFullYear() !== y || (testDate.getUTCMonth() + 1) !== m || testDate.getUTCDate() !== d) {
         alert('존재하지 않는 날짜(예: 2월 30일 등)요. 올바른 생년월일을 확인하고 다시 적으시오!');
+        focusField('day');
         return;
       }
     }
 
-    if (isFutureDate({ y: sy, m: sm, d: sd })) { alert(FUTURE_TEXT); return; }   // 업데이트 44 (더블체크 1-4)
+    if (isFutureDate({ y: sy, m: sm, d: sd })) { alert(FUTURE_TEXT); focusField('year'); return; }   // 업데이트 44 (더블체크 1-4)
     const late = parseInt(document.getElementById('hourSelect').value, 10) === LATE_ZI;   // 밤 자시 → 다음 날 자시 (더블체크 2-1)
     if (late) ({ y: sy, m: sm, d: sd } = addDaysYmd({ y: sy, m: sm, d: sd }, 1));
 
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // 업데이트 51: 자판이 풀이 의식·결과 위에 남지 않게
     playRitual();          // 막을 먼저 내리고 (결과가 뒤로 비치지 않게)
     calculateSaju(sy, sm, sd, { lunar, late });
     _resultFoldsDirty = true;   // 새 풀이: 긴 단락을 다시 접는다 (showView에서)
