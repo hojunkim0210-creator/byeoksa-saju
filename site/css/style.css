@@ -628,7 +628,7 @@ option:disabled { color: #9C8E7C; }
 .saju-fold-summary { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 14px; border-radius: var(--r-chip); border: 1px solid rgba(244, 238, 226, 0.3);
   color: var(--moon-soft); font-family: var(--font-body); font-size: 14px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; list-style: none; }
 .saju-fold-summary::-webkit-details-marker { display: none; }
-.saju-fold-summary:hover { background: rgba(244, 238, 226, 0.06); }
+@media (hover: hover) and (pointer: fine) { .saju-fold-summary:hover { background: rgba(244, 238, 226, 0.06); } }
 .saju-fold[open] > .saju-fold-summary { margin-bottom: 12px; }
 .saju-fold .saju-fold-opened, .saju-fold[open] .saju-fold-closed { display: none; }
 .saju-fold[open] .saju-fold-opened { display: inline; }
@@ -658,7 +658,7 @@ option:disabled { color: #9C8E7C; }
 .saju-table tr > *:last-child { border-right: none; }
 .saju-table tbody tr:last-child > * { border-bottom: none; }
 .saju-table th { font-weight: 700; font-size: 13px; color: var(--ink-soft); background: var(--paper-deep); }
-.label-col { width: 64px; font-weight: 700; color: var(--cinnabar); background: rgba(168, 42, 32, 0.05); }
+.label-col { width: 64px; font-weight: 700; color: var(--cinnabar-deep); background: rgba(168, 42, 32, 0.05); }   /* 업데이트 52: 주사(4.3:1) → 짙은 주사(대비 통과) */
 
 .ganji-tile {
   display: inline-flex;
@@ -747,7 +747,7 @@ option:disabled { color: #9C8E7C; }
 .daeun-tiles { display: flex; gap: 3px; }
 .daeun-tiles .badge { font-family: var(--font-display); font-size: 15px !important; padding: 2px 6px; }
 .daeun-sub { font-size: 11.5px; line-height: 1.45; text-align: center; color: var(--cinnabar-deep); word-break: keep-all; }
-.daeun-term { font-size: 10.5px; opacity: 0.75; }   /* 쉬운 말 뒤 괄호 속 용어 (2026-11-08) */
+.daeun-term { font-size: 10.5px; opacity: 0.9; }   /* 업데이트 52: 0.75는 너무 흐렸다(2.7:1) */   /* 쉬운 말 뒤 괄호 속 용어 (2026-11-08) */
 .daeun-comment { font-size: 15.5px; line-height: 1.85; color: var(--ink); }
 
 /* 오행 */
@@ -1823,7 +1823,7 @@ body.veil-on { overflow: hidden; }
 .saju-table td.hour-unknown-cell { vertical-align: middle; background: repeating-linear-gradient(135deg, rgba(120, 100, 70, 0.05) 0 6px, transparent 6px 12px); }
 .hour-unknown-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 100%; padding: 6px 0; }
 .hour-unknown-char { font-family: var(--font-display); font-size: 30px; line-height: 1; color: rgba(120, 100, 70, 0.55); }
-.hour-unknown-text { font-size: 11.5px; line-height: 1.5; color: #7d6e58; word-break: keep-all; }
+.hour-unknown-text { font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); word-break: keep-all; }   /* 업데이트 52: #7d6e58(3.5:1) → 먹-연 */
 .rs-pillar-unknown { opacity: 0.6; border-style: dashed; }
 .rs-pillar-unknown .rs-char { color: #8a7a62; }
 .talisman-mine { border-top: 1px dashed rgba(168, 42, 32, 0.35); padding-top: 10px; }
@@ -2113,6 +2113,37 @@ button, summary, .leap-check { -webkit-user-select: none; user-select: none; }
 .spirit-portrait-box { isolation: isolate; }
 /* 설화록 두루마리를 끝까지 넘기면 뒤의 대문이 같이 밀리던 것 */
 .scroll-paper { overscroll-behavior: contain; }
+
+/* ── 업데이트 52 (2026-11-22): 무료 결과 화면 다듬기 — 같은 스킬 점검 중 안전한 것만. 새 색·글꼴 없음, 풀이 글·결제·가격 그대로. ── */
+/* 자판으로 옮겨 다닐 때 초점이 하단 메뉴·구매 바 밑으로 숨던 것 */
+html { scroll-padding-bottom: calc(65px + 16px + env(safe-area-inset-bottom)); }
+html:has(body.buy-bar-on) { scroll-padding-bottom: calc(65px + 67px + 16px + env(safe-area-inset-bottom)); }
+/* '더 보기' 누름 자리(33px)를 모든 화면에서 넓힘 — 업데이트 51은 대문만이었다 */
+.fold-more { position: relative; }
+.fold-more::before { content: ''; position: absolute; inset: -6px; }
+#viewResult > .btn-nav-back { position: relative; }
+#viewResult > .btn-nav-back::before { content: ''; position: absolute; inset: -4px; }
+.action-bar .btn-action { min-height: 44px; }
+#viewResult .coupon-line .link-btn { position: relative; }
+#viewResult .coupon-line .link-btn::before { content: ''; position: absolute; inset: -12px -10px; }
+/* 구매 바가 떠 있을 때 알림(복사했소 등)이 구매 바를 덮던 것 → 그 위로 */
+body.buy-bar-on .toast-msg { bottom: calc(84px + 68px + env(safe-area-inset-bottom)); }
+/* 누를 때 브라우저가 그리는 파란·회색 상자 대신 우리 눌림 표시 (결과 화면 — 가격 상자·구매 바·결제창은 손대지 않음) */
+#viewResult > .btn-nav-back, #viewResult .fold-more, #viewResult .btn-action, #viewResult .share-fold-summary, #viewResult .saju-fold-summary, #viewResult .ghost-gate, #viewResult .coupon-line .link-btn, #daeunScroll { -webkit-tap-highlight-color: transparent; }
+#viewResult > .btn-nav-back:active, #viewResult .btn-action:active, .share-fold-summary:active { background: rgba(244, 238, 226, 0.09); }
+.saju-fold-summary:active { background: rgba(244, 238, 226, 0.06); }
+#viewResult .coupon-line .link-btn:active { opacity: 0.7; }
+.ghost-gate:active { opacity: 0.85; }
+.ghost-img { -webkit-touch-callout: none; }   /* 귀신 그림을 길게 눌러도 '이미지 저장'이 안 뜨게 */
+/* 10년 운 줄: 끝까지 넘기면 페이지가 같이 밀리던 것, 자판 초점 테두리는 한지 위에서 보이는 주사색으로 */
+.daeun-scroll { overscroll-behavior-x: contain; }
+#daeunScroll:focus-visible { outline-color: var(--cinnabar); }
+/* 귀신 그림을 한 번 누른 뒤: 사진 밑에 숨겨진(안 보이는) 예비 그림의 움직임 넷이 결과 화면이 열려 있는 내내 계속 돌았다 → 멈춤 (보이는 것은 그대로) */
+.ghost-portrait.is-seen .ghost-portrait-frame.has-img svg, .ghost-portrait.is-seen .ghost-portrait-frame.has-img svg * { animation: none; }
+/* '움직임 줄이기' 설정: 풀이 의식 막이 이미 투명해졌는데도 0.7초쯤 누름을 막던 것 */
+@media (prefers-reduced-motion: reduce) { .ritual-veil.is-leaving { pointer-events: none; } }
+/* 카드 구석 낙관(辟邪)은 꾸밈 — 화면 낭독이 읽지 않게 (모양은 그대로, 이 문법을 모르는 브라우저는 위 선언을 쓴다) */
+.dream-fit-card::after, .daeun-card::after, .oheng-card::after, .mind-scan-card::after, .sniff-teaser-card::after, .portfolio-section-card::after, .kpi-dashboard::after, .rs-card::after { content: '辟邪' / ''; }
 
 /* ── 2027 띠별 운세 페이지 (업데이트 49, site/2027/ — tools/zodiac2027/build.js가 만든다) ──
    색·글꼴은 위 :root 그대로. 읽는 면은 한지 카드, 버튼은 주사 현판(.btn-main). */

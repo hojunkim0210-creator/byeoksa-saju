@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = 51;
+const VERSION = 52;
 const ORIGIN = 'https://byeoksa.com';
 const OUT = path.resolve(__dirname, '../../site/2027');
 

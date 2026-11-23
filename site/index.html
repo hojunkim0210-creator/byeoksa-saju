@@ -20,13 +20,13 @@
   <link rel="canonical" href="https://byeoksa.com/">
   <meta name="theme-color" content="#1A1C2E">
   <!-- CSS·JS·manifest 주소의 ?v=숫자 = 업데이트 번호. 사이트를 올릴 때마다 바꾼다 (전에 왔던 손님의 브라우저가 옛 파일을 재사용하지 않게, legal.html도 같이) -->
-  <link rel="manifest" href="manifest.json?v=51">
+  <link rel="manifest" href="manifest.json?v=52">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=51">
+    <link rel="stylesheet" href="css/style.css?v=52">
 </head>
 <body>
 
@@ -415,14 +415,14 @@
     <!-- 1. 영안 개안 동물 캐릭터 카드 -->
     <div class="character-card">
       <div class="animal-tag" id="animalTag">-</div>
-      <div class="animal-emoji" id="animalEmoji">✨</div>
-      <div class="animal-name" id="animalTitle">-</div>
+      <div class="animal-emoji" id="animalEmoji" aria-hidden="true">✨</div>
+      <div class="animal-name" id="animalTitle" role="heading" aria-level="2">-</div>
       <div class="animal-sub" id="animalDesc" data-fold="5" data-fold-tone="dark">-</div>
     </div>
 
     <!-- 1-2. 📌 한눈에 보는 핵심 — 아래 긴 풀이에서 꼭 볼 것만 (renderGlance) -->
     <div class="glance-card" id="glanceCard">
-      <div class="glance-title">📌 벽사견이 맡은 냄새, 한눈에</div>
+      <div class="glance-title" role="heading" aria-level="2">📌 벽사견이 맡은 냄새, 한눈에</div>
       <ul class="glance-list" id="glanceList"></ul>
       <p class="glance-note">아래 풀이는 이 다섯 줄을 길게 푼 것이오. '핵심' 표시가 붙은 줄만 따라 읽어도 되오.</p>   <!-- 2026-11-08: '노란' → 실제 모양(붉은 꼬리표), 줄 수는 renderGlance 가 실제 개수로 -->
     </div>
@@ -430,35 +430,35 @@
     <!-- 2. 🎯 꿈 & 현실 기운 조화도 카드 -->
     <div class="dream-fit-card" id="dreamFitCard">
       <div class="fit-header">
-        <div class="section-title" style="margin-bottom:0;">🎯 꿈과 타고난 팔자의 영적 조화율</div>
+        <div class="section-title" role="heading" aria-level="2" style="margin-bottom:0;">🎯 꿈과 타고난 팔자의 영적 조화율</div>
         <div class="fit-score-badge" id="fitScore">조화율 -%</div>
       </div>
       <div class="fit-content" id="fitContent" data-fold="6">-</div>
     </div>
 
     <!-- 3. 사주 원국 테이블 -->
-    <div class="section-title">📊 네 기둥 원국 (四柱) 영적 분석</div>
+    <div class="section-title" role="heading" aria-level="2">📊 네 기둥 원국 (四柱) 영적 분석</div>
     <p class="section-sub">태어난 해·달·날·시간을 옛 글자로 적은 표요. 전문 용어라 몰라도 되오. 아래 풀이가 쉬운 말로 다시 말하오.</p>
     <!-- 2026-11-08 업데이트 39(디자인 검수 6·7번): 옛 글자·전문 용어 표는 접어 두고, 궁금한 손님만 펼친다. 인쇄할 때는 app.js beforeprint 가 펼친다 -->
     <details class="saju-fold">
     <summary class="saju-fold-summary"><span class="saju-fold-closed">그대 사주 여덟 글자 표(옛 글자) 펼쳐 보기</span><span class="saju-fold-opened">표 접기</span></summary>
-    <table class="saju-table">
+    <table class="saju-table" aria-label="사주 여덟 글자 표">
       <thead>
         <tr>
-          <th class="label-col">구분</th>
-          <th>시(時)</th>
-          <th>일(日)</th>
-          <th>월(月)</th>
-          <th>년(年)</th>
+          <th class="label-col" scope="col">구분</th>
+          <th scope="col">시(時)</th>
+          <th scope="col">일(日)</th>
+          <th scope="col">월(月)</th>
+          <th scope="col">년(年)</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td class="label-col">천간</td><td id="hourStem">-</td><td id="dayStem">-</td><td id="monthStem">-</td><td id="yearStem">-</td></tr>
-        <tr><td class="label-col">지지</td><td id="hourBranch">-</td><td id="dayBranch">-</td><td id="monthBranch">-</td><td id="yearBranch">-</td></tr>
-        <tr><td class="label-col">지장간</td><td id="hourJijang">-</td><td id="dayJijang">-</td><td id="monthJijang">-</td><td id="yearJijang">-</td></tr>
-        <tr><td class="label-col">천간 십신</td><td id="hourSipsin">-</td><td>일주</td><td id="monthSipsin">-</td><td id="yearSipsin">-</td></tr>
-        <tr><td class="label-col">12운성</td><td id="hourUnsung">-</td><td id="dayUnsung">-</td><td id="monthUnsung">-</td><td id="yearUnsung">-</td></tr>
-        <tr><td class="label-col">신살</td><td id="hourSinsal">-</td><td id="daySinsal">-</td><td id="monthSinsal">-</td><td id="yearSinsal">-</td></tr>
+        <tr><td class="label-col" role="rowheader">천간</td><td id="hourStem">-</td><td id="dayStem">-</td><td id="monthStem">-</td><td id="yearStem">-</td></tr>
+        <tr><td class="label-col" role="rowheader">지지</td><td id="hourBranch">-</td><td id="dayBranch">-</td><td id="monthBranch">-</td><td id="yearBranch">-</td></tr>
+        <tr><td class="label-col" role="rowheader">지장간</td><td id="hourJijang">-</td><td id="dayJijang">-</td><td id="monthJijang">-</td><td id="yearJijang">-</td></tr>
+        <tr><td class="label-col" role="rowheader">천간 십신</td><td id="hourSipsin">-</td><td>일주</td><td id="monthSipsin">-</td><td id="yearSipsin">-</td></tr>
+        <tr><td class="label-col" role="rowheader">12운성</td><td id="hourUnsung">-</td><td id="dayUnsung">-</td><td id="monthUnsung">-</td><td id="yearUnsung">-</td></tr>
+        <tr><td class="label-col" role="rowheader">신살</td><td id="hourSinsal">-</td><td id="daySinsal">-</td><td id="monthSinsal">-</td><td id="yearSinsal">-</td></tr>
       </tbody>
     </table>
     </details>
@@ -468,17 +468,17 @@
     <!-- 3-1. 🌊 10년 대운(大運) 흐름 카드 -->
     <div class="daeun-card" id="daeunCard">
       <div class="daeun-header">
-        <div class="section-title" style="margin-bottom:0;">🌊 벽사견이 읽어내는 10년 대운(大運) 파도</div>
+        <div class="section-title" role="heading" aria-level="2" style="margin-bottom:0;">🌊 벽사견이 읽어내는 10년 대운(大運) 파도</div>
         <div class="daeun-badge" id="daeunBadge">대운 분석 중...</div>
       </div>
       <p class="section-sub">대운은 10년마다 바뀌는 큰 운의 흐름이오. 지금 그대가 어느 구간에 있는지 보오.</p>
-      <div class="daeun-scroll" id="daeunScroll"></div>
+      <div class="daeun-scroll" id="daeunScroll" tabindex="0" role="group" aria-label="10년 운 칸 (옆으로 넘겨 보기)"></div>
       <div class="daeun-comment" id="daeunComment" data-fold="5">대운 해설 준비 중...</div>
     </div>
 
     <!-- 4. 오행 그래프 -->
     <div class="oheng-card">
-      <div class="section-title">🔥 오행(木火土金水) 불균형 및 결핍 감별</div>
+      <div class="section-title" role="heading" aria-level="2">🔥 오행(木火土金水) 불균형 및 결핍 감별</div>
       <p class="section-sub">나무·불·흙·쇠·물 다섯 기운이 그대 사주에 몇 개씩 있는지 센 것이오. 없는 기운이 그대 약점이자 채워야 할 곳이오.</p>
       <div class="stacked-bar" id="stackedBar"></div>
       <div class="oheng-list" id="ohengList"></div>
@@ -488,7 +488,7 @@
     <!-- 5. 🔮 영적 심리 투시 카드 (살을 대폭 붙인 팩트 폭격) -->
     <div class="mind-scan-card" id="mindScanCard">
       <div class="mind-scan-header">
-        <div class="section-title" style="margin-bottom:0;">🔮 벽사견의 영적 투시: 등 뒤의 그림자와 고질병</div>
+        <div class="section-title" role="heading" aria-level="2" style="margin-bottom:0;">🔮 벽사견의 영적 투시: 등 뒤의 그림자와 고질병</div>
         <div class="mind-badge" id="mindBadge">심리 투시 -%</div>
       </div>
       <p class="section-sub">그대 속마음과 사람 관계에서 되풀이되는 버릇을 짚소.</p>
@@ -510,7 +510,7 @@
 
     <!-- 7. 🕯️ 벽사견의 은밀한 후각 감별 (연애·재물 한 줄 티저 후킹) -->
     <div class="sniff-teaser-card" id="sniffTeaserCard">
-      <div class="section-title" style="margin-bottom:4px;">🕯️ 벽사견의 은밀한 후각 감별 (초기 감지)</div>
+      <div class="section-title" role="heading" aria-level="2" style="margin-bottom:4px;">🕯️ 벽사견의 은밀한 후각 감별 (초기 감지)</div>
       <p class="section-sub">사랑·돈·일 세 가지를 한 줄씩만 미리 맡아 본 것이오. 자세한 풀이는 리포트에 있소.</p>
       
       <div class="sniff-item">
@@ -873,13 +873,13 @@
   </div>
 </div>
 
-<div class="toast-msg" id="toastMsg"></div>
+<div class="toast-msg" id="toastMsg" role="status" aria-live="polite"></div>
 
 
-  <script src="js/saju-core.js?v=51"></script>
-  <script src="js/phrases.js?v=51"></script>
-  <script src="js/app.js?v=51"></script>
-  <script src="js/extras.js?v=51"></script>
-  <script src="js/shop.js?v=51"></script>
+  <script src="js/saju-core.js?v=52"></script>
+  <script src="js/phrases.js?v=52"></script>
+  <script src="js/app.js?v=52"></script>
+  <script src="js/extras.js?v=52"></script>
+  <script src="js/shop.js?v=52"></script>
 </body>
 </html>

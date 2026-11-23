@@ -593,6 +593,8 @@ let currentSajuData = null;
       t.classList.toggle('active', on);
       if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
     });
+    // 업데이트 52: 10년 운 줄이 늘 첫 칸(1세)에서 시작해, 마흔 넘은 손님은 '현재' 칸이 화면 밖이었다 → 결과 화면이 뜰 때 '현재' 칸을 가운데로 (페이지는 안 움직임)
+    if (id === 'viewResult') { const ds = document.getElementById('daeunScroll'), cur = ds && ds.querySelector('.current-daeun'); if (cur) ds.scrollLeft = Math.max(0, cur.offsetLeft - (ds.clientWidth - cur.offsetWidth) / 2); }
     window.scrollTo(0, 0);   // 업데이트 51: 화면은 바로 바뀌는데 스크롤만 미끄러져 올라가 출렁였고, '움직임 줄이기' 설정도 무시했다 (원래: behavior 'smooth')
   }
 
@@ -838,10 +840,15 @@ let currentSajuData = null;
 
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // 업데이트 51: 자판이 풀이 의식·결과 위에 남지 않게
     playRitual();          // 막을 먼저 내리고 (결과가 뒤로 비치지 않게)
-    calculateSaju(sy, sm, sd, { lunar, late });
-    _resultFoldsDirty = true;   // 새 풀이: 긴 단락을 다시 접는다 (showView에서)
-    goToStep(3);
-    track('free');
+    // 업데이트 52: 막이 화면에 먼저 그려진 뒤에 풀이를 계산한다 — 전에는 계산(느린 폰에서 0.1~0.5초)이 끝나야 막이 보여 버튼이 눌린 채 멈춘 듯했다.
+    //   자동 테스트(QUIET)는 예전처럼 그 자리에서 바로 계산한다.
+    const run = () => {
+      calculateSaju(sy, sm, sd, { lunar, late });
+      _resultFoldsDirty = true;   // 새 풀이: 긴 단락을 다시 접는다 (showView에서)
+      goToStep(3);
+      track('free');
+    };
+    if (QUIET() || typeof requestAnimationFrame !== 'function') run(); else requestAnimationFrame(() => setTimeout(run, 0));
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1274,7 +1281,7 @@ let currentSajuData = null;
     const nightClose = c ? ph(PH.NIGHT_CLOSE, null, c, 9) : ORIG.nightClose;
 
     document.getElementById('mindItem1').innerHTML = 
-      `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">` +
+      `<div style="display:flex; flex-wrap:wrap; gap:6px 10px; justify-content:space-between; align-items:center; margin-bottom:8px;">` +   // 업데이트 52: 좁은 폰에서 제목이 세 줄로 눌리던 것 — 꼬리표가 제목 아래로 내려가게
       `  <strong class="impact-red" style="font-size:15.5px; font-weight:800;">👀 속마음 투시 (골수까지 도려내는 소름 돋는 팩폭)</strong>` +
       `  <span style="font-size:12px; font-family:var(--font-display); color:var(--cinnabar-deep); border:1px solid rgba(168,42,32,0.5); padding:2px 8px; border-radius:2px; white-space:nowrap;">${data.iljuName}(태어난 날) 맞춤</span>` +
       `</div>` +
@@ -1283,7 +1290,7 @@ let currentSajuData = null;
       `<strong class="impact-red" style="font-size:15.5px; font-weight:800;">${data.badge}</strong><br>` +
       `${data.hook}<br>` +
       `${data.details}<br><br>` +
-      `💡 <strong style="color:var(--gold); font-weight:800;">[벽사견이 꿰뚫은 그대 타고난 본성]</strong>: ${data.branchDesc}<br>` +
+      `💡 <strong style="font-weight:800;">[벽사견이 꿰뚫은 그대 타고난 본성]</strong>: ${data.branchDesc}<br>` +
       `${data.innerSoul}${c ? ph(PH.SOUL_TAIL, c.strength, c, 29) : ''}</p>`;
 
     document.getElementById('mindItem2').innerHTML = 
@@ -1296,7 +1303,7 @@ let currentSajuData = null;
       `그리고 그대가 적어낸 꿈... <strong class="impact-gold" style="font-size:16px;">[${dream}]</strong>.<br>` +
       `${nightFear}<br>` +
       `<strong class="impact-red" style="font-size:16px;">${nightSilence}</strong><br>` +
-      `<br>🐾 <strong style="color:var(--gold);">[그 함정의 뿌리]</strong>: ${trapRoot}<br><br>` +
+      `<br>🐾 <strong>[그 함정의 뿌리]</strong>: ${trapRoot}<br><br>` +
       `${nightClose}</p>`;
     setKeyLine('mindScanCard', `그대 속을 갉는 함정의 뿌리는 <strong>${EL_NAME[ps.weakKey]} 기운 부족</strong>이오 — 아래 글은 그 부족이 밤에 어떻게 드러나는지를 짚소.`, '.mind-scan-header');
   }
@@ -1705,7 +1712,7 @@ let currentSajuData = null;
 
     const scrollContainer = document.getElementById('daeunScroll');
     scrollContainer.innerHTML = daeunItems.map((item) => `
-      <div class="daeun-item ${item.isCurrent ? 'current-daeun' : ''}">
+      <div class="daeun-item ${item.isCurrent ? 'current-daeun' : ''}"${item.isCurrent ? ' aria-current="true"' : ''}>
         ${item.isCurrent ? '<span class="daeun-current-tag">현재</span>' : ''}
         <span class="daeun-age">${item.ageStart}세</span>
         <div class="daeun-tiles">
@@ -1714,7 +1721,7 @@ let currentSajuData = null;
         </div>
         <div class="daeun-sub">
           <div>${SIPSIN_SHORT[item.sipsin] || item.sipsin}<span class="daeun-term">(${item.sipsin})</span></div>
-          <div style="color:#64748b;">${UNSUNG_SHORT[item.unsung] || item.unsung}<span class="daeun-term">(${item.unsung})</span></div>
+          <div style="color:var(--ink-soft);">${UNSUNG_SHORT[item.unsung] || item.unsung}<span class="daeun-term">(${item.unsung})</span></div>
         </div>
       </div>
     `).join('');
@@ -1769,7 +1776,7 @@ let currentSajuData = null;
       <div class="oheng-item">
         <div class="oheng-item-name" style="color:${e.color}">${e.label}</div>
         <div class="oheng-item-val">${counts[e.key]}자</div>
-        <div style="font-size:10px; color:#888;">${Math.round((counts[e.key]/total)*100)}%</div>
+        <div style="font-size:10px; color:var(--ink-soft);">${Math.round((counts[e.key]/total)*100)}%</div>
       </div>
     `).join('');
 
@@ -2122,7 +2129,8 @@ let currentSajuData = null;
       t.innerText = text;
       hideEmoji(t);   // 알림의 이모지도 화면에서만 감춘다 (2026-10-27)
       t.style.display = 'block';
-      setTimeout(() => { t.style.display = 'none'; }, 2500);
+      clearTimeout(t._hideTimer);   // 업데이트 52: 알림을 잇달아 띄우면 앞 알림의 타이머가 뒤 알림을 일찍 지우던 것
+      t._hideTimer = setTimeout(() => { t.style.display = 'none'; }, 2500);
     }
   }
 
