@@ -1,0 +1,98 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/T3/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:31:25.839Z",
+        "reason": "기획 판단: 영상 렌더용 자막 틀 — 움직이는 영상 위 글자를 읽히게 하려는 글자 빛 번짐, 웹 화면이 아님(이미 다 만든 영상)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/B8/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:31:25.853Z",
+        "reason": "기획 판단: 영상 렌더용 자막 틀 — 움직이는 영상 위 글자를 읽히게 하려는 글자 빛 번짐, 웹 화면이 아님(이미 다 만든 영상)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/B9/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:47:07.232Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 영상 자막 글씨 가독성을 위한 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/B10/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:47:07.251Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 영상 자막 글씨 가독성을 위한 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/B11/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:47:07.271Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 영상 자막 글씨 가독성을 위한 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/T4/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:47:07.290Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 영상 자막 글씨 가독성을 위한 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/T5/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:47:07.308Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 영상 자막 글씨 가독성을 위한 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/Z12-09/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:53:51.933Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 자막 가독성용 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/Z12-10/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:53:51.958Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 자막 가독성용 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/Z12-11/proj/index.html"
+        ],
+        "createdAt": "2026-11-23T21:53:52.008Z",
+        "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 자막 가독성용 그림자, 영상 제작 의도"
+      }
+    ]
+  }
+}

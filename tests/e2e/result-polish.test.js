@@ -100,3 +100,51 @@ test('실제 손님 길(자동 테스트 표시 없이): 막이 먼저 내려오
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// 업데이트 53 (2026-11-24 대표님 "네, 숨겨 줘"): 꿈을 안 적은 손님에게는 조화율 카드와 '한눈에'의 '그대 꿈' 줄을 보이지 않는다
+test("꿈을 안 적으면 조화율 카드·'그대 꿈' 줄이 없고 '[이루고픈 천명]'이 화면에 안 나온다 — 꿈을 적으면 예전처럼 나온다", async () => {
+  const { ctx, page } = await openPage(browser, { width: 375, height: 667 });
+  const look = () => page.evaluate(() => {
+    const card = document.getElementById('dreamFitCard');
+    return { cardShown: getComputedStyle(card).display !== 'none', keys: [...document.querySelectorAll('#glanceCard .glance-key')].map(k => k.textContent.trim()), note: document.querySelector('#glanceCard .glance-note').textContent,
+      glance: document.getElementById('glanceCard').innerText,
+      seen: (() => { const c = document.getElementById('viewResult').cloneNode(true); c.querySelectorAll('[hidden]').forEach(e => e.remove()); const box = c.querySelector('.paywall, #paywallBox'); return [...c.querySelectorAll('#glanceCard, #animalCard, .animal-card')].map(e => e.textContent).join(' '); })() };
+  });
+  await fillAndSubmit(page, { job: '', dream: '' });
+  let r = await look();
+  assert.equal(r.cardShown, false, '꿈 빈칸: 조화율 카드가 보이면 안 된다');
+  assert.ok(!r.keys.includes('그대 꿈'), '꿈 빈칸: 한눈에 카드에 그대 꿈 줄');
+  assert.equal(r.keys.length, 5); assert.ok(r.note.includes('다섯 줄'), r.note);
+  assert.ok(!/이루고픈 천명|조화율/.test(r.glance + r.seen), '꿈 빈칸: 한눈에 카드에 임시 글자나 조화율이 보인다');
+  // 직업만 적어도(꿈은 빈칸) 카드는 없다
+  await page.evaluate(() => goToStep(2)); await fillAndSubmit(page, { job: '디자이너', dream: '' });
+  assert.equal((await look()).cardShown, false);
+  // 꿈을 적으면 예전처럼
+  await page.evaluate(() => goToStep(2)); await fillAndSubmit(page, { job: '디자이너', dream: '내 가게 열기' });
+  r = await look();
+  assert.equal(r.cardShown, true); assert.ok(r.keys.includes('그대 꿈')); assert.equal(r.keys.length, 6); assert.ok(r.note.includes('여섯 줄'), r.note);
+  assert.match(r.glance, /내 가게 열기\] — 조화율 \d+%/);
+  // 다시 빈칸으로 풀면 또 숨는다(앞 풀이의 카드가 남지 않는다)
+  await page.evaluate(() => goToStep(2)); await page.fill('#userJob', ''); await page.fill('#userDream', ''); await fillAndSubmit(page, { job: '', dream: '' });
+  assert.equal((await look()).cardShown, false);
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});
+
+test("꿈을 안 적으면 풀이 문장의 임시 글자에서 대괄호만 빠진다('이루고픈 천명을…') — 꿈을 적으면 '[적은 꿈]' 그대로", async () => {
+  const { ctx, page } = await openPage(browser, { width: 375, height: 667 });
+  const seen = () => page.evaluate(() => { const c = document.getElementById('viewResult').cloneNode(true); c.querySelectorAll('[hidden]').forEach(e => e.remove()); return { all: c.textContent, sniff: document.getElementById('sniffCareerText').textContent }; });
+  for (const who of [{ y: '1994', m: '5', d: '17', gender: 'F' }, { y: '1985', m: '12', d: '3', gender: 'M', hour: '-1' }, { y: '1972', m: '1', d: '20', gender: 'F' }]) {
+    await page.evaluate(() => goToStep(2));
+    await fillAndSubmit(page, { ...who, job: '', dream: '' });
+    const r = await seen();
+    assert.ok(!/\[\s*이루고픈 천명\s*\]/.test(r.all), `${who.y}: 대괄호째 남은 임시 글자`);
+    assert.ok(!/\[\s*\]/.test(r.sniff), `${who.y}: 빈 대괄호`);
+    assert.match(r.sniff, /^"이루고픈 천명[을은이]/, `${who.y}: ` + r.sniff.slice(0, 40));   // 문장은 사람마다 다르다
+  }
+  await page.evaluate(() => goToStep(2));
+  await fillAndSubmit(page, { job: '개발자', dream: '창업' });
+  assert.match((await seen()).sniff, /^"\[창업\][을은이]/);
+  assert.deepEqual(page._errors, []);
+  await ctx.close();
+});

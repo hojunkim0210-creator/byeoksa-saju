@@ -1013,6 +1013,9 @@ let currentSajuData = null;
     const userMajor = cleanUserText(document.getElementById('userMajor').value) || '갈고닦는 무기';
     const userHobby = cleanUserText(document.getElementById('userHobby').value) || '숨 쉬는 구멍';
     const userDream = cleanUserText(document.getElementById('userDream').value) || '이루고픈 천명';
+    // 업데이트 53 (2026-11-24 대표님 "네, 숨겨 줘"): 꿈을 적지 않은 손님에게는 조화율 카드와 '한눈에'의 '그대 꿈' 줄을 보이지 않는다.
+    //   전에는 빈칸이어도 "그대가 적은 꿈이…"·'[이루고픈 천명] — 조화율 83%'가 나왔다(업데이트 48로 선택 칸을 접은 뒤로 대부분 빈칸). 글은 그대로, 꿈을 적으면 예전처럼 나온다.
+    _dreamGiven = userDream !== '이루고픈 천명';
 
     // 🌟 만세력 원국: 계산은 전부 SajuCore가 담당 (입춘·절입 '시각' 기준, 서울 역사 표준시 반영)
     const pillars = calculateFourPillars(y, m, d, hourVal >= 0 ? hourVal : null);
@@ -1036,6 +1039,7 @@ let currentSajuData = null;
     const ohengResult = renderOheng({ yStem, yBranch, mStem, mBranch, dStem, dBranch, hStem, hBranch });
     CUR = buildProfile(pillars, ohengResult, uInfo);   // 오행 개수까지 들어간 완성본
     updateDreamFitCard(dStem, dBranch, ohengResult, userJob, userMajor, userHobby, userDream);
+    { const fitCard = document.getElementById('dreamFitCard'); if (fitCard) fitCard.hidden = !_dreamGiven; }
     renderDaeun(y, m, d, genderVal, yStemIdx, mStemIdx, mBranchIdx, dStemIdx, pillars);
     renderTermBoundaryNote(pillars.termBoundary, hourVal >= 0);
 
@@ -1061,6 +1065,23 @@ let currentSajuData = null;
     saveProfile({ y, m, d, hour: hourVal, gender: genderVal, ...(lunar ? { lunar } : {}), ...(late ? { late: true } : {}) });
     applyPaidState();
     tidyTitles(document.getElementById('viewResult'));
+    unbracketBlankDream(document.getElementById('viewResult'));
+  }
+
+  // 업데이트 53 (2026-11-24 대표님 "네, 대괄호 빼 줘"): 꿈을 적지 않은 손님에게 무료 결과의 풀이 문장에 임시 글자가 '[이루고픈 천명]'처럼
+  //   대괄호째 나오던 것 — 꿈이 빈칸일 때만 대괄호를 빼 "이루고픈 천명을 향해 가는 길목에서…"로 읽히게 한다. 글자는 그대로, 꿈을 적으면 예전처럼 '[적은 꿈]'.
+  function unbracketBlankDream(root) {
+    if (_dreamGiven || !root || !document.createTreeWalker) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+    while ((n = w.nextNode())) {
+      if (n.nodeValue.indexOf('[이루고픈 천명]') !== -1) n.nodeValue = n.nodeValue.split('[이루고픈 천명]').join('이루고픈 천명');
+      // '[<strong>이루고픈 천명</strong>]'처럼 대괄호와 글자가 따로 놓인 곳
+      const el = n.parentNode;
+      if (n.nodeValue === '이루고픈 천명' && el && el.childNodes.length === 1) {
+        const a = el.previousSibling, b = el.nextSibling;
+        if (a && b && a.nodeType === 3 && b.nodeType === 3 && /\[$/.test(a.nodeValue) && /^\]/.test(b.nodeValue)) { a.nodeValue = a.nodeValue.slice(0, -1); b.nodeValue = b.nodeValue.slice(1); }
+      }
+    }
   }
 
   function updateAnimalCard(dStem, dBranch) {
@@ -1109,6 +1130,7 @@ let currentSajuData = null;
     if (after && after.parentNode === card) after.insertAdjacentElement('afterend', wrap);
     else card.insertAdjacentElement('afterbegin', wrap);
   }
+  let _dreamGiven = true;   // 손님이 꿈 칸을 채웠는지 (calculateSaju가 정한다, 업데이트 53)
   function updateDreamFitCard(dStem, dBranch, oheng, job, major, hobby, dream) {
     // 예전엔 일주 글자 코드로만 정해져 88~96% 사이에서 거의 같은 값이 나왔다 → 원국·꿈에 따라 계산
     const fit = calculateDreamFit(dStem, dBranch, oheng, dream);
@@ -1318,7 +1340,7 @@ let currentSajuData = null;
     const nobles = noblesFor(dStemIdx, BRANCHES.indexOf(dBranch));
     const ghost = ghostFor(ps.weakKey);
     const dn = lastDaeun && lastDaeun.item;
-    const safe = String(dream || '').replace(/[<>&]/g, '');
+    const safe = _dreamGiven ? String(dream || '').replace(/[<>&]/g, '') : '';   // 꿈을 안 적었으면 '그대 꿈' 줄을 넣지 않는다 (업데이트 53)
     const rows = [
       ['타고난 결', `<strong>${EL_NAME[ps.dmEl]} 기운 사람</strong>(태어난 날 ${dStem.char}${dBranch.char}) — 가장 모자란 기운은 <strong>${EL_NAME[ps.weakKey]}</strong>`],   // 쉬운 말 (2026-11-02): 일주·일간·오행 이름 대신
       ['지금 운', lastDaeun && lastDaeun.before   // 첫 10년 운 전인 어린이 (업데이트 44, 더블체크 1-3)
