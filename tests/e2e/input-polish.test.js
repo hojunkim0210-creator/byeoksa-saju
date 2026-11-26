@@ -42,7 +42,9 @@ test('칸 안 안내 글씨가 읽을 만큼 진하다(대비 4.5:1 이상) — 
   await toInput(page);
   const r = await page.evaluate(() => {
     const el = document.getElementById('year');
-    const ph = getComputedStyle(el, '::placeholder'); const bg = getComputedStyle(el).backgroundColor;
+    const ph = getComputedStyle(el, '::placeholder');
+    // 업데이트 54: 칸 바탕이 투명(밑줄 칸)이라, 실제로 뒤에 깔린 바탕(종이 카드)을 찾아 잰다
+    let bg = 'rgba(0, 0, 0, 0)'; for (let e = el; e && /rgba\(0, 0, 0, 0\)|transparent/.test(bg); e = e.parentElement) bg = getComputedStyle(e).backgroundColor;
     const rgb = s => s.match(/[\d.]+/g).map(Number);
     const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
     const B = rgb(bg), F = rgb(ph.color), a = (F[3] === undefined ? 1 : F[3]) * parseFloat(ph.opacity || '1');
@@ -151,5 +153,30 @@ test('대문: 설화록을 닫자마자 다시 열어도 그대로 열려 있다
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('hanjiScrollModal')).display), 'flex');
   await page.evaluate(() => closeHanjiScroll()); await page.waitForTimeout(450);
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('hanjiScrollModal')).display), 'none');
+  await ctx.close();
+});
+
+// ── 업데이트 54 (2026-11-25 대표님 "A안으로"): 입력 화면 '한지 서식' — 빛 번짐·광택·동그라미·둥근 칸을 걷어낸 모습이 그대로인지
+test("입력 화면 A안: 칸은 밑줄만, 사진은 네모(빛나는 동그라미 아님), 버튼은 광택·빛 번짐 없는 주사색, 하단 메뉴는 상자 없이 글자만", async () => {
+  const { ctx, page } = await openPage(browser, { width: 375, height: 667 });
+  await toInput(page);
+  const r = await page.evaluate(() => {
+    const cs = (sel, pseudo) => getComputedStyle(document.querySelector(sel), pseudo);
+    const y = cs('#year'), av = cs('#viewInput .gaze-avatar-box'), bt = cs('#viewInput .btn-submit'), card = cs('#viewInput .card'), seal = cs('#tabBar .tab-item.active .tab-seal'), back = cs('#viewInput .btn-nav-back');
+    return { inputBg: y.backgroundColor, inputTop: y.borderTopWidth, inputBottom: y.borderBottomWidth, inputRadius: y.borderTopLeftRadius,
+      avatarRadius: av.borderTopLeftRadius, avatarShadow: av.boxShadow, btnImg: bt.backgroundImage, btnBg: bt.backgroundColor, btnShadow: bt.boxShadow, btnAfter: cs('#viewInput .btn-submit', '::after').display,
+      cardImg: card.backgroundImage, sealBorder: seal.borderTopWidth, sealBg: seal.backgroundColor, sealColor: seal.color, backBg: back.backgroundColor, backRadius: back.borderTopLeftRadius,
+      photo: document.querySelector('#viewInput .gaze-avatar-img').getAttribute('src'), speech: document.querySelector('#viewInput .gaze-speech').textContent.replace(/\s+/g, ' ').trim() };
+  });
+  assert.equal(r.inputBg, 'rgba(0, 0, 0, 0)'); assert.equal(r.inputTop, '0px'); assert.equal(r.inputBottom, '1px'); assert.equal(r.inputRadius, '0px');
+  assert.equal(r.avatarRadius, '3px'); assert.ok(!/3\.5px/.test(r.avatarShadow), '금색 굵은 테두리');
+  assert.equal(r.btnImg, 'none', '버튼 광택(그라데이션)'); assert.equal(r.btnBg, 'rgb(168, 42, 32)'); assert.equal(r.btnShadow, 'none', '버튼 빛 번짐'); assert.equal(r.btnAfter, 'none', '버튼 안쪽 금 실선');
+  assert.equal(r.cardImg, 'none'); assert.equal(r.sealBorder, '0px'); assert.equal(r.sealBg, 'rgba(0, 0, 0, 0)'); assert.equal(r.sealColor, 'rgb(227, 179, 65)');
+  assert.equal(r.backBg, 'rgba(0, 0, 0, 0)'); assert.equal(r.backRadius, '0px');
+  assert.equal(r.photo, 'mung.jpg', '벽사견 사진은 그대로');
+  assert.equal(r.speech, '"문턱에 발을 디뎠구려. 그대 숨소리가 들리오. 생년월일과 가슴속 천명(天命)을 오롯이 적어 내시오."', '벽사견 말은 그대로');
+  // 칸을 누르면 밑줄이 주사색으로
+  await page.focus('#month');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('month')).borderBottomColor), 'rgb(168, 42, 32)');
   await ctx.close();
 });
