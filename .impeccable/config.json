@@ -92,6 +92,24 @@
         ],
         "createdAt": "2026-11-23T21:53:52.008Z",
         "reason": "영상 공방: 릴스 렌더용 임시 페이지(웹 화면 아님) — 자막 가독성용 그림자, 영상 제작 의도"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/Y1/proj/index.html"
+        ],
+        "createdAt": "2026-11-27T10:04:38.688Z",
+        "reason": "릴스 굽기용 페이지(사이트 아님) — 금빛 글자 번쩍임은 기존 릴스 틀과 같은 연출"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "marketing/영상/hf-2027/Y2/proj/index.html"
+        ],
+        "createdAt": "2026-11-27T10:04:38.702Z",
+        "reason": "릴스 굽기용 페이지(사이트 아님) — 금빛 글자 번쩍임은 기존 릴스 틀과 같은 연출"
       }
     ]
   }
